@@ -1,5 +1,16 @@
 "# riveware-modelling" 
 
+---2025-04-22 Current Run Period: Oct 1, 1980 to Mar 15, 1981
+What's new:
+Added Ady and North Canal Diversions, tweaked the Lost to LRDC model pathway, currently working on creating water user object for each refuge and setting a constant diversion during the summer months.
+Set diversions to a known timeseries value (may change in future).
+
+Fixes: 
+None
+
+Known Issues:
+Water User object not properly dispatching. Issue with return flow method.
+
 ---2025-08-08 Current Run Period: Oct 1, 1980 to Mar 15, 1981
 What's new:
 Added wilson Dam, portion of LRDC (flowing from east to west) and a portion of the MH Pump/Stat 48 Pump that takes water _only_ from the Lost river. Object is labeled as such (Modeled as one unit in WRIMS, kept it the same here)
