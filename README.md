@@ -1,4 +1,17 @@
 "# riveware-modelling" 
+****as of 2025-04-29 github is not allowing uploads to the main branch. Will attempt more uploads next week. If model files are needed, please contact me directly via teams or email****
+
+---2025-04-29 Current Run Period: Oct 1, 1980 to Mar 15, 1981
+
+What's New:
+Configured LRDC bi-directional flow (maybe, not fully tested yet). Changed some diversion objects to reduce errors when running model. starting programming DPS account (accumulation and spill). So far the daily flow savings is calculated, need to incorporate project supply and distribution sometime soon.
+
+Fixes: none
+Removed problematic water user object (disabled from dispatching)
+
+Known Issues:
+Flood releases need to be established
+
 
 ---2025-04-22 Current Run Period: Oct 1, 1980 to Mar 15, 1981
 What's new:
