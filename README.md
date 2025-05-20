@@ -1,5 +1,12 @@
 "# riveware-modelling" 
-****as of 2025-04-29 github is not allowing uploads to the main branch. Will attempt more uploads next week. If model files are needed, please contact me directly via teams or email****
+---2025-05-50 Current Run Period: Oct 1, 1980 to Mar 15, 1981
+What's New:
+Continued Work on Ruleset, with Deffered Project Supplyl now accumulating in a slot in the Upper Klamath Lake Object. DPS spill is in a separate data object for ease of troubleshooting.
+
+Fixes: none
+
+Known Issues:
+Flood releases need to be established
 
 ---2025-04-29 Current Run Period: Oct 1, 1980 to Mar 15, 1981
 
