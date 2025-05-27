@@ -1,6 +1,14 @@
 "# riveware-modelling" 
 
----2025-05-50 Current Run Period: Oct 1, 1980 to Mar 15, 1981
+---2025-05-27 Current Run Period: Oct 1, 1980 to Mar 15, 1981
+
+What's New: Configured DPS spill to only function when UKL is actually spilling (workaround for an error that will need to be resolved later), configured Shadow Storage/Shadow elevaiton into the Lake and Ops Index, began revising Project Supply functions.
+
+Fixes: Fixed the interpolation issues with Minimum flows out of keno
+
+Known Issues: DPS spill and DPS accounting crashes the model due to circular references. Attempts to recreate the formula from WRIMS into riverware does not work, and crashes the half the model.  This will be a problem later when UKL enters flood control and spills.
+
+---2025-05-20 Current Run Period: Oct 1, 1980 to Mar 15, 1981
 
 What's New:
 Continued Work on Ruleset, with Deffered Project Supplyl now accumulating in a slot in the Upper Klamath Lake Object. DPS spill is in a separate data object for ease of troubleshooting.
