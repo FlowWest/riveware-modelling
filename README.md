@@ -1,5 +1,16 @@
 "# riveware-modelling" 
 
+---2025-06-23 Current Run Period: Oct 1, 1980 to Mar 20, 1981
+What's new: a. Configured the LRDC object group to automatically detect and divert flow from the Keno impoundment. Rules 27 uses multi-outflow object to automatically calculate what the diversion shortage would be, and the pull water from the Keno impoundment. 
+b. Revised Flood elevations in UKL to NAVD88 datum.
+c. Devised temporary rule to set diversion requests for rapid testing of model. 
+d. Created to data objects with historical data ( so i had to stop referencing an excel spreadsheet)
+e. extended model run period - this requires diversion data for all objects (hence the need for new items a. and c.)
+
+Fixes: none
+
+Known Issues, flood control needs to be looked at with DPS spill. 
+
 ---2025-05-27 Current Run Period: Oct 1, 1980 to Mar 15, 1981
 
 What's New: Configured DPS spill to only function when UKL is actually spilling (workaround for an error that will need to be resolved later), configured Shadow Storage/Shadow elevaiton into the Lake and Ops Index, began revising Project Supply functions.
