@@ -1,6 +1,16 @@
 "# riveware-modelling" 
 
----2025-06-23 Current Run Period: Oct 1, 1980 to Mar 20, 1981
+---2025-06-24 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
+What's new: Reconfigured Keno with updated ACAP capacity and fixed error causing UKL to crash and end the simulation. Added Keno Accretion data on a daily timestep
+
+Fixes: UKL crashing when outflow exceeded capabilityies
+
+Known issues: DPS ruleset needs reconfiguring, 
+
+Upcoming Work: need to configured A canal diversions from UKL (issue is with CFS-AF conversion between slots) and develop ruleset for project supply
+
+
+---2025-06-10 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
 What's new: a. Configured the LRDC object group to automatically detect and divert flow from the Keno impoundment. Rules 27 uses multi-outflow object to automatically calculate what the diversion shortage would be, and the pull water from the Keno impoundment. 
 b. Revised Flood elevations in UKL to NAVD88 datum.
 c. Devised temporary rule to set diversion requests for rapid testing of model. 
