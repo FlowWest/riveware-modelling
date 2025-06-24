@@ -7,7 +7,9 @@ Fixes: UKL crashing when outflow exceeded capabilityies
 
 Known issues: DPS ruleset needs reconfiguring, 
 
-Upcoming Work: need to configured A canal diversions from UKL (issue is with CFS-AF conversion between slots) and develop ruleset for project supply
+Upcoming Work: need to configure A canal diversions from UKL (known issue with CFS-AF conversion - maybe create extra slot for conversion?) and develop full ruleset for project supply.
+
+#tagging for future work: Keno reservoir is treated as a pass through (elevation is firmly set), how can it operate between two elevations? is their a method?
 
 
 ---2025-06-10 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
