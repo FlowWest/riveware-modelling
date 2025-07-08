@@ -1,5 +1,13 @@
 "# riveware-modelling" 
 
+---2025-07-08 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
+What's new: Started working on project supply calculation, working on Project supply from inflow formulas (firm and variable values)  
+
+Fixes: None
+
+Known issues: DPS ruleset needs reconfiguring, 
+
+
 ---2025-06-24 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
 What's new: Reconfigured Keno with updated ACAP capacity and fixed error causing UKL to crash and end the simulation. Added Keno Accretion data on a daily timestep
 
