@@ -1,5 +1,12 @@
 "# riveware-modelling" 
 
+---2025-07-09 Current Run Period: Oct 1, 1980 to Mar Apr 20, 1981
+What's new: Revised model to ensure longer run periods only require updating the historic inflows and diversion objects. Inflow and diversion data is automatically updated and synced with the model. Continued work on project supply calculations. Removed extra and unused slots.
+
+Fixes: Keno accretions bug, Keno accretions is now set to historical data. 
+
+Known issues: Rule #20 is crashing the model when the GetYear function is incorporated in the tableinterpolation function. This rule is used to lookup the inflow forecast for the year and establish the firm project supply from inflow.  Workaround needed. Step-up counter to count the rows in the table? DPS ruleset still needs reconfiguring.
+
 ---2025-07-08 Current Run Period: Oct 1, 1980 to Mar Apr 5, 1981
 What's new: Started working on project supply calculation, working on Project supply from inflow formulas (firm and variable values)  
 
