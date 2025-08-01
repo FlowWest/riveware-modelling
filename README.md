@@ -1,6 +1,14 @@
 "# riveware-modelling" 
 
----2025-07-022 Current Run Period: Oct 1, 1980 to June 4, 1981
+---2025-07-29 Current Run Period: Oct 1, 1980 to June 4, 1981
+
+What's New: add LKNWR as a diversion object with set diversion rate from UKL. Revised UKL flood control and implemented rudimentary flood control protocols and releases from UKL and Keno. 
+
+Fixes: fixed keno rampdown rates
+
+Known Issues: DPS ruleset needs to be finished. Need to add tulelake LKWNR to the project.
+
+---2025-07-22 Current Run Period: Oct 1, 1980 to June 4, 1981
 What's New: No new Rules, revised project supply rules and began work on the 3rd part of the project supply formula. Started Work on the refuges. Still working out how to incorporate refuges and deliveries into the model ruleset. Set a consistent elevation and and then program diversions from that? Unsure
 
 Fixes: revised the Upper/Lower boundary in UKL for the lake index function. Fixed the tableinterpolation bug from 2025-07-09. 
