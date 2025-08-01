@@ -1,0 +1,49 @@
+# RiverWare_Ruleset 9.3.5 Patch
+# Created 12:15 July 30, 2025
+# 
+RULESET
+NAME "RPL Set";
+AGENDA_ORDER ASCENDING;
+DESCRIPTION "";
+PRECISION   2;
+NOTES "";
+BEGIN
+
+  POLICY_GROUP   "UKL Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "A Canal Diversions";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.Diversion" [] := IF ( ? >= ? AND ? <= ? )
+ THEN
+  ?
+ ENDIF;
+
+    END
+    UUID "{25fd6edd-89bc-4235-b715-13049c6bf8a2}";;
+
+    RULE                 "Shadow Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.Shadow_Elevation" [] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [] - ( $ "Upper Klamath Lake.Deffered Project Supply Account" [] + $ "Upper Klamath Lake.FFA Increment" [] ) );
+
+    END
+    UUID "{e3fbb5c7-d0fd-4a8c-947c-45f6a65468fa}";;
+
+  END
+  UUID "{2041afd6-0556-4701-ab4b-53298398d5b7}";;
+
+END
+UUID "{23ed2376-6afe-4d94-a1de-a05b67cb93f8}";

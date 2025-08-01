@@ -1,0 +1,52 @@
+-- 8/1: 
+deferred project supply account (DPSA):
+Two Main Sources of Accrual:
+Project contributions to Keno flows (substitute for Link Dam releases)
+Foregone UKL refuge supply (diverted drainage/refuge water instead)
+Conditions for DPSA Accrual:
+Keno impoundment is balanced
+UKL is not in flood control
+Accumulation period: Nov 1 – Sep 30 (no Oct accrual)
+Spill and Use Logic:
+Spills:
+DPS spills before FFA during flood events
+Spill formula accounts for dam flows minus refuge/project diversions
+Use:
+DPS used in Ag diversion according to rules
+Refuge can divert DPS in flood operations
+
+Summary:
+Credits (adds water):
+Flow savings: When Lost River or pump water helps meet river flow targets, saving UKL water.
+Debits (subtracts water):
+Irrigation use: When farms use water from DPSA.
+Refuge use: When refuges actually use the saved water.
+
+When is DPSA Active?
+It starts fresh on November 1 every year.
+October is excluded — no accumulation or carryover.
+It operates daily from November 1 to September 30.
+
+Spills: If UKL floods, some DPSA water may be lost to the river.
+Refuge savings: If the refuges don’t need all their allocated UKL water.
+DPSA_today = DPSA_yesterday
+           + water saved from Project/refuge flow contributions
+           - water used by irrigators
+           - water used by refuges
+           - water spilled from UKL
+
+DPS d=max(0,DPS_d−1+Yflow_save_d+YRef_save_d−YProj_DPS_div_d−YRef_DPS_div_d−YDPS_spill_d)
+​
+Current Dans Riverware Version:
+Adds flow savings
+Subtracts spills
+But misses irrigation and refuge use
+
+Flowwest version: 
+Lake Data misses DPS Spill 
+Added Customized DPS Spil slot to Lake Data
+
+
+TODOS:
+any missing data trace back to R spreadsheet - found UKL spill value in Alt_Tables in R workbook
+screen recording on notes and progress
