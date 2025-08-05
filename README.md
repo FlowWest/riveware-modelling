@@ -2,11 +2,7 @@
 
 ---2025-08-05 Current Run Period: Oct 1, 1980 to June 4, 1981
 
-What's New: n/a
-
-Fixes: revised keno flood control rules, DPS accounting
-
-Known Issues: Need to incorporate LKNWR and TLNWR into model as reservoirs. Need area-capacity data.
+unable to upload current model files to github. 
 
 
 ---2025-07-29 Current Run Period: Oct 1, 1980 to June 4, 1981
