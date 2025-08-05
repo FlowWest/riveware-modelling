@@ -1,5 +1,14 @@
 "# riveware-modelling" 
 
+---2025-08-05 Current Run Period: Oct 1, 1980 to June 4, 1981
+
+What's New: n/a
+
+Fixes: revised keno flood control rules, DPS accounting
+
+Known Issues: Need to incorporate LKNWR and TLNWR into model as reservoirs. Need area-capacity data.
+
+
 ---2025-07-29 Current Run Period: Oct 1, 1980 to June 4, 1981
 
 What's New: add LKNWR as a diversion object with set diversion rate from UKL. Revised UKL flood control and implemented rudimentary flood control protocols and releases from UKL and Keno. 
