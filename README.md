@@ -1,5 +1,8 @@
 "# riveware-modelling" 
 
+---2025-08-12 Current Run Period: Oct 1, 1980 to June 4, 1981
+No Updates or revisions to the current model, enabled the Data Manager Interface (DMI) and began to utilize the tool to import daily data into the model. Additional refinements needed for daily data import. Will be usefor for exporting data from various runs 
+
 ---2025-08-05 Current Run Period: Oct 1, 1980 to June 4, 1981
 
 unable to upload current model files to github. 
