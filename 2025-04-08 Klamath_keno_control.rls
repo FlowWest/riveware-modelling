@@ -1,5 +1,5 @@
-# RiverWare_Ruleset 9.1.2 Patch
-# Created 15:38 April 8, 2025
+# RiverWare_Ruleset 9.3.5 Patch
+# Created 22:22 April 17, 2025
 # 
 RULESET
 NAME "RPL Set 1";
@@ -277,7 +277,12 @@ BEGIN
     NOTES                "Rule assumes that Miller Hill and Sta 48 consume all water coming from the east side of the project - as modeled in the WRIMS version. After all water coming from the east is consumed, the pumping plants then take water from UKL via the LRDC.<br><br>Inflows - sta 48 & miller hill_from lost = diversion shortage = Diversion request from sta 48 & miller hill_from UKL.<br><br>***not working - completely breaks the model do i manually input diversion request? or can i calculate it another way?";
     BEGIN
 
-      $ "Sta48 and MH from UKL.Diversion Request" [] := $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "LRDC from Lost River.Available For Diversion" [];
+      $ "Sta48 and MH from UKL.Diversion Request" [] := IF ( $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "LRDC from Lost River.Available For Diversion" [] <= 0.00000000 "cfs" 0 )
+ THEN
+  0.00000000 "cfs" 0
+ ELSE
+  $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "LRDC from Lost River.Available For Diversion" []
+ ENDIF;
 
     END
     UUID "{f47247bc-3c7c-4a68-9c97-e1785633d31d}";;

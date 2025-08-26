@@ -50,3 +50,17 @@ Added Customized DPS Spil slot to Lake Data
 TODOS:
 any missing data trace back to R spreadsheet - found UKL spill value in Alt_Tables in R workbook
 screen recording on notes and progress
+
+8/19---------------------------
+- Version control lost previous notes
+- previous work done: deferred project supply
+- previous issues/questions identified: LRDC is bidirectional; dans model is mapping it as unidirectional?
+- why is station 48 and miller hill grouped together?
+- Dan's Model has Miller Hill and Station 48 combined - they have the same irrigation priority and season but different max diversion capacity cfs
+- whats the difference between keno targeted release and release to river in ruleset
+- need to validate ffa distribution
+TODOs:
+find keno ramp down rates
+find Keno data.Project Contribution to Keno Flows
+
+ 

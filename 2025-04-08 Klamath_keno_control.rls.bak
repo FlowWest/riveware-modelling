@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.1.2 Patch
-# Created 15:16 April 8, 2025
+# Created 15:38 April 8, 2025
 # 
 RULESET
 NAME "RPL Set 1";
@@ -272,12 +272,12 @@ BEGIN
 
     RULE                 "Sta 48 and Miller Hill";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Rule assumes that Miller Hill and Sta 48 consume all water coming from the east side of the project - as modeled in the WRIMS version. After all water coming from the east is consumed, the pumping plants then take water from UKL via the LRDC.<br><br>Inflows - sta 48 & miller hill_from lost = diversion shortage = Diversion request from sta 48 & miller hill_from UKL.<br><br>";
+    NOTES                "Rule assumes that Miller Hill and Sta 48 consume all water coming from the east side of the project - as modeled in the WRIMS version. After all water coming from the east is consumed, the pumping plants then take water from UKL via the LRDC.<br><br>Inflows - sta 48 & miller hill_from lost = diversion shortage = Diversion request from sta 48 & miller hill_from UKL.<br><br>***not working - completely breaks the model do i manually input diversion request? or can i calculate it another way?";
     BEGIN
 
-      $ "Sta48 and MH from  Lost.Diversion Shortage" [] := $ "Sta48 and MH from UKL.Diversion Request" [];
+      $ "Sta48 and MH from UKL.Diversion Request" [] := $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "LRDC from Lost River.Available For Diversion" [];
 
     END
     UUID "{f47247bc-3c7c-4a68-9c97-e1785633d31d}";;
@@ -440,10 +440,10 @@ BEGIN
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "calculates savings for FFA account<br>zeros are placeholders for other values that will be incorporated later";
+    NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-22)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC to Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill (yet to be programmed)<br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
     BEGIN
 
-      "Max"( 0.00000000, $ "River Data.FFA Increment" [@"t - 1"] - "Max"( 0.00000000, $ "Keno.Spill" [@"t - 1"] - ( 0.00000000 - ( 0.00000000 - ( $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ) ) );
+      "Max"( 0.00000000, $ "River Data.FFA Increment" [@"t - 1"] - "Max"( 0.00000000, $ "Keno.Spill" [@"t - 1"] - ( $ "LRDC to Link.Return Flow" [@"t - 1"] - ( 0.00000000 - ( $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ) ) );
 
     END
     UUID "{70fd077d-af11-4f0e-8dc0-59345ed4752f}";;

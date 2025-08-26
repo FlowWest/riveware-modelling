@@ -1,49 +1,246 @@
 # RiverWare_Ruleset 9.3.5 Patch
-# Created 12:15 July 30, 2025
+# Created 11:05 August 21, 2025
 # 
 RULESET
-NAME "RPL Set";
+NAME "FlowWest Ruleset";
 AGENDA_ORDER ASCENDING;
 DESCRIPTION "";
 PRECISION   2;
 NOTES "";
 BEGIN
 
-  POLICY_GROUP   "UKL Rules";
+  POLICY_GROUP   "Keno rule set";
   DESCRIPTION    "";
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
 
-    RULE                 "A Canal Diversions";
+    RULE                 "Keno Rampdown Rates";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.Diversion" [] := IF ( ? >= ? AND ? <= ? )
- THEN
-  ?
- ENDIF;
+      IF_STATEMENT ($ "Keno.Outflow" [] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.Outflow" [] := "Max"( $ "Keno.Outflow" [], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+
+      END_IF_STATEMENT;
 
     END
-    UUID "{25fd6edd-89bc-4235-b715-13049c6bf8a2}";;
+    UUID "{7f40739f-6d50-4e9f-8a4a-283a8b9fe407}";;
 
-    RULE                 "Shadow Elevation";
+    RULE                 "UKL flood control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "testing rules order for Flood Control releases from UKL";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control" [] - $ "Upper Klamath Lake.Pool Elevation" [] <= 0.05000000 "ft") THEN
+            ALERT_STATEMENT "Flood Control";
+
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.Outflow" [@"t - 1"] + 1000.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{9d47dfe8-70a5-4abe-bf17-7af3933a4a94}";;
+
+    RULE                 "Keno Elevation";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.Shadow_Elevation" [] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [] - ( $ "Upper Klamath Lake.Deffered Project Supply Account" [] + $ "Upper Klamath Lake.FFA Increment" [] ) );
+      $ "Keno.Pool Elevation" [] := 4085.50000000 "feet";
 
     END
-    UUID "{e3fbb5c7-d0fd-4a8c-947c-45f6a65468fa}";;
+    UUID "{fa4d1dfd-70d1-4407-acd4-f7fb924a65ec}";;
+
+    RULE                 "releases to the river";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
+    BEGIN
+
+      % "Keno" & "Outflow" [] := "Max"( $ "Keno data.River Base Flow" [], $ "Keno data.River Base Flow" [] + ( $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) ) + 0.00000000 "cfs";
+
+    END
+    UUID "{95934ab6-65cf-4cdd-bf1f-f489485d0788}";;
+
+    RULE                 "Keno Targeted Release";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
+    BEGIN
+
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [], $ "Keno data.River Base Flow" [] + ( $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) );
+
+    END
+    UUID "{2a0bc351-dc41-425f-bbf6-df712a698aef}";;
 
   END
-  UUID "{2041afd6-0556-4701-ab4b-53298398d5b7}";;
+  UUID "{48c93aae-3b32-4a16-be30-b21b4fdb120d}";;
+
+  POLICY_GROUP   "Various Slot Setting Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Inflow and Diversion Rate Rules";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "A Canal Diversion.Diversion Request" [] := $ "Historical Diversions.A Canal" [];
+
+    END
+    UUID "{bf8befb0-a9ae-48a0-9e13-2a0af8f0e4f3}";;
+
+    RULE                 "Diversion Available";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "A Canal Diversion.Available For Diversion" [] := 1100.00000000 "cfs";
+
+    END
+    UUID "{90cc0279-e429-431e-be9f-09fda706bc1e}";;
+
+  END
+  UUID "{aee58a04-60df-4c14-8f5f-619ed613b40d}";;
+
+  UTILITY_GROUP "Flexible Flow Account and Project Supply";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "FFA reserve Lookup" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Looks up the the FFA reserve volume from the table, based on Ops index value.  FFA reserve table is found at Appendix Table C-14<br><br>As the Ops Index approaches 0.7, the FFA reserve proportion declines to zero because the wetter conditions comes less need to augment flows or to shape a discrete event like a pulse flow<br>";
+    BEGIN
+
+      "TableInterpolation"( $ "OpsData.FFA Reserve table", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+
+    END
+    UUID "{bb8fbb5c-6ef2-4711-94b9-cbdd1907fc29}";;
+
+    FUNCTION       "FFA increment" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Calculates FFA daily increment based on ops index - defer use of some water targeted for release to the river during fall-winter.  <br>Formula #6 from Appendix E (pg 22).";
+    BEGIN
+
+      $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) * "FFA reserve Lookup"(  );
+
+    END
+    UUID "{b552d5b7-971b-4fe8-9423-c853a3bee641}";;
+
+    FUNCTION       "Yesterday's FFA Saving" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "calculates savings for FFA account - the amount of yesterday's daily accrueal value <br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>Link River from LRDC.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill (yet to be programmed)<br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
+    BEGIN
+
+      "Max"( 0.00000000, $ "River Data.FFA Increment" [@"t - 1"] - "Max"( 0.00000000, $ "Keno.Spill" [@"t - 1"] - ( $ "Link River from LRDC.Return Flow" [@"t - 1"] - ( 0.00000000 - ( $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ) ) );
+
+    END
+    UUID "{56a92b69-1b5a-42ef-ac26-ae1c2b9e042f}";;
+
+  END
+  UUID "{b548d233-ed8c-4f3e-b5b3-cb1deec45ff9}";;
+
+  UTILITY_GROUP "Index and Counters Group";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "Flood Season" (  )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Sets Period of time when flood control is operation";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      @"t" > @"November 15" AND @"t" < @"June 15";
+
+    END
+    UUID "{18946109-d68f-48b8-82a0-1de97b903f01}";;
+
+    FUNCTION       "KenoReleaseMultiplier" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Formula only calculates the Keno release multiplier (KRmult) for the current timestep (@&quot;t&quot;).  It does this by interpolating the Keno releast multiplier table in the OpsData data object. <br><br>Keno Release multiplier table is found in Appendix E, pg 23";
+    BEGIN
+
+      "TableInterpolation"( $ "Keno.Keno Release Multiplier", 0.00000000, "GetMonth"( @"t" ), $ "OpsData.OpsIndex" [], @"t" );
+
+    END
+    UUID "{399e00bb-a501-4c6d-8e39-f43b99353bb0}";;
+
+    FUNCTION       "SpringSummerAgSeason" ( DATETIME CurrentDate )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      CurrentDate >= @"24:00:00 April 1, Current Year" AND CurrentDate <= @"24:00:00 November 30, Current Year";
+
+    END
+    UUID "{2afae379-7445-435c-826b-a4175d6c8ec2}";;
+
+    FUNCTION       "Date Counter" ( DATETIME date1, DATETIME date2 )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Counts the number of days between two dates. Date 1 is the first date, date 2 is the second date ( after).";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Due to RPL language, the values come out as negative, so the abs function is required. Also, riverware count the difference in seconds, thus the divided by 86400 (# of seconds in a day)";
+    BEGIN
+
+      "Abs"( "DateToNumber"( date1 ) - "DateToNumber"( date2 ) ) / 86400.00000000;
+
+    END
+    UUID "{8cbadbdd-654c-40e8-b898-e73ac7b94381}";;
+
+  END
+  UUID "{e45f2def-b1f3-41c2-933f-757fcfac1683}";;
 
 END
 UUID "{23ed2376-6afe-4d94-a1de-a05b67cb93f8}";

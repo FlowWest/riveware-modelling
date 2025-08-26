@@ -1,8 +1,8 @@
-# RiverWare_Ruleset 9.1.2 Patch
-# Created 16:19 July 29, 2025
+# RiverWare_Ruleset 9.3.5 Patch
+# Created 12:36 August 20, 2025
 # 
 RULESET
-NAME "RPL Set 2";
+NAME "dan latest ruleset";
 AGENDA_ORDER ASCENDING;
 DESCRIPTION "";
 PRECISION   3;
@@ -130,7 +130,7 @@ BEGIN
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
       ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
+            $ "River Data.FFA Increment" COMMENTED_BY "FFA Storage when keno Release > RBF <br>" [] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
       END_ELSEIF;
 
     END
