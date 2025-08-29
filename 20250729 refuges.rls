@@ -1,8 +1,8 @@
-# RiverWare_Ruleset 9.1.2 Patch
-# Created 16:19 July 29, 2025
+# RiverWare_Ruleset 9.3.5 Patch
+# Created 17:36 August 28, 2025
 # 
 RULESET
-NAME "RPL Set 2";
+NAME "dan latest ruleset";
 AGENDA_ORDER ASCENDING;
 DESCRIPTION "";
 PRECISION   3;
@@ -130,7 +130,7 @@ BEGIN
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
       ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
+            $ "River Data.FFA Increment" COMMENTED_BY "FFA Storage when keno Release > RBF <br>" [] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
       END_ELSEIF;
 
     END
@@ -148,7 +148,7 @@ BEGIN
 
     RULE                 "DPS accounting";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Formula 22 from Appendix E, Used for account for accumulation, diverting, and spilling dps account,<br><br>First 0 is a stand in for Yesterday's Refuge savings<br>second 0 is a stand is for project diversion of DPS<br>third 0 is the refuge diversion of dps<br>DPS spill is converted to Acre-ft for this formula<br><br> no accumulation in October, so DPS is set to 0<br><br>";
     BEGIN
@@ -430,6 +430,65 @@ BEGIN
 
   END
   UUID "{cc035820-5bf2-4674-af63-80fc3a1a03e9}";;
+
+  POLICY_GROUP   "Refuge Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Calculate Evaporation (Outflow)";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "need to define  taf_cfs<br>";
+    BEGIN
+
+      $ "LKNWR Cell2.Outflow" [] := "Min"( $ "LKNWR Cell2.Storage" [@"t - 1"] * 504.16666670, "TableInterpolation"( $ "LKNWR Cell2.Evap", 0.00000000, 1.00000000, "GetMonth"( @"t" ), @"t" ) / 1000.00000000 * 504.16700000 );
+
+    END
+    UUID "{6ca0952c-ad94-44ae-b70b-cc3c6ead4bcf}";;
+
+    RULE                 "Calculate Zone Storage";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "wrims code:<br><br>define S_Cell2 &lcub;std kind 'Storage' units 'TAF'&rcub; <br>define S_Cell2_1 &lcub;std kind 'STORAGE-ZONE' units 'TAF'&rcub; <br>define S_Cell2_2 &lcub;std kind 'STORAGE-ZONE' units 'TAF'&rcub; <br>goal split_S_Cell2 &lcub;S_Cell2 = S_Cell2_1 + S_Cell2_2&rcub; <br>define S_Cell2Level1 &lcub;value 16.&rcub; !TAF <br>define S_Cell2Level2 &lcub;value 33.075&rcub; !TAF <br>goal S_Cell2Zone1 &lcub;S_Cell2_1 < S_Cell2Level1&rcub; <br>goal S_Cell2Zone2 &lcub;S_Cell2_2 < S_Cell2Level2-S_Cell2Level1&rcub;";
+    BEGIN
+
+      $ "LKNWR Cell2.Zone1_Storage" [] := "Min"( $ "LKNWR Cell2.Storage" [], $ "LKNWR Cell2.Level1_Threshold" [] );
+
+      $ "LKNWR Cell2.Zone2_Storage" [] := "Max"( 0.00000000, "Min"( $ "LKNWR Cell2.Storage" [], $ "LKNWR Cell2.Level2_Threshold" [] ) - $ "LKNWR Cell2.Level1_Threshold" [] );
+
+    END
+    UUID "{31fc7609-ae0c-4f50-9576-4fb320a68c99}";;
+
+    RULE                 "Calculate Refuge Area";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "LKNWR Cell2.Area" [] := "TableInterpolation"( $ "LKNWR Cell2.Elevation Area", 0.00000000, 1.00000000, $ "LKNWR Cell2.Pool Elevation" [], @"t - 1" );
+
+    END
+    UUID "{8942d7ec-dc3e-4e29-9fd5-d03a34af2256}";;
+
+    RULE                 "LKNWR Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "LKNWR Cell2.Pool Elevation" [] := 4089.98450397 "feet";
+
+    END
+    UUID "{d3732f33-d3d5-4dab-938a-626bad726fe8}";;
+
+  END
+  UUID "{8ced3c28-4f4f-4b43-af31-1f7475632c53}";;
 
   POLICY_GROUP   "Various Slot-setting Rules";
   DESCRIPTION    "";
