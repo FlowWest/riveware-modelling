@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 17:24 December 10, 2025
+# Created 00:51 December 11, 2025
 # 
 RULESET
 NAME "Initialization Rules Set";
@@ -23,15 +23,15 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Inflows into UKL.Inflow" [] := $ "Historical Inflows and NWI.UKL Inflow" [];
+    INACTIVE      $ "Inflows into UKL.Inflow" [] := $ "Historical Inflows and NWI.UKL Inflow" [];
 
       $ "Lost into Wilson.Inflow" [] := $ "Historical Inflows and NWI.LRDC Into Wilson" [];
 
-      $ "F_FF pumps.Inflow" [] := $ "Historical Inflows and NWI.F_FF pumping" [];
+      $ "F_FF pumps.Inflow" [] := $ "Historical Inflows and NWI.F_FF Pumping" [];
 
       $ "Keno.Accretions" [] := $ "Historical Inflows and NWI.Keno Accretions" [];
 
-      $ "Wilson Dam  to Tule.Diversion Request" [] := $ "Historical Diversions.Wilson Reservoir to Tule Sumps" [];
+      $ "Wilson Dam to Tule.Diversion Request" [] := $ "Historical Diversions.Wilson Reservoir to Tule Sumps" [];
 
       $ "Sta48 and MH from Lost.Diversion Request" [] := $ "Historical Diversions.Sta 48 and Miller Hill Year Round" [];
 
@@ -69,8 +69,10 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1 Day", @"Finish Timestep", "1 Days" )) DO
-            $ "Upper Klamath Lake.Pool Elevation" [date] := $ "Constants UKL Init Elevation" [];
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Upper Klamath Lake.Pool Elevation" [date] := $ "LakeData.Historic Pool Elevation" [date];
+
+            $ "Upper Klamath Lake.Outflow" [date] := 1000.00000000 "cfs";
 
       ENDFOREACH;
 
@@ -91,23 +93,7 @@ BEGIN
       ENDFOREACH;
 
     END
-    UUID "{7c6cf606-8883-47a2-87ca-e744f39b1b6c}";;
-
-    RULE                 "initializing TLNWR Pool Elevation";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    SET_VALUE_FLAG       64;
-    NOTES                "";
-    BEGIN
-
-      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1", @"Finish Timestep", "1 Days" )) DO
-            $ "Tule Sumps 1A.Pool Elevation" [date] := $ "Constants.Tule Sumps 1A Init Elevation" [];
-
-      ENDFOREACH;
-
-    END
-    UUID "{eab50689-a08d-4745-a6f0-14b1bdce7ad0}";;
+    UUID "{3904fbd5-9451-40c5-97c6-951ae95d8412}";;
 
   END
   UUID "{4c766237-d71d-4d11-9e8b-e515ea469b67}";;

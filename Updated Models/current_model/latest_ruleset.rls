@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:39 December 10, 2025
+# Created 13:32 December 15, 2025
 # 
 RULESET
 NAME "Integrating Refuge rules 2";
@@ -973,7 +973,7 @@ BEGIN
 
       $ "Inflows into UKL.Inflow" [] := $ "Historical Inflows and NWI.UKL Inflow" [];
 
-      $ "Upper Klamath Lake.Outflow" [] := 1000.00000000 "cfs";
+    INACTIVE      $ "Upper Klamath Lake.Outflow" [] := 1000.00000000 "cfs";
 
     END
     UUID "{1f7f76c6-d136-43d2-86e1-9b587dddccf7}";;

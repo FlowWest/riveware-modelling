@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:15 December 10, 2025
+# Created 22:39 December 10, 2025
 # 
 RULESET
 NAME "Integrating Refuge rules 2";
@@ -639,7 +639,7 @@ BEGIN
   0.00000000
  ENDIF;
 
-      $ "LKNWR Cell2.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
+      $ "LKNWR.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
 
     END
     UUID "{f00fd2a0-b4b3-462a-8f9a-ebed681cad2d}";;
