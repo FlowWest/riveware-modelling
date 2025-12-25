@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:27 December 23, 2025
+# Created 20:35 December 24, 2025
 # 
 RULESET
 NAME "latest_model_ruleset";
@@ -327,10 +327,10 @@ BEGIN
       END_ELSEIF;
 
       IF_STATEMENT (@"t" > @"October 1" AND @"t" <= @"November 1") THEN
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
 
       END_IF_STATEMENT;
 
@@ -362,7 +362,7 @@ BEGIN
     NOTES                "Formula 19 - calcualte project use of defered project supply. how much of yesterday's UKL project diversion should be debited from DPSA <br><br>This is based on agriculture diversion (project diversion = sum of A canal, station48 and ady diversion from UKL) from UKL yesterday <br>Numeric proj_total_yest :=<br>    (&quot;Station48.Diverted&quot;[t-1] +<br>     &quot;MillerHill.Diverted&quot;[t-1] +<br>     &quot;North.Diverted&quot;[t-1] +<br>     &quot;Ady.Diverted&quot;[t-1])";
     BEGIN
 
-      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [] * "FlowToVolume"( ( $ "Ady Canal.Diversion" [@"t - 1"] + $ "North Canal.Diversion" [@"t - 1"] + $ "A Canal.Diversion" [@"t - 1"] + $ "Sta48 and MH from Lost.Diversion" [@"t - 1"] ), @"t - 1" );
+      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.Diversion" [@"t - 1"] + $ "North Canal.Diversion" [@"t - 1"] + $ "A Canal.Diversion" [@"t - 1"] + $ "Sta48 and MH from Lost.Diversion" [@"t - 1"] ), @"t - 1" );
 
     END
     UUID "{70e3f112-73e4-49db-8422-e7d32a905e89}";;
@@ -405,13 +405,13 @@ BEGIN
 
     RULE                 "Calculate Project Diversion Fraction";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "equation 20<br>this is the share of today's project diversion from UKL that must be charged to the DPSA bank - the water from UKL that goes to agriculture (project diversion)<br>when its under non flood control scenario, a proportion of DPSA gets diverted to project diversion based on the starting level of project supply and dpsa balance on that day<br><br>todo need to add project supply beginning of day value<br>if else statement also has issues<br>";
     BEGIN
 
       IF_STATEMENT ($ "Refuge Policy Tracking.IsKenoSpilling" [] != 0.00000000 OR $ "Refuge Policy Tracking.IsUKLSpilling" [] != 0.00000000) THEN
-            $ "OpsData.Proj DPS Fraction" [] := $ "OpsData.DPSA Balance" [@"t - 1"] / ( $ "OpsData.DPSA Balance" [@"t - 1"] - 0.00000000 );
+            $ "OpsData.Proj DPS Fraction" [] := $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] / ( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] - 0.00000000 );
 
       ELSE
             $ "OpsData.Proj DPS Fraction" [] := 1.00000000;
