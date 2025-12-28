@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 20:35 December 24, 2025
+# Created 22:39 December 27, 2025
 # 
 RULESET
 NAME "latest_model_ruleset";
@@ -451,13 +451,25 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT (@"t" > @"June 1") THEN
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [] );
+      IF_STATEMENT (@"t" < @"April 15" AND @"t" >= @"April 1") THEN
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"] );
 
       ELSE
-            $ "OpsData.Variable Project Supply Inflow" [] := 0.00000000 "acre-ft";
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 350.00000000 "acre-ft";
 
-      END_IF_STATEMENT;
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" < @"June 1" AND @"t" >= @"April 15" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" < @"October 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
+      END_ELSEIF;
 
     END
     UUID "{b673dfc8-1073-413b-9567-ae2cccb264ac}";;
@@ -470,12 +482,20 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" <= @"June 1" AND @"t" >= @"April 15") THEN
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 6.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the April 15th 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [] ) * $ "OpsData.ProjSuppMult" [] );
+            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
 
       ELSE
             $ "OpsData.Variable Project Supply Inflow" [] := 0.00000000 "acre-ft";
 
-      END_IF_STATEMENT;
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" < @"April 15" AND @"t" >= @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"June 2" AND @"t" < @"October 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Variable Project Supply Inflow" [] := $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"];
+      END_ELSEIF;
 
     END
     UUID "{4199cb4c-76b3-4a4e-9035-4ea77aa037af}";;
@@ -509,7 +529,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT (@"t" >= @"April 16" AND @"t" <= @"October 1") THEN
+      IF_STATEMENT (@"t" >= @"April 15" AND @"t" <= @"October 1") THEN
             $ "OpsData.Firm Project Supply" [] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"] );
 
       ELSE
@@ -534,10 +554,14 @@ BEGIN
             $ "OpsData.Project Supply from Inflow_Firm" [] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply From Inflow" [] := "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 1.00000000, "GetYear"( @"24:00:00 March 1, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+      END_ELSEIF
       ELSEIF_COND ( @"t" >= @"April 16" AND @"t" <= @"October 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Locks in the Firm project supply from Inflow after April 15th <br><br>" [@"t"] := $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"];
-            $ "OpsData.Firm Project Supply" [] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"t"] + $ "OpsData.Project Supply from Storage" [@"t - 15"] );
+            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Locks in the Firm project supply from Inflow after April 15th <br><br>" [] := $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"];
+          INACTIVE      $ "OpsData.Firm Project Supply" [] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"t"] + $ "OpsData.Project Supply from Storage" [@"t - 15"] );
       END_ELSEIF;
 
     END
@@ -585,17 +609,17 @@ BEGIN
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br>";
+    NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br><br>what is the value from ss to winter of next year?<br>";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
-            $ "OpsData.Project Supply from Storage" [] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+            $ "OpsData.Project Supply from Storage" [@"t"] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
 
       ELSE
-            $ "OpsData.Project Supply from Storage" [] := 0.00000000 "acre-ft";
+            $ "OpsData.Project Supply from Storage" [] := 350.00000000 "acre-ft";
 
       END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"April 2" AND @"t" < @"October 1" )
+      ELSEIF_COND ( @"t" >= @"April 2" AND @"t" < @"December 1" )
       ELSEIF_CLAUSE
             $ "OpsData.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
       END_ELSEIF;
