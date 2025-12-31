@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:39 December 27, 2025
+# Created 09:19 December 31, 2025
 # 
 RULESET
 NAME "latest_model_ruleset";
@@ -452,23 +452,23 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" < @"April 15" AND @"t" >= @"April 1") THEN
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"] );
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"] );
 
       ELSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 350.00000000 "acre-ft";
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 350000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" < @"June 1" AND @"t" >= @"April 15" )
       ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"June 1" AND @"t" < @"October 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
       END_ELSEIF;
 
     END
@@ -482,7 +482,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" <= @"June 1" AND @"t" >= @"April 15") THEN
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
 
       ELSE
             $ "OpsData.Variable Project Supply Inflow" [] := 0.00000000 "acre-ft";
@@ -490,7 +490,7 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" < @"April 15" AND @"t" >= @"April 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"June 2" AND @"t" < @"October 1" )
       ELSEIF_CLAUSE
@@ -511,7 +511,7 @@ BEGIN
             $ "Upper Klamath Lake.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [];
 
       ELSE
-            $ "Upper Klamath Lake.Project Supply from Storage" [@"t"] := 35.00000000 "acre-ft";
+            $ "Upper Klamath Lake.Project Supply from Storage" [@"t"] := 350000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"November 1" )
@@ -530,7 +530,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"April 15" AND @"t" <= @"October 1") THEN
-            $ "OpsData.Firm Project Supply" [] := "Min"( 350.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"] );
+            $ "OpsData.Firm Project Supply" [] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"] );
 
       ELSE
             $ "OpsData.Firm Project Supply" [] := 0.00000000 "acre-ft";
@@ -548,7 +548,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"April 1" AND @"t" <= @"April 15") THEN
-            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Calculates the Firm Project Supply from Inflow between April 1 and 15 through lookup tables  <br><br>" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Project Supply from Storage" [@"t"], "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 7.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the April 15th 95% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) );
+            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Calculates the Firm Project Supply from Inflow between April 1 and 15 through lookup tables  <br><br>" [] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"], "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 7.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the April 15th 95% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) );
 
       ELSE
             $ "OpsData.Project Supply from Inflow_Firm" [] := 0.00000000 "acre-ft";
@@ -616,7 +616,7 @@ BEGIN
             $ "OpsData.Project Supply from Storage" [@"t"] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
 
       ELSE
-            $ "OpsData.Project Supply from Storage" [] := 350.00000000 "acre-ft";
+            $ "OpsData.Project Supply from Storage" [] := 350000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"April 2" AND @"t" < @"December 1" )
@@ -652,7 +652,7 @@ BEGIN
   0.00000000
  ENDIF;
 
-      $ "LKNWR.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
+      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
 
     END
     UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
@@ -804,15 +804,15 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "LKNWR.allocation" [] := $ "LKNWR.allocation" [@"t - 1"] - "FlowToVolume"( $ "LKNWR.Diversion" [], @"t - 1" );
+            $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
 
       ELSE
-            $ "LKNWR.allocation" [] := 22000.00000000 "acre-ft";
+            $ "Ady To Refuge.allocation" [] := 22000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
-            $ "LKNWR.allocation" [] := 0.00000000 "acre-ft";
+            $ "Ady To Refuge.allocation" [] := 0.00000000 "acre-ft";
       END_ELSEIF;
 
     END
@@ -826,10 +826,10 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "LKNWR.Diversion Request" [] := $ "LKNWR Cell2.needed inflow" [@"t - 2"];
+            $ "Ady To Refuge.Diversion Request" [] := $ "LKNWR Cell2.needed inflow" [@"t - 2"];
 
       ELSE
-            $ "LKNWR.Diversion Request" [] := 10.00000000 "cfs";
+            $ "Ady To Refuge.Diversion Request" [] := 62.00000000 "cfs";
 
       END_IF_STATEMENT;
 
@@ -945,11 +945,11 @@ BEGIN
     NOTES                "Rule is set to avoide the error:<br><br><br><br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
     BEGIN
 
-      $ "Link River to LRDC.Available For Diversion" [] := 3000.00000000 "cfs";
+      $ "LRDC Draw From Klamath.Available For Diversion" [] := 3000.00000000 "cfs";
 
-      $ "Link to Ady and F_FF pumps.Available For Diversion" [] := 400.00000000 "cfs";
+      $ "Diversion To Ady.Available For Diversion" [] := 400.00000000 "cfs";
 
-      $ "Link outflow to North Canal.Available For Diversion" [] := 190.00000000 "cfs";
+      $ "Diversion To North.Available For Diversion" [] := 190.00000000 "cfs";
 
       $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
 
@@ -976,10 +976,10 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"November 30" AND $ "Lost into Wilson.Outflow" [] < $ "Wilson Dam to Tule.Diversion Request" [] + $ "Sta48 and MH from Lost.Diversion Request" []) THEN
-            $ "Diversion from Link.Multi Outflow" [] := $ "Wilson Dam to Tule.Diversion Request" [] + $ "Sta48 and MH from Lost.Diversion Request" [] - $ "Lost into Wilson.Outflow" [];
+            $ "Div To LRDC.Multi Outflow" [] := $ "Wilson Dam to Tule.Diversion Request" [] + $ "Sta48 and MH from Lost.Diversion Request" [] - $ "Lost into Wilson.Outflow" [];
 
       ELSE
-            $ "Diversion from Link.Multi Outflow" [] := 0.00000000 "cfs";
+            $ "Div To LRDC.Multi Outflow" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
@@ -1034,7 +1034,7 @@ BEGIN
 
     RULE                 "Assigning A Canal Diversion Request";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Need to figure out what starting pool elevation would be. need to verify";
     BEGIN
@@ -1057,13 +1057,13 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Diversion from Link.Diversion Request" [] := 0.00000000 "cfs";
+    INACTIVE      $ "Div To LRDC.Diversion Request" [] := 0.00000000 "cfs";
 
-    INACTIVE      $ "Link River to LRDC.Diversion" [] := 0.00000000 "cfs";
+      $ "LRDC Draw From Klamath.Diversion" [] := 0.00000000 "cfs";
 
-      $ "LRDC into Link.Return Flow" [] := 0.00000000 "cfs";
+    INACTIVE      $ "LRDC into Link.Return Flow" [] := 0.00000000 "cfs";
 
-      $ "Link to Ady and F_FF pumps.Available For Diversion" [] := 1000.00000000 "cfs";
+      $ "Diversion To Ady.Available For Diversion" [] := 1000.00000000 "cfs";
 
     END
     UUID "{7e86e7e2-928a-4964-8a01-156e95be69c5}";;
@@ -1159,11 +1159,11 @@ BEGIN
 
       $ "Upper Klamath Lake.Diversion" [] := 0.00000000 "cfs";
 
-      $ "Link to Ady and F_FF pumps.Available For Diversion" [] := 2000.00000000 "cfs";
+      $ "Diversion To Ady.Available For Diversion" [] := 2000.00000000 "cfs";
 
-      $ "Link outflow to North Canal.Diversion" [] := 0.00000000 "cfs";
+      $ "Diversion To North.Diversion" [] := 0.00000000 "cfs";
 
-    INACTIVE      $ "Link to Ady and F_FF pumps.Diversion" [] := 0.00000000 "cfs";
+    INACTIVE      $ "Diversion To Ady.Diversion" [] := 0.00000000 "cfs";
 
     INACTIVE      $ "Keno.Outflow" [] := 1000.00000000 "cfs";
 
@@ -1174,6 +1174,48 @@ BEGIN
 
   END
   UUID "{404a4aed-c375-4776-bbb7-e0f16190069d}";;
+
+  POLICY_GROUP   "Demand Forecasts";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Set Ag Div";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    DESCRIPTION          "Perform the following for each location that represents a diversion. These are the <br>following: A Canal, Station 48, Miller Hill Pump, North Canal, and Ady Canal.   <br>";
+      FOREACH (OBJECT DiversionObject IN "ListSubbasin"( "Major Canals and Pumps" )) DO
+          DESCRIPTION          "Add considerations for the Refuge diversion that Ady Canal must supply. <br>";
+      WITH_STATEMENT (NUMERIC SecondaryRequest = IF ( DiversionObject == % "Ady Canal" )
+ THEN
+  0.00000000 "cfs"
+ ELSE
+  0.00000000 "cfs"
+ ENDIF) DO
+          DESCRIPTION          "Multiply the timestep's distribution percent with the seasonal supply to determine the object's <br>base demand. <br>";
+      WITH_STATEMENT (NUMERIC BaseRequest = "Distribution Fraction By Date"( DiversionObject, @"t" ) * "VolumeToFlow"( "Seasonal Supply"( @"t", DiversionObject ), @"t" )) DO
+          DESCRIPTION          "Multiply the object's base demand with the adjustment factor to determine the adjusted demand. <br>";
+      DiversionObject & "Diversion Request" [@"t"] := BaseRequest * "Seasonal Adj"( DiversionObject, @"t" ) + SecondaryRequest;
+
+          DESCRIPTION          "Set the same value on this debugging slot <br>";
+      DiversionObject & "Diversion Request Initial Forecast" [@"t"] := BaseRequest * "Seasonal Adj"( DiversionObject, @"t" ) + SecondaryRequest;
+
+      END_WITH_STATEMENT;
+
+      END_WITH_STATEMENT;
+
+      ENDFOREACH;
+
+    END
+    UUID "{02a9a19a-935a-4d89-9c6e-1c9fb4c1b284}";;
+
+  END
+  UUID "{4259fafe-c7ad-4cb5-b39c-c44252c9834f}";;
 
   UTILITY_GROUP "Index and counters Group";
   DESCRIPTION   "";
