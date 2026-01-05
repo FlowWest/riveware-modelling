@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 10:07 December 31, 2025
+# Created 13:25 January 5, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -444,21 +444,26 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "test a canal ag demand";
+    RULE                 "Set Ag Div";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
-          INACTIVE    DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
+    DESCRIPTION          "For planning mode, adjust the adjustment factor based on project supply <br>and diversions to date. <br>";
+      FOREACH (OBJECT div IN "ListSubbasin"( "Major Canals and Pumps" )) DO
+            WITH_STATEMENT (NUMERIC patterntodate = "Pattern to Date"( div ) COMMENTED_BY "Sum the diversion pattern to date-used to scale the remaining pattern to <br>unity. <br>") DO
+            WITH_STATEMENT (NUMERIC patternremaining = "Pattern Remaining"( div ) COMMENTED_BY "Sum the pattern remaining within the season of interest. <br>") DO
+            WITH_STATEMENT (NUMERIC divtodate = "Diversions to Date"( div )) DO
+            IF_STATEMENT ("MarchThruJune"( @"t" )) THEN
+          DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
       FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            $ "A Canal.Diversion Request" [dt] := IF ( dt <= @"November 15" )
+            div & "Diversion Request" [dt] := IF ( dt <= @"November 15" )
  THEN
-  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] / patternremaining ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "Supply.Total Supply" [], $ "Supply.Full Total Supply" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate, 0.00000000 "acre-feet" ), @"t" )
+  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] / patternremaining ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate, 0.00000000 "acre-feet" ), @"t" )
  ELSE
-  $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "Supply.Total Supply" [], $ "Supply.Full Total Supply" [] ) * IF ( div == % "Ady Canal" )
+  $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * IF ( div == % "Ady Canal" )
   THEN
    ( $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] + $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", "Ady to Refuge"] ) COMMENTED_BY "If it's Ady canal, add the refuge demand in. <br>"
   ELSE
@@ -467,6 +472,78 @@ BEGIN
  ENDIF;
 
       ENDFOREACH;
+
+          DESCRIPTION          "Store diversion remaining for verification purposes <br>";
+      $ "Supply.Remaining Diversion Available" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
+
+      ELSE
+            FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
+            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" );
+
+      ENDFOREACH;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( "JulyThruNovember15"( @"t" ) )
+      ELSEIF_CLAUSE
+            IF_STATEMENT (@"t" < "CompletePartialDate"( @"November 15", @"Start Timestep" )) THEN
+          DESCRIPTION          "If we're in July to November, maintain the supply factor calculated at the <br>end of June-unless in run year 1, where we use the default pattern.  <br>";
+      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
+            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ), @"t" );
+
+      ENDFOREACH;
+
+      END_IF_STATEMENT;
+            $ "Supply.Remaining Diversion Available" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
+      END_ELSEIF;
+
+      END_WITH_STATEMENT;
+
+      END_WITH_STATEMENT;
+
+      END_WITH_STATEMENT;
+
+      ENDFOREACH;
+
+    END
+    UUID "{02a9a19a-935a-4d89-9c6e-1c9fb4c1b284}";;
+
+    RULE                 "test_div_debug";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Supply.div_debug" [@"t"] := IF ( @"t" <= @"November 15" )
+ THEN
+  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [@"t", STRINGIFY % "North Canal"] / "Pattern Remaining"( % "North Canal" ) ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"] - 0.00000000 "acre-feet", 0.00000000 "acre-feet" ), @"t" )
+ ELSE
+  $ "Supply.Distribution Fraction for Planning _ Normal" [@"t", STRINGIFY % "North Canal"] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * IF ( div == % "Ady Canal" )
+  THEN
+   ( $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"] + $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", "Ady to Refuge"] ) COMMENTED_BY "If it's Ady canal, add the refuge demand in. <br>"
+  ELSE
+   $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"]
+  ENDIF, @"t" )
+ ENDIF;
+
+    END
+    UUID "{0ce9ace6-50b0-4f97-baf6-aec4a282a2b8}";;
+
+    RULE                 "test a canal ag demand";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
+          INACTIVE    DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
+      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
+            $ "A Canal.Diversion Request" [dt] := ?;
+
+      ENDFOREACH;
+
+            $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
 
       ELSE
             $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
@@ -668,28 +745,7 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "LKNWR Daily Diversion Request";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
-    BEGIN
-
-    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
-
-    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
- THEN
-  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
- ELSE
-  0.00000000
- ENDIF;
-
-      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
-
-    END
-    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
-
-    RULE                 "LKNWR Allocation ";
+    RULE                 "Refuge Allocation ";
     DESCRIPTION          "Purpose: Cover LKNWR need from Dedicated UKL within today?s allowance.<br>Reads: RefugeDemand.LKNWR, AllowedToday. Optional: Ady capacity if you enforce hydraulics here.<br>Writes: a working allocation variable (e.g., Alloc.LKNWR.UKLded (AF/d)), or write directly to Ady request later.<br>Logic: UseDedicated = min(Need, AllowedToday); Remaining = Need - UseDedicated.<br>Notes: If you track combined deliveries for both refuges, this rule contributes only LKNWRs portion to the combined tally (see Rule 4.1).<br><br>Purpose: If LKNWR still needs water, allow DPS Spill only after Ag diversions are satisfied.<br>Reads: Remaining from Rule 3.2; a DPS Spill availability series for ?after Ag? (e.g., DPS.AfterAg.Available (AF/d)).<br>Writes: working allocation Alloc.LKNWR.DPSspill (AF/d).<br>Logic: If DPS.AfterAg.Available > 0: UseDPS = min(Remaining, DPS.AfterAg.Available); update Remaining.<br>Notes: This rule does not accrue DPSA; its a debit from DPSA (accounted later).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -708,14 +764,42 @@ BEGIN
     END
     UUID "{9f0e359a-99da-4c4d-ad1b-ed502bc2a98d}";;
 
-    RULE                 "Calculate Refuge Cumulative Delivery";
+    RULE                 "inflows into refuges";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Calculcates the max inflow needed into LKWNR. Either 250CFS (max deliveries through the canal) or whatever the volume of water needed is to fill the Refuge to capacity. Result is the smaller value.<br><br>TODOS:<br><br>need TLNWR storage volume value and max cfs delivered through station48<br>";
+    BEGIN
+
+    INACTIVE      $ "Tule Sumps 1A.needed inflow" [@"t"] := "Min"( 500.00000000 "cfs", "SolveInflow"( % "Tule Sumps 1A", $ "Tule Sumps 1A.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "Tule Sumps 1A.Storage" [@"t - 1"], @"24:00:00 October 5, 1980" ) );
+
+      $ "LKNWR Cell2.needed inflow" [] := "Min"( 90.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
+
+    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
+
+    END
+    UUID "{c95d5f42-074d-47e6-b0eb-d0cc312556d9}";;
+
+    RULE                 "Refuge Cumulative Delivered";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] := "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [@"t - 1"] + "FlowToVolume"( $ "LKNWR Cell2.Inflow" [], @"t" ) );
+      $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] := $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] + 0.00000000 "acre-ft";
+
+    END
+    UUID "{244f26de-0b02-4c07-a8c3-49184659ea35}";;
+
+    RULE                 "Calculate LKNWR Cumulative Delivery";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] := "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [@"t - 1"] + "FlowToVolume"( $ "LKNWR Cell2.Inflow" [], @"t" ) );
 
     END
     UUID "{8515a522-e449-42a9-8c8e-02065e3a50fb}";;
@@ -772,34 +856,6 @@ BEGIN
     END
     UUID "{fe05f7cd-cfe4-4dd4-8b17-7d6a3e5e80e9}";;
 
-    RULE                 "Max Release";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "LKNWR Cell2.Max Release" [] := $ "LKNWR Cell2.Outflow" [];
-
-      $ "Tule Sumps 1A.Max Release" [] := $ "Tule Sumps 1A.Outflow" [];
-
-    END
-    UUID "{a00b8ea3-1ea5-41b5-ae51-8a9d8cbf1b43}";;
-
-    RULE                 "inflows into refuges";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Calculcates the max inflow needed into LKWNR. Either 250CFS (max deliveries through the canal) or whatever the volume of water needed is to fill the Refuge to capacity. Result is the smaller value.<br><br>TODOS:<br><br>need TLNWR storage volume value and max cfs delivered through station48<br>";
-    BEGIN
-
-    INACTIVE      $ "Tule Sumps 1A.needed inflow" [@"t"] := "Min"( 500.00000000 "cfs", "SolveInflow"( % "Tule Sumps 1A", $ "Tule Sumps 1A.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "Tule Sumps 1A.Storage" [@"t - 1"], @"24:00:00 October 5, 1980" ) );
-
-      $ "LKNWR Cell2.needed inflow" [] := "Min"( 250.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
-
-    END
-    UUID "{c95d5f42-074d-47e6-b0eb-d0cc312556d9}";;
-
     RULE                 "Calculate Refuge Area";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -814,7 +870,7 @@ BEGIN
     END
     UUID "{49303f26-8933-4721-bdce-6c6fea43efb6}";;
 
-    RULE                 "debug outflow";
+    RULE                 "Set Refuge Diversion Value";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -828,7 +884,7 @@ BEGIN
     END
     UUID "{8f1d349f-9915-4495-8c14-195cb6d475b7}";;
 
-    RULE                 "Refuge allocations";
+    RULE                 "Refuge Allocations";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -839,7 +895,7 @@ BEGIN
             $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
 
       ELSE
-            $ "Ady To Refuge.allocation" [] := 22000.00000000 "acre-ft";
+            $ "Ady To Refuge.allocation" [] := 21000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
@@ -850,7 +906,7 @@ BEGIN
     END
     UUID "{952fc517-813f-4bca-aea5-26efae15ee7a}";;
 
-    RULE                 "refuge diversions";
+    RULE                 "Refuge Diversions";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -858,7 +914,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "Ady To Refuge.Diversion Request" [] := $ "LKNWR Cell2.needed inflow" [@"t - 2"];
+            $ "Ady To Refuge.Diversion Request" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
 
       ELSE
             $ "Ady To Refuge.Diversion Request" [] := 62.00000000 "cfs";
@@ -868,6 +924,27 @@ BEGIN
     END
     UUID "{65e6259b-bc5c-41ff-89f2-209a961d1645}";;
 
+    RULE                 "LKNWR Daily Diversion Request";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
+    BEGIN
+
+    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
+
+    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
+ THEN
+  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
+ ELSE
+  0.00000000
+ ENDIF;
+
+      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
+
+    END
+    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
+
   END
   UUID "{1fb26019-b006-4221-9451-4a9c4fe29364}";;
 
@@ -876,6 +953,36 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
+
+    RULE                 "LKNWR Seaonsal Cumulative Max";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Refuge Policy Tracking.LKNWRCumulativeMax" [] := "Min"( 21000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.LKNWRDailyCap" [] ) );
+
+    END
+    UUID "{277512f6-e132-4944-b759-dddd9a6df677}";;
+
+    RULE                 "LKNWR Seasonal Daily Cap";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
+            $ "Refuge Policy Tracking.LKNWRDailyCap" [] := 21000.00000000 "acre-ft" / 214.00000000;
+
+      ELSE
+            $ "Refuge Policy Tracking.LKNWRDailyCap" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{f42f673b-6c28-4ea6-896b-49b92fdfb99d}";;
 
     RULE                 "Set Cumulative Max";
     DESCRIPTION          "";
@@ -889,7 +996,7 @@ BEGIN
     END
     UUID "{33c0720f-595d-4ffd-af19-3ae354e38989}";;
 
-    RULE                 "Set Seasonal Daily Cap";
+    RULE                 "Set Refuge Seasonal Daily Cap";
     DESCRIPTION          "Purpose: Enforce  can t deliver faster than uniform rate  and the 43,000 AF seasonal cap (combined refuges).<br>Reads: Date (month/day).<br>Writes: DedicatedRefuge.DailyCap (AF/d), DedicatedRefuge.CumMax (AF).<br>Logic:<br><br>If Apr Oct: DailyCap = 43,000 / 214   200.9346 AF/d.<br><br>CumMax = min(43,000, days_since_Apr1_inclusive   DailyCap).<br><br>Else (Nov Mar): set both to 0.<br>Notes: This rule doesn t deliver water; it just prepares the cap curve for today";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -899,14 +1006,10 @@ BEGIN
       IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
             $ "Refuge Policy Tracking.RefugeDailyCap" [] := 43000.00000000 "acre-ft" / 214.00000000;
 
-          INACTIVE      $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000, "Max"( 0.00000000, ( "DateToNumber"( @"t" ) - "DateToNumber"( @"April 1" ) ) * $ "LKNWR Cell2.DailyCap" [] ) );
-
       ELSE
             $ "Refuge Policy Tracking.RefugeDailyCap" [] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT;
-
-    INACTIVE      $ "Refuge Policy Tracking.RefugeDailyCap" [] := 43000.00000000 "acre-ft" / 214.00000000;
 
     END
     UUID "{b7da981c-9b12-4245-908e-e87b39e6f6a9}";;
@@ -1203,7 +1306,7 @@ BEGIN
 
     RULE                 "Set Diversion Placeholder Values";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -1233,69 +1336,6 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
-
-    RULE                 "Set Ag Div";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-    DESCRIPTION          "For planning mode, adjust the adjustment factor based on project supply <br>and diversions to date. <br>";
-      FOREACH (OBJECT div IN "ListSubbasin"( "Major Canals and Pumps" )) DO
-            WITH_STATEMENT (NUMERIC patterntodate = "Pattern to Date"( div ) COMMENTED_BY "Sum the diversion pattern to date-used to scale the remaining pattern to <br>unity. <br>") DO
-            WITH_STATEMENT (NUMERIC patternremaining = "Pattern Remaining"( div ) COMMENTED_BY "Sum the pattern remaining within the season of interest. <br>") DO
-            WITH_STATEMENT (NUMERIC divtodate = "Diversions to Date"( div )) DO
-            IF_STATEMENT ("MarchThruJune"( @"t" )) THEN
-          DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
-      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := IF ( dt <= @"November 15" )
- THEN
-  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] / patternremaining ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate, 0.00000000 "acre-feet" ), @"t" )
- ELSE
-  $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * IF ( div == % "Ady Canal" )
-  THEN
-   ( $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] + $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", "Ady to Refuge"] ) COMMENTED_BY "If it's Ady canal, add the refuge demand in. <br>"
-  ELSE
-   $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div]
-  ENDIF, @"t" )
- ENDIF;
-
-      ENDFOREACH;
-
-          DESCRIPTION          "Store diversion remaining for verification purposes <br>";
-      $ "OpsData.ProjectSupplyAccounting" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
-
-      ELSE
-            FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" );
-
-      ENDFOREACH;
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( "JulyThruNovember15"( @"t" ) )
-      ELSEIF_CLAUSE
-            IF_STATEMENT (@"t" < "CompletePartialDate"( @"November 15", @"Start Timestep" )) THEN
-          DESCRIPTION          "If we're in July to November, maintain the supply factor calculated at the <br>end of June-unless in run year 1, where we use the default pattern.  <br>";
-      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ), @"t" );
-
-      ENDFOREACH;
-
-      END_IF_STATEMENT;
-            $ "Supply.Remaining Diversion Available" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
-      END_ELSEIF;
-
-      END_WITH_STATEMENT;
-
-      END_WITH_STATEMENT;
-
-      END_WITH_STATEMENT;
-
-      ENDFOREACH;
-
-    END
-    UUID "{02a9a19a-935a-4d89-9c6e-1c9fb4c1b284}";;
 
   END
   UUID "{4259fafe-c7ad-4cb5-b39c-c44252c9834f}";;
