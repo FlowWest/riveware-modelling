@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 11:37 January 6, 2026
+# Created 11:39 January 6, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -296,7 +296,7 @@ BEGIN
 
     RULE                 "A Canal";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
