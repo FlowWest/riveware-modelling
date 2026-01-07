@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 11:39 January 6, 2026
+# Created 13:19 January 7, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -44,18 +44,6 @@ BEGIN
     END
     UUID "{3d07659d-4dde-474a-89f9-d631a50c9968}";;
 
-    RULE                 "releases to the river";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
-    BEGIN
-
-      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
-
-    END
-    UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
-
     RULE                 "UKL flood control";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -80,6 +68,18 @@ BEGIN
 
     END
     UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
+
+    RULE                 "releases to the river";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
+    BEGIN
+
+      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
+
+    END
+    UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
 
     RULE                 "Keno Targeted Release";
     DESCRIPTION          "";
@@ -452,13 +452,15 @@ BEGIN
     NOTES                "equation 20<br>this is the share of today's project diversion from UKL that must be charged to the DPSA bank - the water from UKL that goes to agriculture (project diversion)<br>when its under non flood control scenario, a proportion of DPSA gets diverted to project diversion based on the starting level of project supply and dpsa balance on that day<br><br>todo need to add project supply beginning of day value<br>if else statement also has issues<br>";
     BEGIN
 
-      IF_STATEMENT ($ "Refuge Policy Tracking.IsKenoSpilling" [] != 0.00000000 OR $ "Refuge Policy Tracking.IsUKLSpilling" [] != 0.00000000) THEN
-            $ "OpsData.Proj DPS Fraction" [] := $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] / ( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] - 0.00000000 );
+    INACTIVE      IF_STATEMENT ($ "Refuge Policy Tracking.IsKenoSpilling" [] != 0.00000000 OR $ "Refuge Policy Tracking.IsUKLSpilling" [] != 0.00000000) THEN
+            $ "OpsData.Proj DPS Fraction" [] := $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] / ( "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [@"t"] - $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] ) + $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] );
 
       ELSE
             $ "OpsData.Proj DPS Fraction" [] := 1.00000000;
 
       END_IF_STATEMENT;
+
+      $ "OpsData.Proj DPS Fraction" [] := $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] / ( "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [@"t"] - $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] ) + $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] );
 
     END
     UUID "{9bf670ae-e484-4e95-9214-657fe379cbbc}";;
@@ -485,115 +487,6 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
-
-    RULE                 "Set Ag Div";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-    DESCRIPTION          "For planning mode, adjust the adjustment factor based on project supply <br>and diversions to date. <br>";
-      FOREACH (OBJECT div IN "ListSubbasin"( "Major Canals and Pumps" )) DO
-            WITH_STATEMENT (NUMERIC patterntodate = "Pattern to Date"( div ) COMMENTED_BY "Sum the diversion pattern to date-used to scale the remaining pattern to <br>unity. <br>") DO
-            WITH_STATEMENT (NUMERIC patternremaining = "Pattern Remaining"( div ) COMMENTED_BY "Sum the pattern remaining within the season of interest. <br>") DO
-            WITH_STATEMENT (NUMERIC divtodate = "Diversions to Date"( div )) DO
-            IF_STATEMENT ("MarchThruJune"( @"t" )) THEN
-          DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
-      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := IF ( dt <= @"November 15" )
- THEN
-  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] / patternremaining ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate, 0.00000000 "acre-feet" ), @"t" )
- ELSE
-  $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * IF ( div == % "Ady Canal" )
-  THEN
-   ( $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] + $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", "Ady to Refuge"] ) COMMENTED_BY "If it's Ady canal, add the refuge demand in. <br>"
-  ELSE
-   $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div]
-  ENDIF, @"t" )
- ENDIF;
-
-      ENDFOREACH;
-
-          DESCRIPTION          "Store diversion remaining for verification purposes <br>";
-      $ "Supply.Remaining Diversion Available" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
-
-      ELSE
-            FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" );
-
-      ENDFOREACH;
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( "JulyThruNovember15"( @"t" ) )
-      ELSEIF_CLAUSE
-            IF_STATEMENT (@"t" < "CompletePartialDate"( @"November 15", @"Start Timestep" )) THEN
-          DESCRIPTION          "If we're in July to November, maintain the supply factor calculated at the <br>end of June-unless in run year 1, where we use the default pattern.  <br>";
-      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            div & "Diversion Request" [dt] := $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] * $ "Supply.Distribution Fraction for Planning _ Normal" [dt, STRINGIFY div] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ), @"t" );
-
-      ENDFOREACH;
-
-      END_IF_STATEMENT;
-            $ "Supply.Remaining Diversion Available" [@"t", STRINGIFY div] := "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY div] - divtodate;
-      END_ELSEIF;
-
-      END_WITH_STATEMENT;
-
-      END_WITH_STATEMENT;
-
-      END_WITH_STATEMENT;
-
-      ENDFOREACH;
-
-    END
-    UUID "{02a9a19a-935a-4d89-9c6e-1c9fb4c1b284}";;
-
-    RULE                 "test_div_debug";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Supply.div_debug" [@"t"] := IF ( @"t" <= @"November 15" )
- THEN
-  ( ( $ "Supply.Distribution Fraction for Planning _ Normal" [@"t", STRINGIFY % "North Canal"] / "Pattern Remaining"( % "North Canal" ) ) COMMENTED_BY "Scale the remaining pattern to one <br>" ) * "VolumeToFlow"( "Max"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"] - 0.00000000 "acre-feet", 0.00000000 "acre-feet" ), @"t" )
- ELSE
-  $ "Supply.Distribution Fraction for Planning _ Normal" [@"t", STRINGIFY % "North Canal"] * "VolumeToFlow"( "Min"( $ "OpsData.ProjectSupplyAccounting" [], $ "OpsData.ProjectSupplyAccounting" [] ) * IF ( div == % "Ady Canal" )
-  THEN
-   ( $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"] + $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", "Ady to Refuge"] ) COMMENTED_BY "If it's Ady canal, add the refuge demand in. <br>"
-  ELSE
-   $ "Supply.Diversion Proportion of Total Project Supply for Planning_WY Type" ["NORMAL", STRINGIFY % "North Canal"]
-  ENDIF, @"t" )
- ENDIF;
-
-    END
-    UUID "{0ce9ace6-50b0-4f97-baf6-aec4a282a2b8}";;
-
-    RULE                 "test a canal ag demand";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
-          INACTIVE    DESCRIPTION          "TODO: make sure we need to forcast diversion request <br>";
-      FOREACH (DATETIME dt IN @"t" TO "OffsetDate"( @"t", 1.00000000, "1 Years" )) DO
-            $ "A Canal.Diversion Request" [dt] := ?;
-
-      ENDFOREACH;
-
-            $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
-
-      ELSE
-            $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{de1c9a07-63bd-409e-b7ad-ecce841133d8}";;
 
     RULE                 "Calculate Project Supply";
     DESCRIPTION          "";
@@ -624,6 +517,28 @@ BEGIN
 
     END
     UUID "{b673dfc8-1073-413b-9567-ae2cccb264ac}";;
+
+    RULE                 "Calculate Cumulative Ag Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" < @"March 1" AND @"t" >= @"January 1") THEN
+            $ "OpsData.TotalProjectSupplyUsed" [] := 0.00000000 "acre-ft";
+
+      ELSE
+            $ "OpsData.TotalProjectSupplyUsed" [@"t"] := $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"November 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.TotalProjectSupplyUsed" [@"t"] := $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] + "FlowToVolume"( $ "A Canal.Diversion" [], @"t" ) + "FlowToVolume"( $ "Sta48 and MH from Lost.Diversion" [], @"t" ) + "FlowToVolume"( $ "Ady Canal.To Project" [], @"t" ) + "FlowToVolume"( $ "North Canal.Diversion" [], @"t" );
+      END_ELSEIF;
+
+    END
+    UUID "{44a4afab-8a62-483d-abb3-d4b902dcb9e2}";;
 
     RULE                 "Variable Project Supply Inflow";
     DESCRIPTION          "";
