@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 12:56 January 5, 2026
+# Created 11:37 January 6, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -32,27 +32,6 @@ BEGIN
     END
     UUID "{3f5ca577-5285-48f8-bde1-43a248376982}";;
 
-    RULE                 "UKL flood control";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "testing rules order for Flood Control releases from UKL";
-    BEGIN
-
-      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control" [] - $ "Upper Klamath Lake.Pool Elevation" [] <= 0.03000000 "ft") THEN
-            ALERT_STATEMENT "Flood Contro Release from UKL";
-
-          DESCRIPTION          "enables the flood control flag at UKL.<br>";
-      $ "Upper Klamath Lake.Flood Control Flag" [] := 1.00000000;
-
-          DESCRIPTION          "Sets UKL outflow to inflows in order to keep the lake below flood control elevation<br>";
-      $ "Upper Klamath Lake.Outflow" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [] ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [] ), @"t" );
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
-
     RULE                 "Keno Elevation";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -72,10 +51,35 @@ BEGIN
     NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
     BEGIN
 
-      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + 0.00000000 "cfs" COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
+      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
 
     END
     UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
+
+    RULE                 "UKL flood control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "testing rules order for Flood Control releases from UKL";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control" [] - $ "Upper Klamath Lake.Pool Elevation" [] <= 0.03000000 "ft") THEN
+            ALERT_STATEMENT "Flood Contro Release from UKL";
+
+          DESCRIPTION          "enables the flood control flag at UKL.<br>";
+      $ "Upper Klamath Lake.Flood Control Flag" [] := 1.00000000;
+
+          DESCRIPTION          "Sets UKL outflow to inflows in order to keep the lake below flood control elevation<br>";
+      $ "Upper Klamath Lake.Outflow" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [] ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [] ), @"t" );
+
+      ELSE
+          DESCRIPTION          "enables the flood control flag at UKL.<br>";
+      $ "Upper Klamath Lake.Flood Control Flag" [] := 0.00000000;
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
 
     RULE                 "Keno Targeted Release";
     DESCRIPTION          "";
@@ -129,7 +133,7 @@ BEGIN
     NOTES                "Set FFA Increment to zero for now";
     BEGIN
 
-      $ "Upper Klamath Lake.Shadow Elevation" [] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [] - ( 0.00000000 "acre-ft" COMMENTED_BY "# Upper Klamath Lake.Deferred Project Supply Account<br>" + 0.00000000 "acre-ft" COMMENTED_BY "River Data.FFA Increment<br>" ) );
+      $ "Upper Klamath Lake.Shadow Elevation" [] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [] - ( $ "Upper Klamath Lake.Deferred Project Supply Account" [] COMMENTED_BY "# Upper Klamath Lake.Deferred Project Supply Account<br>" + $ "River Data.FFA Increment" [] COMMENTED_BY "River Data.FFA Increment<br>" ) );
 
     END
     UUID "{51bc3659-ad41-4ed3-b1c8-d0cee46d426d}";;
@@ -205,7 +209,7 @@ BEGIN
 
     RULE                 "FFA Increment Debug";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -283,6 +287,44 @@ BEGIN
 
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
+
+  POLICY_GROUP   "Flood Control";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "A Canal";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [] == 1.00000000) THEN
+            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [] != 0.00000000 "acre-ft") THEN
+            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [] );
+
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - $ "A Canal.DPS Diversion" [] );
+
+            $ "A Canal.Diversion" [] := $ "A Canal.DPS Diversion" [];
+
+      ELSE
+            $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [] );
+
+            $ "OpsData.ProjectSupplyAccounting" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - $ "A Canal.Project Supply Diversion" [] );
+
+            $ "A Canal.Diversion" [] := $ "A Canal.Project Supply Diversion" [];
+
+      END_IF_STATEMENT;
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
+
+  END
+  UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
 
   POLICY_GROUP   "Deferred Project Supply Accounting";
   DESCRIPTION    "";
@@ -446,7 +488,7 @@ BEGIN
 
     RULE                 "Set Ag Div";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -745,27 +787,6 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "LKNWR Daily Diversion Request";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
-    BEGIN
-
-    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
-
-    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
- THEN
-  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
- ELSE
-  0.00000000
- ENDIF;
-
-      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
-
-    END
-    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
-
     RULE                 "Refuge Allocation ";
     DESCRIPTION          "Purpose: Cover LKNWR need from Dedicated UKL within today?s allowance.<br>Reads: RefugeDemand.LKNWR, AllowedToday. Optional: Ady capacity if you enforce hydraulics here.<br>Writes: a working allocation variable (e.g., Alloc.LKNWR.UKLded (AF/d)), or write directly to Ady request later.<br>Logic: UseDedicated = min(Need, AllowedToday); Remaining = Need - UseDedicated.<br>Notes: If you track combined deliveries for both refuges, this rule contributes only LKNWRs portion to the combined tally (see Rule 4.1).<br><br>Purpose: If LKNWR still needs water, allow DPS Spill only after Ag diversions are satisfied.<br>Reads: Remaining from Rule 3.2; a DPS Spill availability series for ?after Ag? (e.g., DPS.AfterAg.Available (AF/d)).<br>Writes: working allocation Alloc.LKNWR.DPSspill (AF/d).<br>Logic: If DPS.AfterAg.Available > 0: UseDPS = min(Remaining, DPS.AfterAg.Available); update Remaining.<br>Notes: This rule does not accrue DPSA; its a debit from DPSA (accounted later).";
     ACTIVE               TRUE;
@@ -794,12 +815,24 @@ BEGIN
 
     INACTIVE      $ "Tule Sumps 1A.needed inflow" [@"t"] := "Min"( 500.00000000 "cfs", "SolveInflow"( % "Tule Sumps 1A", $ "Tule Sumps 1A.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "Tule Sumps 1A.Storage" [@"t - 1"], @"24:00:00 October 5, 1980" ) );
 
-      $ "LKNWR Cell2.needed inflow" [] := "Min"( 250.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
+      $ "LKNWR Cell2.needed inflow" [] := "Min"( 90.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
 
     INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
 
     END
     UUID "{c95d5f42-074d-47e6-b0eb-d0cc312556d9}";;
+
+    RULE                 "Refuge Cumulative Delivered";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] := $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] + 0.00000000 "acre-ft";
+
+    END
+    UUID "{244f26de-0b02-4c07-a8c3-49184659ea35}";;
 
     RULE                 "Calculate LKNWR Cumulative Delivery";
     DESCRIPTION          "";
@@ -879,7 +912,7 @@ BEGIN
     END
     UUID "{49303f26-8933-4721-bdce-6c6fea43efb6}";;
 
-    RULE                 "debug outflow";
+    RULE                 "Set Refuge Diversion Value";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -904,7 +937,7 @@ BEGIN
             $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
 
       ELSE
-            $ "Ady To Refuge.allocation" [] := 22000.00000000 "acre-ft";
+            $ "Ady To Refuge.allocation" [] := 21000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
@@ -932,6 +965,27 @@ BEGIN
 
     END
     UUID "{65e6259b-bc5c-41ff-89f2-209a961d1645}";;
+
+    RULE                 "LKNWR Daily Diversion Request";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
+    BEGIN
+
+    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
+
+    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
+ THEN
+  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
+ ELSE
+  0.00000000
+ ENDIF;
+
+      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
+
+    END
+    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
 
   END
   UUID "{1fb26019-b006-4221-9451-4a9c4fe29364}";;
@@ -1157,13 +1211,15 @@ BEGIN
 
     RULE                 "Assigning A Canal Diversion Request";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Need to figure out what starting pool elevation would be. need to verify";
     BEGIN
 
-      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
-            $ "A Canal.Diversion Request" [] := 250.00000000 "cfs";
+      $ "A Canal.Diversion Request" [] := $ "Historical Diversions.A canal" [];
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
+            $ "A Canal.Diversion Request" [] := $ "Historical Diversions.A canal" [];
 
       ELSE
             $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
