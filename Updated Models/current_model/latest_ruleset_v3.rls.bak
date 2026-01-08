@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:09 January 7, 2026
+# Created 23:59 January 7, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -327,20 +327,20 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [] == 1.00000000) THEN
-            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [] != 0.00000000 "acre-ft") THEN
-            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [] );
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - $ "A Canal.DPS Diversion" [] );
+          INACTIVE      $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DPS Diversion" [], @"t" ) );
 
-            $ "A Canal.Diversion" [] := $ "A Canal.DPS Diversion" [];
+          INACTIVE      $ "A Canal.Diversion" [] := $ "A Canal.DPS Diversion" [];
 
       ELSE
-            $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [] );
+          INACTIVE      $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [] );
 
-            $ "OpsData.ProjectSupplyAccounting" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - $ "A Canal.Project Supply Diversion" [] );
+          INACTIVE      $ "OpsData.ProjectSupplyAccounting" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - $ "A Canal.Project Supply Diversion" [] );
 
-            $ "A Canal.Diversion" [] := $ "A Canal.Project Supply Diversion" [];
+          INACTIVE      $ "A Canal.Diversion" [] := $ "A Canal.Project Supply Diversion" [];
 
       END_IF_STATEMENT;
 
@@ -412,8 +412,8 @@ BEGIN
     NOTES                " formula21 from Appendix E, pg 41. Formula only engages in UKL is releasing due to flood control, otherwise DPS Spill is set to zero. This is a workaround for an error encountered with the DPS accounting rule and DPS Spill rule - if  run together without the if statement, it breaks the  code, likely due to a circular reference.<br><br><br>C1_exc = Upper Klamath lake.outflow - upper klamath lake.min flows (flows above minimum releases)<br>C13_exc_Keno.spill<br>DSPA = Upper Klamath Lake. Deferred Supply Account<br>Yest_Project_div_dps = 0.00 ( set to zero until it refuges are programmed in)<br>yest_ref_div_dps = 0.00 (seto to zero, refuges are not in the model yet)<br><br>on ukl flood - control days, any remaining DPSA after project + refuge DPS use can spill but limited by the actual capcity to pass excess flow<br><br>*Double min functions- Riverware's min statements only allow up to two variables, so i stacked the Min functions<br>**Yeah it's coded oddly but i wanted to incorporate the the WRIMS code the best that I could";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Spill" [] > 0.00000000 "cfs") THEN
-            $ "LakeData.DPS Spill" [] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"(  ), "Min"( $ "Keno.Spill" [] - $ "Keno data.Project Contributions to Keno Flows" [], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t - 1" ) - $ "OpsData.Proj DPS Div" [] COMMENTED_BY "Yest_project_div_dps <br><br>" - $ "OpsData.Refuge DPS Div" [] COMMENTED_BY " yest_ref_div_dps <br><br>$ &quot;Refuge Policy Tracking.Refuge_DPS_Div&quot;  <br>" ) ) );
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flagl" [] != 0.00000000) THEN
+            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( $ "Keno.FloodSpill" [@"t - 1"] - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t - 1" ) - $ "OpsData.Proj DPS Div" [] COMMENTED_BY "Yest_project_div_dps <br><br>" - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) COMMENTED_BY " yest_ref_div_dps <br><br>$ &quot;Refuge Policy Tracking.Refuge_DPS_Div&quot;  <br>" ) ) );
 
       ELSE
             $ "LakeData.DPS Spill" [] := 0.00000000 "cfs";
@@ -1113,6 +1113,18 @@ BEGIN
 
     END
     UUID "{03d1b01a-6515-40ee-ad03-e9999310f304}";;
+
+    RULE                 "c1_exc Rule";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.c1_exc" [] := "Max"( 0.00000000 "cfs", "C1_exc"(  ) );
+
+    END
+    UUID "{6d3529d4-749c-45c7-a361-bb7fc7037adc}";;
 
     RULE                 "Ramp down rates";
     DESCRIPTION          "";
