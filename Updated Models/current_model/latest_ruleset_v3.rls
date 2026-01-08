@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 09:18 January 8, 2026
+# Created 10:08 January 8, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -131,7 +131,9 @@ BEGIN
     NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
     BEGIN
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) );
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ? ) );
+
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) + "FFA increment"(  ) - $ "Klamath River.FFA Usage" [] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
