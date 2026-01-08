@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 00:21 January 8, 2026
+# Created 09:18 January 8, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -14,6 +14,21 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
+
+    RULE                 "Flood Control Outflow Test";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.FloodSpill" [@"t - 1"] > 0.00000000 "cfs") THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{fc2bf622-f6d1-4fca-947a-a705a91d0816}";;
 
     RULE                 "Keno Rampdown Rates";
     DESCRIPTION          "";
@@ -57,7 +72,9 @@ BEGIN
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
       $ "Upper Klamath Lake.Flood Control Flag" [@"t"] := 1.00000000;
 
-            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t - 1"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t - 1"] - 0.10000000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] ), @"t" ) - $ "Upper Klamath Lake.Outflow" [@"t"];
+            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t - 1"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t - 1"] - 0.10000000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] ), @"t" );
+
+          INACTIVE      $ "Upper Klamath Lake.Release" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"];
 
       ELSE
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
