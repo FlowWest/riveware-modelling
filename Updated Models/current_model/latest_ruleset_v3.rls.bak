@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 09:18 January 8, 2026
+# Created 13:52 January 9, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 1";
@@ -9,83 +9,65 @@ PRECISION   2;
 NOTES "";
 BEGIN
 
-  POLICY_GROUP   "Keno rule set";
+  POLICY_GROUP   "Flood Control";
   DESCRIPTION    "";
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
 
-    RULE                 "Flood Control Outflow Test";
+    RULE                 "Update Project Supply Accounting";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.FloodSpill" [@"t - 1"] > 0.00000000 "cfs") THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t - 1"];
-
-      END_IF_STATEMENT;
+      $ "OpsData.ProjectSupplyAccountingAg" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - "FlowToVolume"( $ "A Canal.Project Supply Diversion" [], @"t" ) );
 
     END
-    UUID "{fc2bf622-f6d1-4fca-947a-a705a91d0816}";;
+    UUID "{feeaa9dd-d98c-43dd-928e-6a04700b4583}";;
 
-    RULE                 "Keno Rampdown Rates";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Creates the variable C13_exc from WRIMS, calculates keno releases in excess of minimum flows and ramp rates<br>";
-    BEGIN
-
-      IF_STATEMENT ($ "Keno.Outflow" [] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
-            $ "Keno.Outflow" [] := "Max"( $ "Keno.Outflow" [], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
-
-          INACTIVE      $ "Keno.Flood Control Flag" [@"t"] := 1.00000000;
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{3f5ca577-5285-48f8-bde1-43a248376982}";;
-
-    RULE                 "Keno Elevation";
+    RULE                 "Update Deferred Project Supply Account";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Keno.Pool Elevation" [] := 4085.50000000 "feet";
+      $ "Upper Klamath Lake.Deferred Project Supply Account Ag" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DPS Diversion" [], @"t" ) );
 
     END
-    UUID "{3d07659d-4dde-474a-89f9-d631a50c9968}";;
+    UUID "{bb483ee2-55c6-4788-98d3-71aa4f69ea9f}";;
 
-    RULE                 "UKL flood control";
+    RULE                 "A Canal Flood Control";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "testing rules order for Flood Control releases from UKL";
+    NOTES                "need to consider edge cases<br>";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.10000000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
-            ALERT_STATEMENT "Flood Contro Release from UKL";
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
-          DESCRIPTION          "enables the flood control flag at UKL.<br>";
-      $ "Upper Klamath Lake.Flood Control Flag" [@"t"] := 1.00000000;
-
-            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t - 1"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t - 1"] - 0.10000000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] ), @"t" );
-
-          INACTIVE      $ "Upper Klamath Lake.Release" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"];
+            $ "A Canal.Project Supply Diversion" [@"t"] := $ "A Canal.Project Supply Diversion" [@"t - 1"];
 
       ELSE
-          DESCRIPTION          "enables the flood control flag at UKL.<br>";
-      $ "Upper Klamath Lake.Flood Control Flag" [] := 0.00000000;
+            $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
-            $ "Upper Klamath Lake.FloodSpill" [@"t"] := 0.00000000 "cfs";
+            $ "A Canal.DPS Diversion" [@"t"] := $ "A Canal.DPS Diversion" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "A Canal.DPS Diversion" [] := 0.00000000 "cfs";
+
+            $ "A Canal.Project Supply Diversion" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
     END
-    UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
+    UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
 
     RULE                 "Keno Flood Control";
     DESCRIPTION          "";
@@ -112,6 +94,85 @@ BEGIN
     END
     UUID "{4aa2f078-c00a-4f43-bcba-0a7e8b4e8210}";;
 
+    RULE                 "UKL flood control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "testing rules order for Flood Control releases from UKL";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.10000000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
+            ALERT_STATEMENT "Flood Contro Release from UKL";
+
+          DESCRIPTION          "enables the flood control flag at UKL.<br>";
+      $ "Upper Klamath Lake.Flood Control Flag" [@"t"] := 1.00000000;
+
+            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t - 1"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t - 1"] - 0.10000000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] ), @"t" ) - $ "Upper Klamath Lake.Outflow" [@"t"];
+
+          INACTIVE      $ "Upper Klamath Lake.Release" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"];
+
+      ELSE
+          DESCRIPTION          "enables the flood control flag at UKL.<br>";
+      $ "Upper Klamath Lake.Flood Control Flag" [] := 0.00000000;
+
+            $ "Upper Klamath Lake.FloodSpill" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
+
+    RULE                 "Flood Control Outflow Test";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.FloodSpill" [@"t - 1"] > 0.00000000 "cfs") THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{fc2bf622-f6d1-4fca-947a-a705a91d0816}";;
+
+  END
+  UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
+
+  POLICY_GROUP   "Keno rule set";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Keno Rampdown Rates";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Creates the variable C13_exc from WRIMS, calculates keno releases in excess of minimum flows and ramp rates<br>";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.Outflow" [] := "Max"( $ "Keno.Outflow" [], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{3f5ca577-5285-48f8-bde1-43a248376982}";;
+
+    RULE                 "Keno Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Keno.Pool Elevation" [] := 4085.50000000 "feet";
+
+    END
+    UUID "{3d07659d-4dde-474a-89f9-d631a50c9968}";;
+
     RULE                 "releases to the river";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -119,7 +180,17 @@ BEGIN
     NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
     BEGIN
 
-      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
+    INACTIVE      $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + 0.00000000 "cfs";
+
+    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000) THEN
+            $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) ) + $ "Upper Klamath Lake.FloodSpill" [@"t"];
+
+      ELSE
+            $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
+
+      END_IF_STATEMENT;
+
+      $ "Keno.Outflow" [] := $ "Keno.Target Releases" [];
 
     END
     UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
@@ -131,7 +202,9 @@ BEGIN
     NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
     BEGIN
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) );
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
+
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) + "FFA increment"(  ) - $ "Klamath River.FFA Usage" [] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
@@ -330,44 +403,6 @@ BEGIN
 
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
-
-  POLICY_GROUP   "Flood Control";
-  DESCRIPTION    "";
-  ACTIVE         TRUE;
-  NOTES          "";
-  BEGIN
-
-    RULE                 "A Canal";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
-            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
-
-          INACTIVE      $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DPS Diversion" [], @"t" ) );
-
-          INACTIVE      $ "A Canal.Diversion" [] := $ "A Canal.DPS Diversion" [];
-
-      ELSE
-          INACTIVE      $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [] );
-
-          INACTIVE      $ "OpsData.ProjectSupplyAccounting" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - $ "A Canal.Project Supply Diversion" [] );
-
-          INACTIVE      $ "A Canal.Diversion" [] := $ "A Canal.Project Supply Diversion" [];
-
-      END_IF_STATEMENT;
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
-
-  END
-  UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
 
   POLICY_GROUP   "Deferred Project Supply Accounting";
   DESCRIPTION    "";
@@ -1041,6 +1076,63 @@ BEGIN
   END
   UUID "{dccd9964-e18a-4e17-8082-98622ece0878}";;
 
+  POLICY_GROUP   "Diversion Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "North Canal FF Diversion";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "North Canal.DiversionFromLRDC" [@"t"] + $ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
+            $ "North Canal.DiversionFromFF" [@"t"] := $ "North Canal.Diversion Request" [@"t"] - ( $ "North Canal.DiversionFromUKL" [@"t"] + $ "North Canal.DiversionFromLRDC" [@"t"] );
+
+      ELSE
+            $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{ae31e199-2286-4c65-8e8c-48fa29e0e9c3}";;
+
+    RULE                 "North Canal LRDC Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
+            $ "North Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "North Canal.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "North Canal.DiversionFromLRDC" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{77894f48-9c54-4a43-bd5c-a5af9b32a253}";;
+
+    RULE                 "North Canal UKL Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "North Canal.DiversionFromUKL" [@"t"] := "Min"( $ "North Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
+
+    END
+    UUID "{1cfd7ec1-ac0d-4c3b-b232-1b8c91f90138}";;
+
+  END
+  UUID "{7fd17c67-01e9-4917-a9df-caa41984c689}";;
+
   POLICY_GROUP   "Various Slot-setting Rules";
   DESCRIPTION    "";
   ACTIVE         TRUE;
@@ -1344,15 +1436,6 @@ BEGIN
 
   END
   UUID "{404a4aed-c375-4776-bbb7-e0f16190069d}";;
-
-  POLICY_GROUP   "Demand Forecasts";
-  DESCRIPTION    "";
-  ACTIVE         TRUE;
-  NOTES          "";
-  BEGIN
-
-  END
-  UUID "{4259fafe-c7ad-4cb5-b39c-c44252c9834f}";;
 
   UTILITY_GROUP "Index and counters Group";
   DESCRIPTION   "";
