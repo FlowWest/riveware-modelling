@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 14:50 January 9, 2026
+# Created 16:16 January 9, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -17,57 +17,122 @@ BEGIN
 
     RULE                 "Update Project Supply Accounting";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "OpsData.ProjectSupplyAccountingAg" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - "FlowToVolume"( $ "A Canal.Project Supply Diversion" [], @"t" ) );
+      $ "OpsData.ProjectSupplyAccountingAg" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - "FlowToVolume"( $ "A Canal.DiversionFromProjectSupply" [], @"t" ) );
 
     END
     UUID "{feeaa9dd-d98c-43dd-928e-6a04700b4583}";;
 
     RULE                 "Update Deferred Project Supply Account";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.Deferred Project Supply Account Ag" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DPS Diversion" [], @"t" ) );
+      $ "Upper Klamath Lake.Deferred Project Supply Account Ag" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DiversionFromDPS" [], @"t" ) );
 
     END
     UUID "{bb483ee2-55c6-4788-98d3-71aa4f69ea9f}";;
 
     RULE                 "A Canal Flood Control";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "need to consider edge cases<br>";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
             IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
-            $ "A Canal.DPS Diversion" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
+            $ "A Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
-            $ "A Canal.Project Supply Diversion" [@"t"] := $ "A Canal.Project Supply Diversion" [@"t - 1"];
+            $ "A Canal.DiversionFromProjectSupply" [@"t"] := $ "A Canal.DiversionFromProjectSupply" [@"t - 1"];
+
+            IF_STATEMENT ($ "A Canal.Diversion Request" [@"t"] - "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) > 0.00000000 "cfs") THEN
+            $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "A Canal.Diversion Request" [@"t"] );
 
       ELSE
-            $ "A Canal.Project Supply Diversion" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
-
-            $ "A Canal.DPS Diversion" [@"t"] := $ "A Canal.DPS Diversion" [@"t - 1"];
+            $ "A Canal.DiversionFromProjectSupply" [@"t"] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
       ELSE
-            $ "A Canal.DPS Diversion" [] := 0.00000000 "cfs";
+          INACTIVE      $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "A Canal.Diversion Request" [@"t"] );
 
-            $ "A Canal.Project Supply Diversion" [] := 0.00000000 "cfs";
+          INACTIVE      $ "A Canal.DiversionFromDPS" [@"t"] := $ "A Canal.DiversionFromDPS" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "A Canal.DiversionFromDPS" [] := 0.00000000 "cfs";
+
+            $ "A Canal.DiversionFromProjectSupply" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "A Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
+
+            IF_STATEMENT ($ "A Canal.Diversion Request" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
+            $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "A Canal.Diversion Request" [@"t"] );
+
+      ELSE
+            $ "A Canal.DiversionFromProjectSupply" [@"t"] := $ "A Canal.DiversionFromProjectSupply" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
+
+      END_IF_STATEMENT;
 
       END_IF_STATEMENT;
 
     END
     UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
+
+    RULE                 "North Canal Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "North Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "North Canal.Diversion Request" [@"t"] );
+
+            IF_STATEMENT ($ "LRDC into Link.Return Flow" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
+            $ "North Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] );
+
+            IF_STATEMENT ($ "North Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
+            $ "North Canal.DiversionFromUKL" [@"t"] := $ "North Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
+
+      ELSE
+            $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+            $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+          INACTIVE      $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+          INACTIVE      $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{ba5e34e8-7266-4ca1-a3cf-b07b6d248191}";;
 
     RULE                 "UKL flood control";
     DESCRIPTION          "";
@@ -268,6 +333,89 @@ BEGIN
 
   END
   UUID "{99ea40d1-8e1f-4e1c-b26e-02f9c4e81f1f}";;
+
+  POLICY_GROUP   "Diversion Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "North Canal FF Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "North Canal.DiversionFromLRDC" [@"t"] + $ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
+            $ "North Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "North Canal.DiversionFromUKL" [@"t"] - $ "North Canal.DiversionFromLRDC" [@"t"] );
+
+      ELSE
+            $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{ae31e199-2286-4c65-8e8c-48fa29e0e9c3}";;
+
+    RULE                 "North Canal LRDC Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
+            $ "North Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "North Canal.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "North Canal.DiversionFromLRDC" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{77894f48-9c54-4a43-bd5c-a5af9b32a253}";;
+
+    RULE                 "North Canal UKL Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "North Canal.DiversionFromUKL" [@"t"] := "Min"( $ "North Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
+
+    END
+    UUID "{1cfd7ec1-ac0d-4c3b-b232-1b8c91f90138}";;
+
+    RULE                 "A Canal Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "A Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
+
+            IF_STATEMENT ($ "A Canal.Diversion Request" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
+            $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "A Canal.Diversion Request" [@"t"] );
+
+      ELSE
+            $ "A Canal.DiversionFromProjectSupply" [@"t"] := $ "A Canal.DiversionFromProjectSupply" [@"t - 1"];
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{3488b621-37da-499d-b880-cc2c97aab734}";;
+
+  END
+  UUID "{7fd17c67-01e9-4917-a9df-caa41984c689}";;
 
   POLICY_GROUP   "FFA";
   DESCRIPTION    "";
@@ -1075,63 +1223,6 @@ BEGIN
 
   END
   UUID "{dccd9964-e18a-4e17-8082-98622ece0878}";;
-
-  POLICY_GROUP   "Diversion Rules";
-  DESCRIPTION    "";
-  ACTIVE         TRUE;
-  NOTES          "";
-  BEGIN
-
-    RULE                 "North Canal FF Diversion";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ($ "North Canal.DiversionFromLRDC" [@"t"] + $ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
-            $ "North Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Return Flow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "North Canal.DiversionFromUKL" [@"t"] - $ "North Canal.DiversionFromLRDC" [@"t"] );
-
-      ELSE
-            $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{ae31e199-2286-4c65-8e8c-48fa29e0e9c3}";;
-
-    RULE                 "North Canal LRDC Diversion";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ($ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
-            $ "North Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "North Canal.Diversion Request" [@"t"] - $ "North Canal.DiversionFromUKL" [@"t"] );
-
-      ELSE
-            $ "North Canal.DiversionFromLRDC" [@"t"] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{77894f48-9c54-4a43-bd5c-a5af9b32a253}";;
-
-    RULE                 "North Canal UKL Diversion";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "North Canal.DiversionFromUKL" [@"t"] := "Min"( $ "North Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
-
-    END
-    UUID "{1cfd7ec1-ac0d-4c3b-b232-1b8c91f90138}";;
-
-  END
-  UUID "{7fd17c67-01e9-4917-a9df-caa41984c689}";;
 
   POLICY_GROUP   "Various Slot-setting Rules";
   DESCRIPTION    "";
