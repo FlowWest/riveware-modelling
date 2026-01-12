@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 15:03 January 12, 2026
+# Created 15:31 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -887,7 +887,7 @@ BEGIN
             $ "OpsData.ProjSuppMult" [@"t"] := "TableInterpolation"( $ "OpsData.ProjectSupplyMultiplierLookUp", 0.00000000, 1.00000000, $ "OpsData.cumI1_ApSep_ex" [], @"t" );
       END_ELSEIF;
 
-      $ "OpsData.ProjSuppMult" [] := 0.50000000;
+      $ "OpsData.ProjSuppMult" [] := 1.50000000;
 
     END
     UUID "{e616baa5-c479-4b3b-bb4f-5bf0edcb346a}";;

@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 15:31 January 12, 2026
+# Created 15:50 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -41,7 +41,7 @@ BEGIN
 
     RULE                 "A Canal Flood Control";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "need to consider edge cases<br>";
     BEGIN
@@ -98,7 +98,7 @@ BEGIN
 
     RULE                 "North Canal Flood Control";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -1120,14 +1120,16 @@ BEGIN
 
     INACTIVE      "LKNWR Cell2.Outflow" [] := 20.00000000 "cfs";
 
-      "LKNWR Cell2.Diversion" [] := 0.00000000 "cfs";
+      $ "LKNWR Cell2.Diversion" [] := 0.00000000 "cfs";
+
+      $ "Tule Sumps 1A..Diversion" [] := 0.00000000 "cfs";
 
     END
     UUID "{8f1d349f-9915-4495-8c14-195cb6d475b7}";;
 
     RULE                 "Refuge Diversions";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "temporary refuge diversions into LKNWR.";
     BEGIN
@@ -1153,6 +1155,42 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
+
+    RULE                 "TLNWR Seasonal Cumulative Max";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"April 1" AND @"t" < @"November 1") THEN
+            $ "Refuge Policy Tracking.TLNWRCumulativeMax" [] := "Min"( 21000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.TLNWRCumulativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.TLNWRDailyCap" [] ) );
+
+      ELSE
+            $ "Refuge Policy Tracking.TLNWRCumulativeMax" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{55e99f2f-55e3-4bf2-b2ab-822b01a006ae}";;
+
+    RULE                 "TLNWR Seasonal Daily Cap";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
+            $ "Refuge Policy Tracking.TLNWRDailyCap" [] := 22000.00000000 "acre-ft" / 213.00000000;
+
+      ELSE
+            $ "Refuge Policy Tracking.TLNWRDailyCap" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{30403ce4-1d47-41b8-92a4-e77abfe35dc5}";;
 
     RULE                 "LKNWR Seaonsal Cumulative Max";
     DESCRIPTION          "";
