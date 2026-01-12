@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 16:16 January 9, 2026
+# Created 16:24 January 9, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -17,7 +17,7 @@ BEGIN
 
     RULE                 "Update Project Supply Accounting";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -29,7 +29,7 @@ BEGIN
 
     RULE                 "Update Deferred Project Supply Account";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
