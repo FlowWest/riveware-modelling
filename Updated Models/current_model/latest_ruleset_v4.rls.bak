@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 16:24 January 9, 2026
+# Created 12:41 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -41,7 +41,7 @@ BEGIN
 
     RULE                 "A Canal Flood Control";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "need to consider edge cases<br>";
     BEGIN
@@ -98,7 +98,7 @@ BEGIN
 
     RULE                 "North Canal Flood Control";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -228,7 +228,7 @@ BEGIN
 
     RULE                 "Keno Elevation";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -267,9 +267,9 @@ BEGIN
     NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
     BEGIN
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
 
-    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) + "FFA increment"(  ) - $ "Klamath River.FFA Usage" [] );
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) + "FFA increment"(  ) - $ "Klamath River.FFA Usage" [] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
@@ -448,7 +448,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "c13_exc"(  ) );
+      $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "c13_exc"( @"t - 1" ) );
 
     END
     UUID "{a19286e4-5d1d-44d0-871c-806d2d948c52}";;
@@ -473,7 +473,7 @@ BEGIN
 
     RULE                 "FFA Increment Debug";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -522,7 +522,7 @@ BEGIN
     NOTES                "forumula from page 23 (9)<br><br>FFA spill only computes after DPS Spill is exhausted";
     BEGIN
 
-      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"(  ), "c13_exc"(  ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" ) );
+      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"(  ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" ) );
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
@@ -947,7 +947,7 @@ BEGIN
     END
     UUID "{9f0e359a-99da-4c4d-ad1b-ed502bc2a98d}";;
 
-    RULE                 "inflows into refuges";
+    RULE                 "LKNWR Credit";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -956,12 +956,63 @@ BEGIN
 
     INACTIVE      $ "Tule Sumps 1A.needed inflow" [@"t"] := "Min"( 500.00000000 "cfs", "SolveInflow"( % "Tule Sumps 1A", $ "Tule Sumps 1A.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "Tule Sumps 1A.Storage" [@"t - 1"], @"24:00:00 October 5, 1980" ) );
 
-      $ "LKNWR Cell2.needed inflow" [] := "Min"( 90.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
+    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "Min"( 90.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
 
-    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
+    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 15.86900000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
+
+      $ "Ady To Refuge.LKNWR_Credit" [] := $ "Ady To Refuge.LKNWR_Allocation" [] - $ "Ady To Refuge.Outflow" [];
 
     END
     UUID "{c95d5f42-074d-47e6-b0eb-d0cc312556d9}";;
+
+    RULE                 "LKNWR Allocations";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
+            $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
+
+      ELSE
+            $ "Ady To Refuge.allocation" [] := 21000.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "Ady To Refuge.allocation" [] := 0.00000000 "acre-ft";
+      END_ELSEIF;
+
+      $ "Ady To Refuge.LKNWR_Allocation" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
+
+    END
+    UUID "{952fc517-813f-4bca-aea5-26efae15ee7a}";;
+
+    RULE                 "Ady To Refuge (LKNWR) Daily Diversion Request";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
+    BEGIN
+
+    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
+
+    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
+ THEN
+  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
+ ELSE
+  0.00000000
+ ENDIF;
+
+    INACTIVE      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
+
+    INACTIVE      $ "Ady To Refuge.Diversion Request" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], $ "LKNWR Cell2.Storage" [@"t"], $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
+
+      $ "Ady To Refuge.Diversion Request" [@"t"] := $ "LKNWR Cell2.Outflow" [@"t - 1"];
+
+    END
+    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
 
     RULE                 "Refuge Cumulative Delivered";
     DESCRIPTION          "";
@@ -1067,28 +1118,6 @@ BEGIN
     END
     UUID "{8f1d349f-9915-4495-8c14-195cb6d475b7}";;
 
-    RULE                 "Refuge Allocations";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
-
-      ELSE
-            $ "Ady To Refuge.allocation" [] := 21000.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
-      ELSEIF_CLAUSE
-            $ "Ady To Refuge.allocation" [] := 0.00000000 "acre-ft";
-      END_ELSEIF;
-
-    END
-    UUID "{952fc517-813f-4bca-aea5-26efae15ee7a}";;
-
     RULE                 "Refuge Diversions";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -1096,37 +1125,18 @@ BEGIN
     NOTES                "temporary refuge diversions into LKNWR.";
     BEGIN
 
-      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "Ady To Refuge.Diversion Request" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
+    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
+            $ "Ady To Refuge.Daily Allocation" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
 
       ELSE
-            $ "Ady To Refuge.Diversion Request" [] := 62.00000000 "cfs";
+            $ "Ady To Refuge.Daily Allocation" [] := 62.00000000 "cfs";
 
       END_IF_STATEMENT;
 
+    INACTIVE      $ "Ady To Refuge.Diversion Request" [@"t"] := $ "LKNWR Cell2.Outflow" [@"t - 1"];
+
     END
     UUID "{65e6259b-bc5c-41ff-89f2-209a961d1645}";;
-
-    RULE                 "LKNWR Daily Diversion Request";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
-    BEGIN
-
-    INACTIVE      $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] := "Min"( "FlowToVolume"( $ "Refuge Policy Tracking.LKNWR_Demand" [], @"t" ), $ "Refuge Policy Tracking.RefugeAllowedToday" [] );
-
-    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
- THEN
-  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
- ELSE
-  0.00000000
- ENDIF;
-
-      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
-
-    END
-    UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
 
   END
   UUID "{1fb26019-b006-4221-9451-4a9c4fe29364}";;
@@ -1271,6 +1281,8 @@ BEGIN
 
       $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
 
+      $ "Ady To Refuge.Available For Diversion" [] := 250.00000000 "cfs";
+
     END
     UUID "{f2c8384b-df12-4738-8af1-82e74cc5b775}";;
 
@@ -1311,7 +1323,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Keno.C13_exc" [] := "Max"( 0.00000000 "cfs", "c13_exc"(  ) );
+      $ "Keno.C13_exc" [] := "Max"( 0.00000000 "cfs", "c13_exc"( @"t" ) );
 
     END
     UUID "{03d1b01a-6515-40ee-ad03-e9999310f304}";;
@@ -1339,7 +1351,7 @@ BEGIN
             $ "Keno.Ramp Down Rate" [] := 150.00000000 "cfs";
 
       ELSE
-            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs" );
+            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "c13_exc"( @"t - 1" ) - 3100.00000000 "cfs" );
 
       END_IF_STATEMENT
       ELSEIF_COND ( $ "Keno.Outflow" [] < 2800.00000000 "cfs" )
@@ -1352,7 +1364,7 @@ BEGIN
       END_ELSEIF
       ELSEIF_COND ( $ "Keno.Outflow" [] < 3500.00000000 "cfs" )
       ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := $ "Keno.Outflow" [@"t - 1"] - 2500.00000000 "cfs";
+            $ "Keno.Ramp Down Rate" [] := "c13_exc"( @"t - 1" ) - 2500.00000000 "cfs";
       END_ELSEIF
       ELSEIF_COND ( $ "Keno.Outflow" [] < 4100.00000000 "cfs" )
       ELSEIF_CLAUSE
@@ -1456,12 +1468,24 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Diversion Data.Ady Canal FW" [] + $ "Diversion Data.Ady Canal SS" [];
+    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Diversion Data.Ady Canal" [];
 
-      $ "Ady Canal.Diversion Request" [] := $ "Diversion Data.Ady Canal" [];
+      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [] + $ "Historical Diversions.Ady Canal to Refuge" [];
 
     END
     UUID "{6afe5415-d591-4bb7-8b1b-6ca09b785920}";;
+
+    RULE                 "Ady Canal to Project";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Ady Canal.To Project" [] := $ "Historical Diversions.Ady Canal to Project" [];
+
+    END
+    UUID "{189738c8-f9b6-40fc-bb92-845db44c6ecd}";;
 
     RULE                 "Keno Base Outflow";
     DESCRIPTION          "";
@@ -1693,7 +1717,7 @@ BEGIN
     END
     UUID "{d1385b40-ac9a-46ff-a7f4-a505d74d7353}";;
 
-    FUNCTION       "c13_exc" (  )
+    FUNCTION       "c13_exc" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -1703,7 +1727,7 @@ BEGIN
     NOTES          "<br><br>";
     BEGIN
 
-      $ "Keno.Outflow" [] - "Max"( $ "Keno data.River Base Flow" [], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+      $ "Keno.Outflow" [date] - "Max"( $ "Keno data.River Base Flow" [date], $ "Keno.Outflow" [date - 1.00000000] - $ "Keno.Ramp Down Rate" [date] );
 
     END
     UUID "{ccd8dd20-c8c6-4232-901a-448732d469e7}";;
