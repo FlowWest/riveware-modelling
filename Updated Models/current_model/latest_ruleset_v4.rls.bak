@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 12:41 January 12, 2026
+# Created 15:03 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -175,7 +175,7 @@ BEGIN
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
       $ "Keno.Flood Control Flag" [@"t"] := 1.00000000;
 
-            $ "Keno.FloodSpill" [] := $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [@"t - 1"], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [@"t - 1"] );
+            $ "Keno.FloodSpill" [] := "c13_exc"( @"t - 1" );
 
       ELSE
             $ "Keno.Flood Control Flag" [@"t"] := 0.00000000;
@@ -218,8 +218,13 @@ BEGIN
     NOTES                "Creates the variable C13_exc from WRIMS, calculates keno releases in excess of minimum flows and ramp rates<br>";
     BEGIN
 
-      IF_STATEMENT ($ "Keno.Outflow" [] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
-            $ "Keno.Outflow" [] := "Max"( $ "Keno.Outflow" [], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.Outflow" [@"t"] := "Max"( $ "Keno.Outflow" [@"t"], $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t"] );
+
+      END_IF_STATEMENT;
+
+    INACTIVE      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.Outflow" [@"t"] := "c13_exc"( @"t" );
 
       END_IF_STATEMENT;
 
@@ -598,7 +603,7 @@ BEGIN
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
 
       END_IF_STATEMENT;
 
@@ -613,7 +618,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] != 0.00000000) THEN
-            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [] ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t - 1" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) COMMENTED_BY "Yest_project_div_dps <br><br>" - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) COMMENTED_BY " yest_ref_div_dps <br><br>$ &quot;Refuge Policy Tracking.Refuge_DPS_Div&quot;  <br>" ) ) );
+            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t - 1" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) COMMENTED_BY "Yest_project_div_dps <br><br>" - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) COMMENTED_BY " yest_ref_div_dps <br><br>$ &quot;Refuge Policy Tracking.Refuge_DPS_Div&quot;  <br>" ) ) );
 
           INACTIVE      $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [] ) - $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t - 1" ) ) ) );
 
@@ -646,6 +651,8 @@ BEGIN
 
     INACTIVE      $ "Refuge Policy Tracking.Refuge_DPS_Div" [] := $ "DPS_TLNWR_alloc" [] + $ "DPS_LKNWR_alloc" [];
 
+    INACTIVE      $ "OpsData.Refuge DPS Div" [] := $ "Refuge Policy Tracking.RefugeDailyCap" [@"t - 1"];
+
       $ "OpsData.Refuge DPS Div" [] := 0.00000000 "acre-ft";
 
     END
@@ -659,7 +666,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31" AND $ "Upper Klamath Lake.Flood Control Flag" [@"t"] != 1.00000000 AND $ "Keno.Flood Control Flag" [@"t"] != 1.00000000) THEN
-            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - ( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [@"t - 1"], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ), @"t" ) COMMENTED_BY "Calculates the volume of water LRDC and F/FF pumps are contributing to Keno flows, minus any <br><br>spilling for flood control <br><br>";
+            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - "c13_exc"( @"t - 1" ) ), @"t" ) COMMENTED_BY "Calculates the volume of water LRDC and F/FF pumps are contributing to Keno flows, minus any <br><br>spilling for flood control <br><br>";
 
       ELSE
             $ "Upper Klamath Lake.Daily Flow Savings" [] := 0.00000000 "acre-ft";
@@ -667,7 +674,7 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" AND $ "Upper Klamath Lake.Flood Control Flag" [@"t"] != 1.00000000 AND $ "Keno.Flood Control Flag" [@"t"] != 1.00000000 )
       ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - ( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [@"t - 1"], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ), @"t" );
+            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - "c13_exc"( @"t - 1" ) ), @"t" );
       END_ELSEIF;
 
     END
@@ -1154,7 +1161,15 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Refuge Policy Tracking.LKNWRCumulativeMax" [] := "Min"( 21000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.LKNWRDailyCap" [] ) );
+    INACTIVE      $ "Refuge Policy Tracking.LKNWRCumulativeMax" [] := "Min"( 21000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.LKNWRDailyCap" [] ) );
+
+      IF_STATEMENT (@"t" >= @"April 1" AND @"t" < @"November 1") THEN
+            $ "Refuge Policy Tracking.LKNWRCumulativeMax" [] := "Min"( 21000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.LKNWRDailyCap" [] ) );
+
+      ELSE
+            $ "Refuge Policy Tracking.LKNWRCumulativeMax" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
 
     END
     UUID "{277512f6-e132-4944-b759-dddd9a6df677}";;
@@ -1167,7 +1182,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
-            $ "Refuge Policy Tracking.LKNWRDailyCap" [] := 21000.00000000 "acre-ft" / 214.00000000;
+            $ "Refuge Policy Tracking.LKNWRDailyCap" [] := 21000.00000000 "acre-ft" / 213.00000000;
 
       ELSE
             $ "Refuge Policy Tracking.LKNWRDailyCap" [] := 0.00000000 "acre-ft";
@@ -1184,7 +1199,15 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] ) );
+    INACTIVE      $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] ) );
+
+      IF_STATEMENT (@"t" >= @"April 1" AND @"t" < @"November 1") THEN
+            $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] ) );
+
+      ELSE
+            $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
 
     END
     UUID "{33c0720f-595d-4ffd-af19-3ae354e38989}";;
@@ -1197,7 +1220,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ("SpringSummerAgSeason"( @"t" )) THEN
-            $ "Refuge Policy Tracking.RefugeDailyCap" [] := 43000.00000000 "acre-ft" / 214.00000000;
+            $ "Refuge Policy Tracking.RefugeDailyCap" [] := 43000.00000000 "acre-ft" / 213.00000000;
 
       ELSE
             $ "Refuge Policy Tracking.RefugeDailyCap" [] := 0.00000000 "acre-ft";
@@ -1727,7 +1750,7 @@ BEGIN
     NOTES          "<br><br>";
     BEGIN
 
-      $ "Keno.Outflow" [date] - "Max"( $ "Keno data.River Base Flow" [date], $ "Keno.Outflow" [date - 1.00000000] - $ "Keno.Ramp Down Rate" [date] );
+      $ "Keno.Outflow" [date] - "Max"( $ "Keno data.River Base Flow" [date], $ "Keno.Outflow" [date - 1.00000000 "day"] - $ "Keno.Ramp Down Rate" [date] );
 
     END
     UUID "{ccd8dd20-c8c6-4232-901a-448732d469e7}";;
