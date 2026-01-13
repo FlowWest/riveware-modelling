@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 10:23 January 13, 2026
+# Created 12:22 January 13, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -74,8 +74,7 @@ BEGIN
 
       END_IF_STATEMENT;
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+      IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
             $ "A Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
             IF_STATEMENT ($ "A Canal.Diversion Request" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
@@ -89,12 +88,38 @@ BEGIN
       ELSE
             $ "A Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "A Canal.Diversion Request" [@"t"] );
 
-      END_IF_STATEMENT;
+            $ "A Canal.DiversionFromDPS" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
     END
     UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
+
+    RULE                 "North Canal UKL Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "North Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "North Canal.DiversionFromUKL" [@"t"] );
+
+            IF_STATEMENT ($ "North Canal.DiversionFromUKL" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
+            $ "North Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "North Canal.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "North Canal.DiversionFromProjectSupply" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "North Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "North Canal.DiversionFromUKL" [@"t"] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{f196bcd7-58d8-407d-bf50-6eb97da96c9a}";;
 
     RULE                 "North Canal Flood Control";
     DESCRIPTION          "";
@@ -134,6 +159,32 @@ BEGIN
     END
     UUID "{ba5e34e8-7266-4ca1-a3cf-b07b6d248191}";;
 
+    RULE                 "Ady Canal UKL Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "Ady Canal.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "Ady Canal.DiversionFromUKL" [@"t"] );
+
+            IF_STATEMENT ($ "Ady Canal.DiversionFromUKL" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
+            $ "Ady Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "Ady Canal.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "Ady Canal.DiversionFromProjectSupply" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "Ady Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "Ady Canal.DiversionFromUKL" [@"t"] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{68f56e92-c215-4ae5-98bf-7b9fd02ad848}";;
+
     RULE                 "Ady Canal Flood Control";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -171,6 +222,32 @@ BEGIN
 
     END
     UUID "{ff2d16a8-9480-4a58-86cd-21419d5aee28}";;
+
+    RULE                 "Sta48 MH UKL Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
+            $ "Sta48 and MH from Lost.DiversionFromDPS" [] := "Min"( "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ), $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] );
+
+            IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] > "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" )) THEN
+            $ "Sta48 and MH from Lost.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t" ) - $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromProjectSupply" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{52ee19f1-82f1-4377-bf77-00ce4f621943}";;
 
     RULE                 "Sta48 MH Flood Control";
     DESCRIPTION          "";
@@ -393,7 +470,7 @@ BEGIN
 
     RULE                 "Keno Elevation";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -852,10 +929,14 @@ BEGIN
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
       END_ELSEIF;
@@ -871,7 +952,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"( @"t - 1" ), "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) COMMENTED_BY "Yest_project_div_dps <br><br>" - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) COMMENTED_BY " yest_ref_div_dps <br><br>$ &quot;Refuge Policy Tracking.Refuge_DPS_Div&quot;  <br>" ) ) );
+            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"( @"t - 1" ), "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) ) ) );
 
           INACTIVE      $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [] ) - $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t - 1" ) ) ) );
 
@@ -883,14 +964,14 @@ BEGIN
     END
     UUID "{e41ace42-2d80-42a0-be24-d1753c072dd2}";;
 
-    RULE                 "Yest_DPS_Div";
+    RULE                 "Yest_Prj_Div_DPS";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Formula 19 - calcualte project use of defered project supply. how much of yesterday's UKL project diversion should be debited from DPSA <br><br>This is based on agriculture diversion (project diversion = sum of A canal, station48 and ady diversion from UKL) from UKL yesterday <br>Numeric proj_total_yest :=<br>    (&quot;Station48.Diverted&quot;[t-1] +<br>     &quot;MillerHill.Diverted&quot;[t-1] +<br>     &quot;North.Diverted&quot;[t-1] +<br>     &quot;Ady.Diverted&quot;[t-1])";
     BEGIN
 
-      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.DiversionFromUKL" [@"t - 1"] + $ "North Canal.DiversionFromUKL" [@"t - 1"] + $ "A Canal.Diversion" [@"t - 1"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t - 1"] ), @"t - 1" );
+      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.DiversionFromDPS" [@"t - 1"] + $ "North Canal.DiversionFromDPS" [@"t - 1"] + $ "A Canal.DiversionFromDPS" [@"t - 1"] + $ "Sta48 and MH from Lost.DiversionFromDPS" [@"t - 1"] ), @"t - 1" );
 
     END
     UUID "{70e3f112-73e4-49db-8422-e7d32a905e89}";;
@@ -904,11 +985,11 @@ BEGIN
 
     INACTIVE      $ "Refuge Policy Tracking.Refuge_DPS_Div" [] := $ "DPS_TLNWR_alloc" [] + $ "DPS_LKNWR_alloc" [];
 
-      $ "OpsData.Refuge DPS Div" [] := $ "Refuge Policy Tracking.RefugeDailyCap" [@"t"];
+    INACTIVE      $ "OpsData.Refuge DPS Div" [] := $ "Refuge Policy Tracking.RefugeDailyCap" [@"t"];
 
     INACTIVE      $ "OpsData.Refuge DPS Div" [] := $ "A Cana.DiversionFromDPS" [];
 
-    INACTIVE      $ "OpsData.Refuge DPS Div" [] := 0.00000000 " acre-ft";
+      $ "OpsData.Refuge DPS Div" [] := 0.00000000 " acre-ft";
 
     END
     UUID "{5a760d98-ba36-4ce2-82b3-8753b24bd960}";;
@@ -920,14 +1001,14 @@ BEGIN
     NOTES                "Formula 18 from Appendix E, found on Page 40. The formula calculates yesterday's daily flow savings for the current timestep (taken directly from WRIMS code)<br><br>Keno.spill is the variable C13_exc(d-1); yesterday's spill volume at keno<br><br> No accumulation in October, so volume set to zero<br><br>If flood control is not happening at either keno or ukl<br><br>what it does:: adds to dpsa when project side water supports the keno target, letting you reduce link release that day. this only counts when link/keno arent spilling and itsnot october";
     BEGIN
 
-      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31" AND $ "Upper Klamath Lake.Flood Control Flag" [@"t"] != 1.00000000 AND $ "Keno.Flood Control Flag" [@"t"] != 1.00000000) THEN
+      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
             $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - "c13_exc"( @"t - 1" ) ), @"t" ) COMMENTED_BY "Calculates the volume of water LRDC and F/FF pumps are contributing to Keno flows, minus any <br><br>spilling for flood control <br><br>";
 
       ELSE
             $ "Upper Klamath Lake.Daily Flow Savings" [] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" AND $ "Upper Klamath Lake.Flood Control Flag" [@"t"] != 1.00000000 AND $ "Keno.Flood Control Flag" [@"t"] != 1.00000000 )
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
             $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - "c13_exc"( @"t - 1" ) ), @"t" );
       END_ELSEIF;
@@ -1022,7 +1103,7 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"November 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.TotalProjectSupplyUsed" [@"t"] := $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] + "FlowToVolume"( $ "A Canal.Diversion" [], @"t" ) + "FlowToVolume"( $ "Sta48 and MH from Lost.Diversion" [], @"t" ) + "FlowToVolume"( $ "Ady Canal.To Project" [], @"t" ) + "FlowToVolume"( $ "North Canal.Diversion" [], @"t" );
+            $ "OpsData.TotalProjectSupplyUsed" [@"t"] := $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] + "FlowToVolume"( $ "A Canal.DiversionFromProjectSupply" [], @"t" ) + "FlowToVolume"( $ "Sta48 and MH from Lost.DiversionFromProjectSupply" [], @"t" ) + "FlowToVolume"( $ "Ady Canal.DiversionFromProjectSupply" [], @"t" ) + "FlowToVolume"( $ "North Canal.DiversionFromProjectSupply" [], @"t" );
       END_ELSEIF;
 
     END
