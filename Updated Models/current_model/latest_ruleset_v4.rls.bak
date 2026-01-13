@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 12:21 January 13, 2026
+# Created 13:56 January 13, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -14,30 +14,6 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
-
-    RULE                 "Update Project Supply Accounting";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "OpsData.ProjectSupplyAccountingAg" [] := "Max"( 0.00000000 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [] - "FlowToVolume"( $ "A Canal.DiversionFromProjectSupply" [], @"t" ) );
-
-    END
-    UUID "{feeaa9dd-d98c-43dd-928e-6a04700b4583}";;
-
-    RULE                 "Update Deferred Project Supply Account";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Upper Klamath Lake.Deferred Project Supply Account Ag" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [] - "FlowToVolume"( $ "A Canal.DiversionFromDPS" [], @"t" ) );
-
-    END
-    UUID "{bb483ee2-55c6-4788-98d3-71aa4f69ea9f}";;
 
     RULE                 "A Canal Flood Control";
     DESCRIPTION          "";
@@ -116,6 +92,8 @@ BEGIN
       ELSE
             $ "North Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "North Canal.DiversionFromUKL" [@"t"] );
 
+            $ "North Canal.DiversionFromDPS" [] := 0.00000000 "cfs";
+
       END_IF_STATEMENT;
 
     END
@@ -180,6 +158,8 @@ BEGIN
       ELSE
             $ "Ady Canal.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "Ady Canal.DiversionFromUKL" [@"t"] );
 
+            $ "Ady Canal.DiversionFromDPS" [] := 0.00000000 "cfs";
+
       END_IF_STATEMENT;
 
     END
@@ -243,6 +223,8 @@ BEGIN
 
       ELSE
             $ "Sta48 and MH from Lost.DiversionFromProjectSupply" [] := "Min"( "VolumeToFlow"( $ "OpsData.ProjectSupplyAccounting" [], @"t" ), $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] );
+
+            $ "Sta48 and MH from Lost.DiversionFromDPS" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
@@ -504,7 +486,7 @@ BEGIN
 
     INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) + "FFA increment"(  ) - $ "Klamath River.FFA Usage" [] );
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"( @"t" ) + "FFA increment"( @"t" ) - $ "Klamath River.FFA Usage" [] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
@@ -765,7 +747,7 @@ BEGIN
             $ "OpsData.FFAccounting" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "OpsData.FFAccounting" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAccounting" [@"t - 1"] + "Yesterday's FFA Saving"(  ) - $ "OpsData.yest_FFA_Spill" [@"t"] - "FlowToVolume"( $ "Klamath River.yest_FFA_Usage" [@"t"], @"t" ) );
+            $ "OpsData.FFAccounting" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAccounting" [@"t - 1"] + "Yesterday's FFA Saving"( @"t" ) - $ "OpsData.yest_FFA_Spill" [@"t"] - "FlowToVolume"( $ "Klamath River.yest_FFA_Usage" [@"t"], @"t" ) );
 
       END_IF_STATEMENT;
 
@@ -779,7 +761,15 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "c13_exc"( @"t - 1" ) );
+    INACTIVE      $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "C1_exc"( @"t - 1" ) );
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "Klamath River.yest_FFA_Usage" [] := 0.00000000 "cfs";
+
+      ELSE
+            $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "C1_exc"( @"t - 1" ) );
+
+      END_IF_STATEMENT;
 
     END
     UUID "{a19286e4-5d1d-44d0-871c-806d2d948c52}";;
@@ -828,7 +818,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"(  ), @"t" );
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
 
       ELSE
             $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
@@ -836,7 +826,7 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 2" )
       ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"(  ), @"t" );
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
       ELSEIF_CLAUSE
@@ -846,14 +836,26 @@ BEGIN
     END
     UUID "{0cb69d1c-5adb-4404-8bce-92d6c68cc6d8}";;
 
-    RULE                 "FFA Spill";
+    RULE                 "Yest FFA Spill";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "forumula from page 23 (9)<br><br>FFA spill only computes after DPS Spill is exhausted";
     BEGIN
 
-      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" ) );
+    INACTIVE      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t" ) );
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "OpsData.yest_FFA_Spill" [] := 0.00000000 "acre-ft";
+
+      ELSE
+            $ "OpsData.yest_FFA_Spill" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t" ) );
+      END_ELSEIF;
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
@@ -870,12 +872,20 @@ BEGIN
     END
     UUID "{578c9c95-cb37-419f-ab3e-c89d3bd4c8b4}";;
 
-    RULE                 "FFA Pulse Flow Distribution";
+    RULE                 "Yest FFA Savings";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
+
+      ELSE
+            $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
+
+      END_IF_STATEMENT;
 
     END
     UUID "{038a637a-969a-4769-bd30-82591d9789ff}";;
@@ -972,8 +982,6 @@ BEGIN
     BEGIN
 
       $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.DiversionFromDPS" [@"t - 1"] + $ "North Canal.DiversionFromDPS" [@"t - 1"] + $ "A Canal.DiversionFromDPS" [@"t - 1"] + $ "Sta48 and MH from Lost.DiversionFromDPS" [@"t - 1"] ), @"t - 1" );
-
-      ? := NaNToZero ?;
 
     END
     UUID "{70e3f112-73e4-49db-8422-e7d32a905e89}";;
@@ -2014,7 +2022,7 @@ BEGIN
     END
     UUID "{c461a803-3da0-4c6e-b629-c590dd385925}";;
 
-    FUNCTION       "KenoReleaseMultiplier" (  )
+    FUNCTION       "KenoReleaseMultiplier" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -2024,7 +2032,7 @@ BEGIN
     NOTES          "Formula only calculates the Keno release multiplier (KRmult) for the current timestep (@&quot;t&quot;).  It does this by interpolating the Keno releast multiplier table in the OpsData data object. <br><br>Keno Release multiplier table is found in Appendix E, pg 23";
     BEGIN
 
-      "TableInterpolation"( $ "Keno.Keno Release Multiplier", 0.00000000, "GetMonth"( @"t" ), $ "OpsData.OpsIndex" [], @"t" );
+      "TableInterpolation"( $ "Keno.Keno Release Multiplier", 0.00000000, "GetMonth"( date ), $ "OpsData.OpsIndex" [], date );
 
     END
     UUID "{6aa179b7-482b-429f-85d7-3537b3f5f687}";;
@@ -2068,7 +2076,7 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    FUNCTION       "FFA reserve Lookup" (  )
+    FUNCTION       "FFA reserve Lookup" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -2078,12 +2086,12 @@ BEGIN
     NOTES          "Looks up the the FFA reserve volume from the table, based on Ops index value.  FFA reserve table is <br>";
     BEGIN
 
-      "TableInterpolation"( $ "OpsData.FFA Reserve table", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+      "TableInterpolation"( $ "OpsData.FFA Reserve table", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], date );
 
     END
     UUID "{a0c6eff5-d9cf-4ec1-a1c0-68a593b63a8e}";;
 
-    FUNCTION       "FFA increment" (  )
+    FUNCTION       "FFA increment" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -2093,12 +2101,12 @@ BEGIN
     NOTES          "Calculates FFA daily increment based on ops index. <br>Formula #6 from Appendix E (pg 22).";
     BEGIN
 
-      $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) * "FFA reserve Lookup"(  );
+      $ "Keno data.River Base Flow" [date] * "KenoReleaseMultiplier"( date ) * "FFA reserve Lookup"( date );
 
     END
     UUID "{f7fda56f-862b-4d15-8210-c7f7c29ce0ec}";;
 
-    FUNCTION       "Yesterday's FFA Saving" (  )
+    FUNCTION       "Yesterday's FFA Saving" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -2108,7 +2116,7 @@ BEGIN
     NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC into Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill <br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
     BEGIN
 
-      "Max"( 0.00000000 "acre-ft", $ "River Data.FFA Increment" [@"t - 1"] - "Max"( "FlowToVolume"( $ "Keno.Spill" [@"t - 1"] - ( $ "LRDC into Link.Return Flow" [@"t - 1"] - ( $ "LakeData.DPS Spill" [@"t - 1"] - ( $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ), @"t - 1" ), 0.00000000 "acre-ft" ) );
+      "Max"( 0.00000000 "acre-ft", $ "River Data.FFA Increment" [date - 1.00000000 "day"] - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.Ramp Down Rate" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
 
     END
     UUID "{1e9d8509-bf3e-4c0f-aecf-3b5262c79c2e}";;
