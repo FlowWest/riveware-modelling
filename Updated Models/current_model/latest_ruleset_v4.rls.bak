@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 13:56 January 13, 2026
+# Created 13:59 January 13, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -743,11 +743,11 @@ BEGIN
     NOTES                "Need to change it back to october 1 reset date";
     BEGIN
 
-      IF_STATEMENT (@"t" <= @"October 5") THEN
+      IF_STATEMENT (@"t" == @"October 1") THEN
             $ "OpsData.FFAccounting" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "OpsData.FFAccounting" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAccounting" [@"t - 1"] + "Yesterday's FFA Saving"( @"t" ) - $ "OpsData.yest_FFA_Spill" [@"t"] - "FlowToVolume"( $ "Klamath River.yest_FFA_Usage" [@"t"], @"t" ) );
+            $ "OpsData.FFAccounting" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAccounting" [@"t - 1"] + $ "OpsData.YestFFASavings" [@"t"] - $ "OpsData.yest_FFA_Spill" [@"t"] - "FlowToVolume"( $ "Klamath River.yest_FFA_Usage" [@"t"], @"t" ) );
 
       END_IF_STATEMENT;
 
