@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 15:50 January 12, 2026
+# Created 20:09 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -1014,12 +1014,28 @@ BEGIN
 
     INACTIVE      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
 
-    INACTIVE      $ "Ady To Refuge.Diversion Request" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], $ "LKNWR Cell2.Storage" [@"t"], $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
-
       $ "Ady To Refuge.Diversion Request" [@"t"] := $ "LKNWR Cell2.Outflow" [@"t - 1"];
 
     END
     UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
+
+    RULE                 "Sta 48 to TLNWR Daily Diversion Request";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Tule Sumps 1A.Outflow" [@"t - 1"] >= $ "Wilson Dam to Tule.Outflow" [@"t - 1"]) THEN
+            $ "Sta 48 to TLNWR.Diversion Request" [@"t"] := $ "Tule Sumps 1A.Outflow" [@"t - 1"] - $ "Wilson Dam to Tule.Outflow" [@"t - 1"];
+
+      ELSE
+            $ "Sta 48 to TLNWR.Diversion Request" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{a1a4feff-dda4-4473-afa7-c0c44967cb83}";;
 
     RULE                 "Refuge Cumulative Delivered";
     DESCRIPTION          "";
@@ -1028,12 +1044,12 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] := $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] + 0.00000000 "acre-ft";
+      $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] := $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] + $ "Refuge Policy Tracking.TLNWRCumulativeDelivered" [];
 
     END
     UUID "{244f26de-0b02-4c07-a8c3-49184659ea35}";;
 
-    RULE                 "Calculate LKNWR Cumulative Delivery";
+    RULE                 "Calculate Cumulative Delivery";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -1041,6 +1057,8 @@ BEGIN
     BEGIN
 
       $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [] := "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [@"t - 1"] + "FlowToVolume"( $ "LKNWR Cell2.Inflow" [], @"t" ) );
+
+      $ "Refuge Policy Tracking.TLNWRCumulativeDelivered" [] := "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.TLNWRCumulativeDelivered" [@"t - 1"] + "FlowToVolume"( $ "Tule Lake NWR.Inflow" [], @"t" ) );
 
     END
     UUID "{8515a522-e449-42a9-8c8e-02065e3a50fb}";;
@@ -1054,12 +1072,12 @@ BEGIN
 
       $ "LKNWR Cell2.Outflow" [@"t"] := $ "LKNWR Cell2.DailyEvaporation" [@"t"] * 1.00000000 "day";
 
-    INACTIVE      $ "Tule Sumps 1A.Outflow" [] := "VolumeToFlow"( $ "Tule Sumps 1A.Area" [] * $ "Tule Sumps 1A.Monthly Evaporation Rate" [@"t"], @"t - 1" );
+      $ "Tule Sumps 1A.Outflow" [@"t"] := $ "Tule Sumps 1A.DailyEvaporation" [@"t"] * 1.00000000 "day";
 
     END
     UUID "{6b245964-61bc-47c7-962e-12a9a0af03f9}";;
 
-    RULE                 "Daily Evaporation";
+    RULE                 "Daily LKNWR Evaporation";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -1071,6 +1089,18 @@ BEGIN
     END
     UUID "{d7ca42e4-a4c3-4885-b705-9b10c4c1bb0a}";;
 
+    RULE                 "Daily Tule Sumps Evaporation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Tule Sumps 1A.DailyEvaporation" [] := "VolumeToFlow"( $ "Tule Sumps 1A.Area" [] * $ "Tule Sumps 1A.Evap" [@"t"], @"t - 1" ) / "Tule Sumps 1A.days_in_month" [];
+
+    END
+    UUID "{b7bdb208-20e3-4dd2-afe3-52df911ed244}";;
+
     RULE                 "get days in month";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -1080,12 +1110,14 @@ BEGIN
 
       "LKNWR Cell2.days_in_month" [] := "GetDaysInMonth"( @"t" );
 
+      "Tule Sumps 1A.days_in_month" [] := "GetDaysInMonth"( @"t" );
+
     END
     UUID "{2c1bcd97-507c-440a-81bb-3fc0a1835576}";;
 
     RULE                 "Refuge Demand";
     DESCRIPTION          "Compute LKNWR need max<br>Purpose: Today?s required volume to hold Unit 2 at its target level.<br>Reads: Unit 2 current storage/elevation; target elev table; expected daily losses  and inflows.";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "What is the target storage (by date?) for the resevoir? <br><br>      $ &quot;Refuge Policy Tracking.LKNWR_Demand&quot; [] := &quot;Max&quot;( 0.00000000, $ &quot;LKNWR Cell2.Max Storage&quot; [] - $ &quot;LKNWR Cell2.Storage&quot; [] + $ &quot;LKNWR Cell2.Outflow&quot; [] )";
     BEGIN
@@ -1097,7 +1129,7 @@ BEGIN
     END
     UUID "{fe05f7cd-cfe4-4dd4-8b17-7d6a3e5e80e9}";;
 
-    RULE                 "Calculate Refuge Area";
+    RULE                 "Calculate LKNWR Area";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -1106,10 +1138,20 @@ BEGIN
 
       $ "LKNWR Cell2.Area" [] := "TableInterpolation"( $ "LKNWR Cell2.Elevation Area", 0.00000000, 1.00000000, $ "LKNWR Cell2.Pool Elevation" [], @"t - 1" );
 
-    INACTIVE      $ "Tule Sumps 1A.Area" [] := "TableInterpolation"( $ "Tule Sumps 1A.Elevation Area", 0.00000000, 1.00000000, $ "Tule Sumps 1A.Pool Elevation" [], @"t - 1" );
-
     END
     UUID "{49303f26-8933-4721-bdce-6c6fea43efb6}";;
+
+    RULE                 "Calculate Tule Sumps Area";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Tule Sumps 1A.Area" [] := "TableInterpolation"( $ "Tule Sumps 1A.Elevation Area", 0.00000000, 1.00000000, $ "Tule Sumps 1A.Pool Elevation" [], @"t - 1" );
+
+    END
+    UUID "{7d51ea1f-c576-41ee-a50e-ec72968f3c49}";;
 
     RULE                 "Set Refuge Diversion Value";
     DESCRIPTION          "";
@@ -1122,14 +1164,14 @@ BEGIN
 
       $ "LKNWR Cell2.Diversion" [] := 0.00000000 "cfs";
 
-      $ "Tule Sumps 1A..Diversion" [] := 0.00000000 "cfs";
+      $ "Tule Sumps 1A.Diversion" [] := 0.00000000 "cfs";
 
     END
     UUID "{8f1d349f-9915-4495-8c14-195cb6d475b7}";;
 
     RULE                 "Refuge Diversions";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "temporary refuge diversions into LKNWR.";
     BEGIN
