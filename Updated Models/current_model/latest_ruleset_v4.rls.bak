@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 19:14 January 12, 2026
+# Created 23:25 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -134,6 +134,99 @@ BEGIN
     END
     UUID "{ba5e34e8-7266-4ca1-a3cf-b07b6d248191}";;
 
+    RULE                 "Ady Canal Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "Ady Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] );
+
+            IF_STATEMENT ($ "LRDC into Link.Return Flow" [@"t"] < $ "Ady Canal.Diversion Request" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] );
+
+            IF_STATEMENT ($ "Ady Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromUKL" [@"t"] := $ "Ady Canal.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
+
+      ELSE
+            $ "Ady Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "Ady Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+            $ "Ady Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+          INACTIVE      $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+          INACTIVE      $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{ff2d16a8-9480-4a58-86cd-21419d5aee28}";;
+
+    RULE                 "Sta48 MH Flood Control";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC from Lost River.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] );
+
+            IF_STATEMENT ($ "LRDC from Lost River.Inflow" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] );
+
+            IF_STATEMENT ($ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+          INACTIVE      $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+          INACTIVE      $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{d989a157-7317-4068-8795-2e4dd27f6014}";;
+
+    RULE                 "Update UKL Flood Release";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      $ "Keno.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"] + $ "Keno.Target Releases" [@"t"];
+
+      IF_STATEMENT ("Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "Keno.Outflow" [@"t"] := "Min"( $ "Upper Klamath Lake.FloodSpill" [@"t"] + $ "Keno.Target Releases" [@"t"], 3000.00000000 "cfs" );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{4d19adb3-efa7-4005-9fbb-dafae0fd7de2}";;
+
     RULE                 "UKL flood control";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -257,6 +350,14 @@ BEGIN
 
       ELSE
             $ "Keno.Outflow" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + ( $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] COMMENTED_BY "Klamath River.FFA_Usage <br>" ) ) );
+
+      END_IF_STATEMENT;
+
+    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000) THEN
+          INACTIVE      $ "Keno.Outflow" [] := $ "Keno.Target Releases" [] + $ "Upper Klamath Lake.FloodSpill" [@"t"];
+
+      ELSE
+            $ "Keno.Outflow" [] := $ "Keno.Target Releases" [];
 
       END_IF_STATEMENT;
 
@@ -392,6 +493,102 @@ BEGIN
 
     END
     UUID "{1cfd7ec1-ac0d-4c3b-b232-1b8c91f90138}";;
+
+    RULE                 "Ady Canal FF Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Ady Canal.DiversionFromLRDC" [@"t"] + $ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.Diversion Request" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] - $ "Ady Canal.DiversionFromLRDC" [@"t"] );
+
+      ELSE
+            $ "Ady Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{504c1436-db01-45fa-9375-0c437c593e14}";;
+
+    RULE                 "Ady Canal LRDC Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.Diversion Request" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] );
+
+      ELSE
+            $ "Ady Canal.DiversionFromLRDC" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{2b647bd7-cc68-44c9-b54c-68740fe447cc}";;
+
+    RULE                 "Ady Canal UKL Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
+
+    END
+    UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
+
+    RULE                 "Sta48 and MH from Lost FF Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] );
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{0c1c552c-10e9-4b22-b4d9-909b2d8d8411}";;
+
+    RULE                 "Sta48 and MH from Lost UKLDiversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := "Min"( $ "LRDC Draw From Klamath.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] );
+
+      ELSE
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{2a40cacb-1a8a-4138-b112-86d7f9582238}";;
+
+    RULE                 "Sta48 and MH from Lost LRDC Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "Sta48 and MH from Lost.Diversion Request" [@"t"], $ "LRDC from Lost River.Inflow" [@"t"] );
+
+    END
+    UUID "{ca595762-9767-42d6-9537-bd342a16d29f}";;
 
     RULE                 "A Canal Diversion";
     DESCRIPTION          "";
@@ -599,13 +796,17 @@ BEGIN
             $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
       END_ELSEIF;
 
-      IF_STATEMENT (@"t" > @"October 1" AND @"t" <= @"November 1") THEN
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" < @"November 1") THEN
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
 
-      END_IF_STATEMENT;
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
+      END_ELSEIF;
 
     END
     UUID "{ba582b44-c160-483c-abd2-cf59bfd2064a}";;
@@ -1014,12 +1215,28 @@ BEGIN
 
     INACTIVE      $ "Ady To Refuge.Diversion Request Debug" [] := "Min"( $ "Refuge Policy Tracking.LKNWR_Demand" [], "VolumeToFlow"( $ "Refuge Policy Tracking.RefugeAllowedToday" [], @"t" ) );
 
-    INACTIVE      $ "Ady To Refuge.Diversion Request" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], $ "LKNWR Cell2.Storage" [@"t"], $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
-
       $ "Ady To Refuge.Diversion Request" [@"t"] := $ "LKNWR Cell2.Outflow" [@"t - 1"];
 
     END
     UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
+
+    RULE                 "Sta 48 to TLNWR Daily Diversion Request";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Tule Sumps 1A.Outflow" [@"t - 1"] >= $ "Wilson Dam to Tule.Outflow" [@"t - 1"]) THEN
+            $ "Sta 48 to TLNWR.Diversion Request" [@"t"] := $ "Tule Sumps 1A.Outflow" [@"t - 1"] - $ "Wilson Dam to Tule.Outflow" [@"t - 1"];
+
+      ELSE
+            $ "Sta 48 to TLNWR.Diversion Request" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{a1a4feff-dda4-4473-afa7-c0c44967cb83}";;
 
     RULE                 "Refuge Cumulative Delivered";
     DESCRIPTION          "";
@@ -1061,7 +1278,7 @@ BEGIN
     END
     UUID "{6b245964-61bc-47c7-962e-12a9a0af03f9}";;
 
-    RULE                 "Daily Evaporation";
+    RULE                 "Daily LKNWR Evaporation";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -1070,10 +1287,20 @@ BEGIN
 
       $ "LKNWR Cell2.DailyEvaporation" [] := "VolumeToFlow"( $ "LKNWR Cell2.Area" [] * $ "LKNWR Cell2.Evap" [@"t"], @"t - 1" ) / "LKNWR Cell2.days_in_month" [];
 
-    INACTIVE      $ "Tule Sumps 1A.DailyEvaporation" [] := "VolumeToFlow"( $ "Tule Sumps 1A.Area" [] * $ "Tule Sumps 1A.Evap" [@"t"], @"t - 1" ) / "Tule Sumps 1A.days_in_month" [];
-
     END
     UUID "{d7ca42e4-a4c3-4885-b705-9b10c4c1bb0a}";;
+
+    RULE                 "Daily Tule Sumps Evaporation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Tule Sumps 1A.DailyEvaporation" [] := "VolumeToFlow"( $ "Tule Sumps 1A.Area" [] * $ "Tule Sumps 1A.Evap" [@"t"], @"t - 1" ) / "Tule Sumps 1A.days_in_month" [];
+
+    END
+    UUID "{b7bdb208-20e3-4dd2-afe3-52df911ed244}";;
 
     RULE                 "get days in month";
     DESCRIPTION          "";
@@ -1084,14 +1311,14 @@ BEGIN
 
       "LKNWR Cell2.days_in_month" [] := "GetDaysInMonth"( @"t" );
 
-    INACTIVE      "Tule Sumps 1A.days_in_month" [] := "GetDaysInMonth"( @"t" );
+      "Tule Sumps 1A.days_in_month" [] := "GetDaysInMonth"( @"t" );
 
     END
     UUID "{2c1bcd97-507c-440a-81bb-3fc0a1835576}";;
 
     RULE                 "Refuge Demand";
     DESCRIPTION          "Compute LKNWR need max<br>Purpose: Today?s required volume to hold Unit 2 at its target level.<br>Reads: Unit 2 current storage/elevation; target elev table; expected daily losses  and inflows.";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "What is the target storage (by date?) for the resevoir? <br><br>      $ &quot;Refuge Policy Tracking.LKNWR_Demand&quot; [] := &quot;Max&quot;( 0.00000000, $ &quot;LKNWR Cell2.Max Storage&quot; [] - $ &quot;LKNWR Cell2.Storage&quot; [] + $ &quot;LKNWR Cell2.Outflow&quot; [] )";
     BEGIN
@@ -1103,7 +1330,7 @@ BEGIN
     END
     UUID "{fe05f7cd-cfe4-4dd4-8b17-7d6a3e5e80e9}";;
 
-    RULE                 "Calculate Refuge Area";
+    RULE                 "Calculate LKNWR Area";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -1112,10 +1339,20 @@ BEGIN
 
       $ "LKNWR Cell2.Area" [] := "TableInterpolation"( $ "LKNWR Cell2.Elevation Area", 0.00000000, 1.00000000, $ "LKNWR Cell2.Pool Elevation" [], @"t - 1" );
 
-    INACTIVE      $ "Tule Sumps 1A.Area" [] := "TableInterpolation"( $ "Tule Sumps 1A.Elevation Area", 0.00000000, 1.00000000, $ "Tule Sumps 1A.Pool Elevation" [], @"t - 1" );
-
     END
     UUID "{49303f26-8933-4721-bdce-6c6fea43efb6}";;
+
+    RULE                 "Calculate Tule Sumps Area";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Tule Sumps 1A.Area" [] := "TableInterpolation"( $ "Tule Sumps 1A.Elevation Area", 0.00000000, 1.00000000, $ "Tule Sumps 1A.Pool Elevation" [], @"t - 1" );
+
+    END
+    UUID "{7d51ea1f-c576-41ee-a50e-ec72968f3c49}";;
 
     RULE                 "Set Refuge Diversion Value";
     DESCRIPTION          "";
@@ -1128,7 +1365,7 @@ BEGIN
 
       $ "LKNWR Cell2.Diversion" [] := 0.00000000 "cfs";
 
-    INACTIVE      $ "Tule Sumps 1A.Diversion" [] := 0.00000000 "cfs";
+      $ "Tule Sumps 1A.Diversion" [] := 0.00000000 "cfs";
 
     END
     UUID "{8f1d349f-9915-4495-8c14-195cb6d475b7}";;
