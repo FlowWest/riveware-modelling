@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 23:26 January 12, 2026
+# Created 23:57 January 12, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -724,7 +724,7 @@ BEGIN
     NOTES                "forumula from page 23 (9)<br><br>FFA spill only computes after DPS Spill is exhausted";
     BEGIN
 
-      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"(  ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" ) );
+      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" ) );
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
@@ -838,7 +838,7 @@ BEGIN
     NOTES                "Formula 19 - calcualte project use of defered project supply. how much of yesterday's UKL project diversion should be debited from DPSA <br><br>This is based on agriculture diversion (project diversion = sum of A canal, station48 and ady diversion from UKL) from UKL yesterday <br>Numeric proj_total_yest :=<br>    (&quot;Station48.Diverted&quot;[t-1] +<br>     &quot;MillerHill.Diverted&quot;[t-1] +<br>     &quot;North.Diverted&quot;[t-1] +<br>     &quot;Ady.Diverted&quot;[t-1])";
     BEGIN
 
-      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.Diversion" [@"t - 1"] + $ "North Canal.Diversion" [@"t - 1"] + $ "A Canal.Diversion" [@"t - 1"] + $ "Sta48 and MH from Lost.Diversion" [@"t - 1"] ), @"t - 1" );
+      $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.DiversionFromUKL" [@"t - 1"] + $ "North Canal.DiversionFromUKL" [@"t - 1"] + $ "A Canal.Diversion" [@"t - 1"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t - 1"] ), @"t - 1" );
 
     END
     UUID "{70e3f112-73e4-49db-8422-e7d32a905e89}";;
@@ -1639,7 +1639,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.c1_exc" [] := "Max"( 0.00000000 "cfs", "C1_exc"(  ) );
+      $ "Upper Klamath Lake.c1_exc" [] := "Max"( 0.00000000 "cfs", "C1_exc"( @"t" ) );
 
     END
     UUID "{6d3529d4-749c-45c7-a361-bb7fc7037adc}";;
@@ -2006,7 +2006,7 @@ BEGIN
     END
     UUID "{38fd6748-4070-47be-b9b1-1387f247cb44}";;
 
-    FUNCTION       "C1_exc" (  )
+    FUNCTION       "C1_exc" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
     DESCRIPTION    "";
@@ -2016,7 +2016,7 @@ BEGIN
     NOTES          "Formula to calculate C1-exc variable. UKL releases in excess of Minimum flows (typicall occurs during flood control)";
     BEGIN
 
-      $ "Upper Klamath Lake.Outflow" [@"t"] - $ "Upper Klamath Lake.Min Flows" [@"t"];
+      $ "Upper Klamath Lake.Outflow" [date] - $ "Upper Klamath Lake.Min Flows" [date];
 
     END
     UUID "{d1385b40-ac9a-46ff-a7f4-a505d74d7353}";;
