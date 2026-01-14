@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 09:39 January 14, 2026
+# Created 11:38 January 14, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -710,18 +710,6 @@ BEGIN
     END
     UUID "{2b647bd7-cc68-44c9-b54c-68740fe447cc}";;
 
-    RULE                 "Ady Canal UKL Diversion";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
-
-    END
-    UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
-
     RULE                 "Ady Canal FW SS Diversion";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -751,6 +739,18 @@ BEGIN
 
     END
     UUID "{23385691-4bdb-40f0-8b29-44091f3bd0d3}";;
+
+    RULE                 "Ady Canal UKL Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
+
+    END
+    UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
 
     RULE                 "Sta48 and MH from Lost FF Diversion";
     DESCRIPTION          "";
@@ -795,7 +795,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "Sta48 and MH from Lost.Diversion Request" [@"t"], $ "LRDC from Lost River.Inflow" [@"t"] );
+      $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "Sta48 and MH from Lost.Diversion Request" [@"t"], $ "LRDC into Link.Return Flow" [@"t"] );
 
     END
     UUID "{ca595762-9767-42d6-9537-bd342a16d29f}";;
@@ -1196,13 +1196,21 @@ BEGIN
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" < @"October 1" )
+      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"October 1" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
       END_ELSEIF;
 
     END
@@ -2028,9 +2036,9 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Diversion Data.Ady Canal" [];
+      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal" [];
 
-      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [] + $ "Historical Diversions.Ady Canal to Refuge" [];
+    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [] + $ "Historical Diversions.Ady Canal to Refuge" [];
 
     END
     UUID "{6afe5415-d591-4bb7-8b1b-6ca09b785920}";;
