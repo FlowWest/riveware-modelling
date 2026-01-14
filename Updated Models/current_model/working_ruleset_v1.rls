@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 08:21 January 14, 2026
+# Created 09:39 January 14, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -8,6 +8,45 @@ DESCRIPTION "";
 PRECISION   2;
 NOTES "";
 BEGIN
+
+  POLICY_GROUP   "Generate Output";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Calculate CumAg_ss_Delv";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" == @"January 1") THEN
+            $ "Output.CumAg_ss_DelDV" [] := 0.00000000 "acre-ft";
+
+      ELSE
+            $ "Output.CumAg_ss_DelDV" [@"t"] := $ "Output.CumAg_ss_DelDV" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" == @"March 1" )
+      ELSEIF_CLAUSE
+            $ "Output.CumAg_ss_DelDV" [@"t"] := "FlowToVolume"( $ "A Canal.Diversion Request" [@"t"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] + $ "Ady Canal.DiversionFromUKL_SS" [@"t"] + $ "North Canal.DiversionFromUKL_SS" [@"t"], @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" > @"March 1" AND @"t" <= @"October 31" )
+      ELSEIF_CLAUSE
+            $ "Output.CumAg_ss_DelDV" [@"t"] := "FlowToVolume"( $ "A Canal.Diversion Request" [@"t"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] + $ "Ady Canal.DiversionFromUKL_SS" [@"t"] + $ "North Canal.DiversionFromUKL_SS" [@"t"], @"t" ) + $ "Output.CumAg_ss_DelDV" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"November 15" )
+      ELSEIF_CLAUSE
+            $ "Output.CumAg_ss_DelDV" [@"t"] := "FlowToVolume"( $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"], @"t" ) + $ "Output.CumAg_ss_DelDV" [@"t - 1"];
+      END_ELSEIF;
+
+    END
+    UUID "{17dfd2eb-8937-4a41-86ef-4e83cea7c67e}";;
+
+  END
+  UUID "{a5700c85-c6dc-4034-90f9-08f1e74b05e6}";;
 
   POLICY_GROUP   "Flood Control";
   DESCRIPTION    "";
@@ -557,6 +596,36 @@ BEGIN
   NOTES          "";
   BEGIN
 
+    RULE                 "North Canal FW SS Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"September 30") THEN
+            $ "North Canal.DiversionFromUKL_SS" [@"t"] := $ "North Canal.DiversionFromUKL" [@"t"];
+
+            $ "North Canal.DiversionFromUKL_FW" [@"t"] := 0.00000000 "cfs";
+
+      ELSE
+          INACTIVE      $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" < @"March 1" AND @"t" >= @"January 1" )
+      ELSEIF_CLAUSE
+            $ "North Canal.DiversionFromUKL_FW" [@"t"] := $ "North Canal.DiversionFromUKL" [@"t"];
+            $ "North Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"October" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "North Canal.DiversionFromUKL_FW" [@"t"] := $ "North Canal.DiversionFromUKL" [@"t"];
+            $ "North Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+      END_ELSEIF;
+
+    END
+    UUID "{2c080dec-f574-4e90-b35e-63af66410fcc}";;
+
     RULE                 "North Canal FF Diversion";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -652,6 +721,36 @@ BEGIN
 
     END
     UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
+
+    RULE                 "Ady Canal FW SS Diversion";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"September 30") THEN
+            $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := $ "Ady Canal.DiversionFromUKL" [@"t"];
+
+            $ "Ady Canal.DiversionFromUKL_FW" [@"t"] := 0.00000000 "cfs";
+
+      ELSE
+          INACTIVE      $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" < @"March 1" AND @"t" >= @"January 1" )
+      ELSEIF_CLAUSE
+            $ "Ady Canal.DiversionFromUKL_FW" [@"t"] := $ "Ady Canal.DiversionFromUKL" [@"t"];
+            $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"October" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "Ady Canal.DiversionFromUKL_FW" [@"t"] := $ "Ady Canal.DiversionFromUKL" [@"t"];
+            $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
+      END_ELSEIF;
+
+    END
+    UUID "{23385691-4bdb-40f0-8b29-44091f3bd0d3}";;
 
     RULE                 "Sta48 and MH from Lost FF Diversion";
     DESCRIPTION          "";
