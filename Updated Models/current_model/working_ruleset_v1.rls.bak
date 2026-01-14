@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 11:25 January 14, 2026
+# Created 11:38 January 14, 2026
 # 
 RULESET
 NAME "latest_model_ruleset 2";
@@ -1196,7 +1196,7 @@ BEGIN
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" <= @"December 31" )
+      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
       END_ELSEIF
@@ -1205,6 +1205,10 @@ BEGIN
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"October 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
       END_ELSEIF;
