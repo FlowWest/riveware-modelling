@@ -1,8 +1,8 @@
 # RiverWare_Ruleset 9.5.2
-# Created 12:51 January 14, 2026
+# Created 22:39 January 14, 2026
 # 
 RULESET
-NAME "latest_model_ruleset 2";
+NAME "working_ruleset_1";
 AGENDA_ORDER ASCENDING;
 DESCRIPTION "";
 PRECISION   2;
@@ -336,7 +336,7 @@ BEGIN
     INACTIVE      $ "Keno.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"] + $ "Keno.Target Releases" [@"t"];
 
       IF_STATEMENT ("Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( $ "Upper Klamath Lake.FloodSpill" [@"t"] + ( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( $ "Upper Klamath Lake.FloodSpill" [@"t"] + ( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
       END_IF_STATEMENT;
 
@@ -405,7 +405,7 @@ BEGIN
 
     INACTIVE      $ "Keno.Outflow" [] := $ "Keno.Target Releases" [];
 
-      $ "Upper Klamath Lake.Outflow" [] := "Min"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [], "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
     INACTIVE      $ "Upper Klamath Lake.Outflow" [] := 1000.00000000 "cfs";
 
@@ -419,13 +419,13 @@ BEGIN
     NOTES                "testing rules order for Flood Control releases from UKL";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.10000000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
+      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.00010000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
             ALERT_STATEMENT "Flood Contro Release from UKL";
 
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
       $ "Upper Klamath Lake.Flood Control Flag" [@"t"] := 1.00000000;
 
-            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t - 1"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t - 1"] - 0.10000000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] ), @"t" );
+            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t"] - 0.00010000 "ft" ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t"] ), @"t" );
 
           INACTIVE      $ "Upper Klamath Lake.Release" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"];
 
