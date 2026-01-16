@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 23:29 January 15, 2026
+# Created 12:12 January 16, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -379,7 +379,7 @@ BEGIN
     NOTES                "testing rules order for Flood Control releases from UKL";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.00010000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
+      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.10000000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
             ALERT_STATEMENT "Flood Contro Release from UKL";
 
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
@@ -463,7 +463,7 @@ BEGIN
 
     INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "River Data.FFA_Inc" [@"t"] + $ "River Data.FFA_use" [@"t"] );
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + 0.00000000 "cfs" );
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + 0.00000000 "cfs" - $ "OpsData.FFAInc" [@"t"] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
