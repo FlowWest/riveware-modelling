@@ -1,7 +1,6 @@
 library(ggplot2)
 library(tidyverse)
 library(plotly)
-install.packages("plotly")
 
 data <- read_csv("output_comparison.csv")
 ukl_outflow <- data %>% 
@@ -10,8 +9,8 @@ ukl_outflow <- data %>%
     names_to="model",
     values_to = "value"
   ) %>% mutate(date=as.Date(Date, format="%d%b%Y")) %>%
-  filter(date >as.Date("1992-01-01")) %>% 
-  filter(date < as.Date("1994-01-01")) %>% 
+  filter(date >as.Date("1981-01-01")) %>% 
+  filter(date < as.Date("1982-01-01")) %>% 
   select(-Date) %>%  glimpse()
   
 ggplot(ukl_outflow, aes(x = date, y = value, color = model)) +
@@ -27,7 +26,7 @@ ggplot(ukl_outflow, aes(x = date, y = value, color = model)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
-out
+  out
 
 keno_outflow <- data %>% 
   pivot_longer(
@@ -110,22 +109,14 @@ ukl_elev <- data %>%
     names_to="model",
     values_to = "value"
   ) %>% mutate(date=as.Date(Date, format="%d%b%Y")) %>% 
-  #filter(date >as.Date("1992-01-01")) %>% 
-  #filter(date < as.Date("1994-01-01")) %>% 
+  filter(date >as.Date("1980-01-01")) %>% 
+  filter(date < as.Date("1995-01-01")) %>% 
   select(-Date) %>% glimpse()
 
-plot <- ukl_elev %>%
-  filter(date >= as.Date("1992-01-01")) %>%
-  ggplot(aes(
-    x = date,
-    y = value,
-    color = model,
-  )) +
+ggplot(ukl_elev, aes(x = date, y = value, color = model)) +
   geom_line(alpha = 0.8) +
-  labs(x = "Date", y = "Elevation (ft)", title = "UKL Pool Elevation") +
+  labs(x = "Day of Year", y = "Elevation (ft)", title = "UKL Elevation") +
   theme_minimal()
-
-ggplotly(plot, tooltip = "text")
 
 ffa <- data %>% 
   pivot_longer(
@@ -148,7 +139,22 @@ dpsa <- data %>%
   ) %>% mutate(date=as.Date(Date, format="%d%b%Y")) %>% 
   select(-Date) %>% glimpse()
 
-ggplot(ffa, aes(x = date, y = value, color = model)) +
+ggplot(dpsa, aes(x = date, y = value, color = model)) +
   geom_line(alpha = 0.8) +
   labs(x = "Day of Year", y = "dpsa acre-ft", title = "Deferred Project Supply Account") +
+  theme_minimal()
+
+ffa_inc <- data %>% 
+  pivot_longer(
+    cols=c(WRIMS_FFA_INC,Riverware_FFA_Inc),
+    names_to="model",
+    values_to = "value"
+  ) %>% mutate(date=as.Date(Date, format="%d%b%Y")) %>%
+  filter(date >as.Date("1981-01-01")) %>% 
+  filter(date < as.Date("1982-01-01")) %>% 
+  select(-Date) %>% glimpse()
+
+ggplot(ffa_inc, aes(x = date, y = value, color = model)) +
+  geom_line(alpha = 0.8) +
+  labs(x = "Day of Year", y = "cfs", title = "FFA Inc") +
   theme_minimal()

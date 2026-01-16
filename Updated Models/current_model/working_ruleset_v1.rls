@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 16:28 January 15, 2026
+# Created 23:29 January 15, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -407,7 +407,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"] < 0.01000000 "cfs") THEN
+      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"] < 0.10000000 "cfs") THEN
             ALERT_STATEMENT "Flood Contro Release from KENO";
 
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
@@ -447,7 +447,7 @@ BEGIN
       END_IF_STATEMENT;
 
       IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
-            $ "Keno.Target Releases" [@"t"] := "Max"( $ "Upper Klamath Lake.Outflow" [@"t"], $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t"] );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Max"( "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], @"t" ), $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t"] );
 
       END_IF_STATEMENT;
 
@@ -461,7 +461,9 @@ BEGIN
     NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
     BEGIN
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + $ "Keno data.River Base Flow" [@"t"] * "KenoReleaseMultiplier"( @"t" ) + "FFA increment"( @"t" ) - $ "Klamath River.FFA Usage" [] );
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "River Data.FFA_Inc" [@"t"] + $ "River Data.FFA_use" [@"t"] );
+
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + 0.00000000 "cfs" );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
@@ -857,32 +859,6 @@ BEGIN
     END
     UUID "{cb7f3135-efdf-4748-b1ed-306265026921}";;
 
-    RULE                 "FFA storage and release";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Code has broken FFA accumulation ruleset into two separate lines of code because the year change between october and March 2 breaks the code<br><br>FFA releases are scheduled <br>FFA increment is 0 if flooding<br><br>need to load in ffa-increment ==0";
-    BEGIN
-
-      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
-
-      ELSE
-            $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 2" )
-      ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
-      ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [@"t"] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
-      END_ELSEIF;
-
-    END
-    UUID "{0cb69d1c-5adb-4404-8bce-92d6c68cc6d8}";;
-
     RULE                 "Yest FFA Spill";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -937,6 +913,86 @@ BEGIN
     END
     UUID "{038a637a-969a-4769-bd30-82591d9789ff}";;
 
+    RULE                 "FFA Increment";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Code has broken FFA accumulation ruleset into two separate lines of code because the year change between october and March 2 breaks the code<br><br>FFA releases are scheduled <br>FFA increment is 0 if flooding<br><br>need to load in ffa-increment ==0";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31" AND $ "River Data.FFA Increment" [@"t"] < $ "OpsData.FFA_vol_limit" []) THEN
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
+
+      ELSE
+            $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" AND $ "River Data.FFA Increment" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [@"t"] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
+      END_ELSEIF;
+
+      $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
+
+    END
+    UUID "{0cb69d1c-5adb-4404-8bce-92d6c68cc6d8}";;
+
+    RULE                 "FFA_Inc";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "OpsData.FFAInc" [@"t"] := 0.00000000 "cfs";
+
+      ELSE
+            $ "OpsData.FFAInc" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" > @"October 1" AND @"t" <= @"December 31" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
+      ELSEIF_CLAUSE
+            $ "OpsData.FFAInc" [@"t"] := "FFA increment"( @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
+      ELSEIF_CLAUSE
+            $ "OpsData.FFAInc" [@"t"] := "FFA increment"( @"t" );
+      END_ELSEIF;
+
+    END
+    UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
+
+    RULE                 "FFA Reserve";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "OpsData.FFAReserve" [] := 0.00000000 "cfs";
+
+      ELSE
+            $ "OpsData.FFAReserve" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" > @"October 1" AND @"t" <= @"December 31" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
+      ELSEIF_CLAUSE
+            $ "OpsData.FFAReserve" [@"t"] := "FFA increment"( @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
+      ELSEIF_CLAUSE
+            $ "OpsData.FFAReserve" [@"t"] := "FFA increment"( @"t" );
+      END_ELSEIF;
+
+    END
+    UUID "{72bc6406-897f-48e8-bfb6-e613412a6522}";;
+
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
 
@@ -952,35 +1008,6 @@ BEGIN
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Formula 22 from Appendix E, Used for account for accumulation, diverting, and spilling dps account,<br><br><br>dps set to 0 on nov 1<br><br>setting refuge dps div to zero for now<br>The DPSA balance decreases when:<br><br>Project irrigators divert DPS,<br><br>Refuges divert DPS during flood-control conditions, or<br><br>DPS spills during UKL flood control.<br><br>At the end of each day, DPSA is updated as:<br>DPSA_today = max(0, DPSA_yesterday + flow savings + refuge savings - project DPS diversion - refuge DPS diversion - DPS spill).<br><br>The DPSA account resets to zero on November 1 every year and begins accumulating again on the same day.<br><br>elseif for october place holder";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t"] + 0.00000000 "acre-ft" - $ "Refuge Policy Tracking.Proj DPS Div" [@"t - 1"] - 0.00000000 "acre-ft" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
-
-      ELSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
-      ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" - $ "Refuge Policy Tracking.Proj DPS Div" [@"t - 1"] - 0.00000000 "acre-ft" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
-      END_ELSEIF;
-
-    INACTIVE      IF_STATEMENT (@"t" == @"November 1") THEN
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
-
-      ELSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "Refuge Policy Tracking.Refuge_DPS_Div <br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" > @"November 1" AND @"t" <= @"September 30" )
-      ELSEIF_CLAUSE
-          INACTIVE      $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" COMMENTED_BY "need RefugeSavings<br>" - $ "OpsData.Proj DPS Div" [@"t - 1"] - $ "OpsData.Refuge DPS Div" [@"t - 1"] COMMENTED_BY "need RefugeDiversions<br>" - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t - 1" ) );
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 500.00000000 "acre-ft";
-      END_ELSEIF
-      ELSEIF_COND ( ( @"t" > @"October 1" AND @"t" < @"November 1" ) COMMENTED_BY "october placeholder <br>" )
-      ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
-      END_ELSEIF;
 
       IF_STATEMENT (@"t" >= @"October 1" AND @"t" < @"November 1") THEN
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := 0.00000000 "acre-ft";
@@ -1010,8 +1037,6 @@ BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000) THEN
             $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"( @"t - 1" ), "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) ) ) );
-
-          INACTIVE      $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Upper Klamath Lake.Min Flows" [@"t - 1"], "Min"( $ "Keno.Outflow" [@"t - 1"] - "Max"( $ "Keno data.River Base Flow" [], $ "Keno.Outflow" [@"t - 2"] - $ "Keno.Ramp Down Rate" [] ) - $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t - 1" ) ) ) );
 
       ELSE
             $ "LakeData.DPS Spill" [] := 0.00000000 "cfs";
