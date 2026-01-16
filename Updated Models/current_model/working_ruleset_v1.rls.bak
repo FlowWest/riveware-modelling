@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 10:31 January 16, 2026
+# Created 13:37 January 16, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -913,7 +913,7 @@ BEGIN
     END
     UUID "{038a637a-969a-4769-bd30-82591d9789ff}";;
 
-    RULE                 "FFA Increment";
+    RULE                 "FFA Stored";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -936,7 +936,23 @@ BEGIN
             $ "River Data.FFA Increment" [@"t"] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
       END_ELSEIF;
 
-      $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
+    INACTIVE      $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
+
+      IF_STATEMENT (@"t" == @"October 1") THEN
+            $ "River Data.FFA Increment" [@"t"] := 0.00000000 "acre-ft";
+
+      ELSE
+            $ "River Data.FFA Increment" [@"t"] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"October 2" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( $ "OpsData.FFAInc" [], @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"];
+      END_ELSEIF;
 
     END
     UUID "{0cb69d1c-5adb-4404-8bce-92d6c68cc6d8}";;
