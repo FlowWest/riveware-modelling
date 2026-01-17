@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 13:39 January 16, 2026
+# Created 22:06 January 16, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -360,7 +360,7 @@ BEGIN
     END
     UUID "{00b2fefd-dcec-4db2-a624-6e3c7fa96c0b}";;
 
-    RULE                 "releases to the river";
+    RULE                 "Release to River";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -434,6 +434,21 @@ BEGIN
   NOTES          "";
   BEGIN
 
+    RULE                 "Keno RampDown Flow";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
+
     RULE                 "Keno Rampdown Rates";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -463,10 +478,50 @@ BEGIN
 
     INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "River Data.FFA_Inc" [@"t"] + $ "River Data.FFA_use" [@"t"] );
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + 0.00000000 "cfs" - $ "OpsData.FFAInc" [@"t"] );
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + $ "Klamath River.FFA Usage" - $ "OpsData.FFAInc" [@"t"] );
+
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
+
+    RULE                 "Ramp down rates";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Constraining factors when reducing keno flows to reduce the risk of fish stranding. <br>Data found in BiOp appendix E, pg 25<br><br>";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [] < 1400.00000000 "cfs") THEN
+            $ "Keno.Ramp Down Rate" [] := 150.00000000 "cfs";
+
+      ELSE
+            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "Max"( $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 2800.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 300.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 3100.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 600.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 3500.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - 2500.00000000 "cfs" );
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 4100.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 1000.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] >= 4100.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "Max"( $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
+      END_ELSEIF;
+
+    END
+    UUID "{f6ab3838-472a-4930-9002-f5c9d541561f}";;
 
   END
   UUID "{f948a900-dadf-4147-9e8a-2ebc52be2392}";;
@@ -823,7 +878,7 @@ BEGIN
     END
     UUID "{a19286e4-5d1d-44d0-871c-806d2d948c52}";;
 
-    RULE                 "FFA Downstream Distribution";
+    RULE                 "FFA Usage";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -841,32 +896,12 @@ BEGIN
     END
     UUID "{fa834b55-c845-4d73-a072-b7eafb1221ee}";;
 
-    RULE                 "FFA Increment Debug";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"(  ), @"t" );
-
-    INACTIVE      $ "River Data.FFA_Debug" [@"t"] := "FlowToVolume"( "FFA increment"(  ), @"t" );
-
-    INACTIVE      $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
-
-    INACTIVE      $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 October 5, Current Year"] / 121.00000000 * $ "River Data.FFA Flat Distribution" [], @"t" );
-
-    END
-    UUID "{cb7f3135-efdf-4748-b1ed-306265026921}";;
-
     RULE                 "Yest FFA Spill";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "forumula from page 23 (9)<br><br>FFA spill only computes after DPS Spill is exhausted";
     BEGIN
-
-    INACTIVE      $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t" ) );
 
       IF_STATEMENT (@"t" == @"October 1") THEN
             $ "OpsData.yest_FFA_Spill" [] := 0.00000000 "acre-ft";
@@ -877,23 +912,11 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( $ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000 )
       ELSEIF_CLAUSE
-            $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t" ) );
+            $ "OpsData.yest_FFA_Spill" [] := "Max"( 0.00000000 "acre-ft", "Min"( "FlowToVolume"( "C1_exc"( @"t - 1" ), @"t" ), "FlowToVolume"( "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"], @"t" ) ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
       END_ELSEIF;
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
-
-    RULE                 "FFA Debug";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "OpsData.ffa_debug" [] := "FlowToVolume"( "Min"( "C1_exc"(  ), "c13_exc"(  ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t - 1" );
-
-    END
-    UUID "{578c9c95-cb37-419f-ab3e-c89d3bd4c8b4}";;
 
     RULE                 "Yest FFA Savings";
     DESCRIPTION          "";
@@ -906,7 +929,9 @@ BEGIN
             $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-            $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
+          INACTIVE      $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
+
+            $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT;
 
@@ -982,32 +1007,6 @@ BEGIN
 
     END
     UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
-
-    RULE                 "FFA Reserve";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT (@"t" == @"October 1") THEN
-            $ "OpsData.FFAReserve" [] := 0.00000000 "cfs";
-
-      ELSE
-            $ "OpsData.FFAReserve" [@"t"] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" > @"October 1" AND @"t" <= @"December 31" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
-      ELSEIF_CLAUSE
-            $ "OpsData.FFAReserve" [@"t"] := "FFA increment"( @"t" );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" AND $ "OpsData.FFAccounting" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
-      ELSEIF_CLAUSE
-            $ "OpsData.FFAReserve" [@"t"] := "FFA increment"( @"t" );
-      END_ELSEIF;
-
-    END
-    UUID "{72bc6406-897f-48e8-bfb6-e613412a6522}";;
 
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
@@ -1885,40 +1884,6 @@ BEGIN
     END
     UUID "{6d3529d4-749c-45c7-a361-bb7fc7037adc}";;
 
-    RULE                 "Ramp down rates";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Constraining factors when reducing keno flows to reduce the risk of fish stranding. <br>Data found in BiOp appendix E, pg 25<br><br>";
-    BEGIN
-
-      IF_STATEMENT ($ "Keno.Outflow" [] < 1400.00000000 "cfs") THEN
-            $ "Keno.Ramp Down Rate" [] := 150.00000000 "cfs";
-
-      ELSE
-            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "Max"( "c13_exc"( @"t - 1" ) - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 2800.00000000 "cfs" )
-      ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := 300.00000000 "cfs";
-      END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 3100.00000000 "cfs" )
-      ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := 600.00000000 "cfs";
-      END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 3500.00000000 "cfs" )
-      ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := "Max"( 0.00000000 "cfs", "c13_exc"( @"t - 1" ) - 2500.00000000 "cfs" );
-      END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 4100.00000000 "cfs" )
-      ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := 1000.00000000 "cfs";
-      END_ELSEIF;
-
-    END
-    UUID "{f6ab3838-472a-4930-9002-f5c9d541561f}";;
-
     RULE                 "Assigning A Canal Diversion Request";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -2198,7 +2163,7 @@ BEGIN
     NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC into Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill <br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
     BEGIN
 
-      "Max"( 0.00000000 "acre-ft", $ "River Data.FFA Increment" [date - 1.00000000 "day"] - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.Ramp Down Rate" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
+      "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAInc" [date - 1.00000000 "day"] - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.RampFlow" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
 
     END
     UUID "{1e9d8509-bf3e-4c0f-aecf-3b5262c79c2e}";;
