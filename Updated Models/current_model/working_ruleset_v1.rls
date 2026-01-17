@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:06 January 16, 2026
+# Created 23:47 January 16, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -308,6 +308,30 @@ BEGIN
     END
     UUID "{d989a157-7317-4068-8795-2e4dd27f6014}";;
 
+    RULE                 "Incorporate Rampdown Rates";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT ($ "Keno.RampFlow" [@"t"] > 0.00000000 "cfs") THEN
+            $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Upper Klamath Lake.Outflow" [], ? );
+
+      ELSE
+      END_IF_STATEMENT;
+
+      ? := ?;
+
+      IF_STATEMENT ($ "Keno.RampFlow" [@"t"] > 0.00000000 "cfs") THEN
+            $ "Keno.Target Releases" [] := "Max"( $ "Keno.Target Releases" [], $ "Keno.RampFlow" [] );
+
+      ELSE
+      END_IF_STATEMENT;
+
+    END
+    UUID "{88ef00a7-92ad-4fd4-8792-c0856cd227ca}";;
+
     RULE                 "Update UKL Flood Release";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -434,24 +458,9 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "Keno RampDown Flow";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
-            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
-
     RULE                 "Keno Rampdown Rates";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Creates the variable C13_exc from WRIMS, calculates keno releases in excess of minimum flows and ramp rates<br>";
     BEGIN
@@ -476,11 +485,11 @@ BEGIN
     NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
     BEGIN
 
-    INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "River Data.FFA_Inc" [@"t"] + $ "River Data.FFA_use" [@"t"] );
-
     INACTIVE      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] + $ "Klamath River.FFA Usage" - $ "OpsData.FFAInc" [@"t"] );
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] );
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "OpsData.FFAInc" [@"t"] + $ "Klamath River.FFA Usage" [@"t"] );
+
+    INACTIVE      $ "Keno.Target Releases" [] := "Max"( "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "OpsData.FFAInc" [@"t"] + $ "Klamath River.FFA Usage" [@"t"] ), "Max"( ?, ? ) );
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
@@ -929,9 +938,9 @@ BEGIN
             $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
 
       ELSE
-          INACTIVE      $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
+            $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
 
-            $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
+          INACTIVE      $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT;
 
@@ -1007,6 +1016,29 @@ BEGIN
 
     END
     UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
+
+    RULE                 "Keno RampDown Flow";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+
+      END_IF_STATEMENT;
+
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [@"t - 1"] > 1400.00000000 "cfs") THEN
+            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+
+      ELSE
+            $ "Keno.RampFlow" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
 
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
@@ -2163,7 +2195,7 @@ BEGIN
     NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC into Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill <br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
     BEGIN
 
-      "Max"( 0.00000000 "acre-ft", $ "OpsData.FFAInc" [date - 1.00000000 "day"] - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.RampFlow" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
+      "Max"( 0.00000000 "acre-ft", "FlowToVolume"( $ "OpsData.FFAInc" [date - 1.00000000 "day"], @"t" ) - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.RampFlow" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
 
     END
     UUID "{1e9d8509-bf3e-4c0f-aecf-3b5262c79c2e}";;
