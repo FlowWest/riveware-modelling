@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 23:47 January 16, 2026
+# Created 10:28 January 18, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1039,6 +1039,42 @@ BEGIN
 
     END
     UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
+
+    RULE                 "ReleaseDebug";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Debug.KenReleaseDebug" [] := "KenoReleaseMultiplier"( @"t" );
+
+    END
+    UUID "{bb855221-ebdf-4bfb-94c4-43dabbe11039}";;
+
+    RULE                 "ReserveDebug";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Debug.ReserveDebug" [] := "FFA reserve Lookup"( @"t" );
+
+    END
+    UUID "{38a7c686-d0eb-4396-b9ed-5cc27ae2c1e2}";;
+
+    RULE                 "Riverbase Debug";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Debug.RiverBaseDebug" [] := $ "Keno data.River Base Flow" [@"t"];
+
+    END
+    UUID "{5554d894-02f1-47e7-8b20-e6b62631fff3}";;
 
   END
   UUID "{52b384c8-b267-4578-96c8-0b7fa7f426e7}";;
