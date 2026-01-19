@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 23:45 January 18, 2026
+# Created 10:35 January 19, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1235,32 +1235,29 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT (@"t" < @"April 15" AND @"t" >= @"April 1") THEN
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"] );
-
-      ELSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 350000.00000000 "acre-ft";
+      IF_STATEMENT (@"t" == @"October 1" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 220000.00000000 "acre-ft";
 
       END_IF_STATEMENT
-      ELSEIF_COND ( @"t" < @"June 1" AND @"t" >= @"April 15" )
+      ELSEIF_COND ( @"t" >= @"December 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"] );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"June 1" AND @"t" <= @"September 30" )
-      ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"] + $ "OpsData.Firm Project Supply" [@"24:00:00 June 1, Current Year"] );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply From Inflow" [@"24:00:00 March 1, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 March 1, Current Year"] );
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 0.00000000 "acre-ft";
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := 0.00000000 "acre-ft";
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"October 1" AND @"t" <= @"December 31" )
+      ELSEIF_COND ( @"t" == @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Variable" [@"t"] + $ "OpsData.Project_Storage_Mar1" [@"t"] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" > @"March 1" AND @"t" < @"April 1" )
       ELSEIF_CLAUSE
             $ "OpsData.ProjectSupplyAccounting" [@"t"] := $ "OpsData.ProjectSupplyAccounting" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"April 1" AND @"t" < @"December 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.ProjectSupplyAccounting" [@"t"] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Variable" [@"t"] + $ "OpsData.Firm Project Supply" [@"t"] );
       END_ELSEIF;
 
     END
@@ -1295,7 +1292,7 @@ BEGIN
     NOTES                "needs debugging<br>need to set variable sproject supply to values from june 1";
     BEGIN
 
-      IF_STATEMENT (@"t" <= @"June 1" AND @"t" >= @"April 15") THEN
+    INACTIVE      IF_STATEMENT (@"t" <= @"June 1" AND @"t" >= @"April 15") THEN
             $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
 
       ELSE
@@ -1312,24 +1309,44 @@ BEGIN
       END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := 120000.00000000 "acre-ft";
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := 120000.00000000 "acre-ft";
 
       END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"April 1" )
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := $ "OpsData.Variable Project Supply Inflow" [@"t - 1"];
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := $ "OpsData.Project Supply from Inflow_Variable" [@"t - 1"];
       END_ELSEIF
-      ELSEIF_COND ( @"t" < @"April 15" AND @"t" >= @"April 1" )
+      ELSEIF_COND ( @"t" == @"March 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 2.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
       END_ELSEIF
-      ELSEIF_COND ( @"t" <= @"June 1" AND @"t" >= @"April 15" )
+      ELSEIF_COND ( @"t" < @"April 1" AND @"t" > @"March 1" )
       ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := $ "OpsData.Project Supply from Inflow_Variable" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 3.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" < @"April 15" AND @"t" > @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := $ "OpsData.Project Supply from Inflow_Variable" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"April 15" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"t"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 4.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" < @"June 1" AND @"t" > @"April 15" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := $ "OpsData.Project Supply from Inflow_Variable" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"June 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"t"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
       END_ELSEIF
       ELSEIF_COND ( @"t" > @"June 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := $ "OpsData.Variable Project Supply Inflow" [@"t - 1"];
+            $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := $ "OpsData.Project Supply from Inflow_Variable" [@"t - 1"];
       END_ELSEIF;
 
     END
@@ -1337,7 +1354,7 @@ BEGIN
 
     RULE                 "Project Supply From Storage";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "If date equals April 1, then set Project Supply from storage<br><br>to look up Project supply multiplier<br>      $ &quot;Lake.DebuggingSlot&quot; [@&quot;t&quot;] := &quot;TableInterpolation&quot;( $ &quot;OpsData.Project Share Calculator&quot;, 0.00000000, 1.00000000, $ &quot;OpsData.OpsIndex&quot; [@&quot;t&quot;], @&quot;t&quot; )<br><br>5/27 - shadow storage is now programmed in, <br>adding placeholder value<br>";
     BEGIN
