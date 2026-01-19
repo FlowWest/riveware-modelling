@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:47 January 18, 2026
+# Created 23:10 January 18, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1386,7 +1386,7 @@ BEGIN
       END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
-            $ "OpsData.Project Supply from Inflow_Firm" [] := 100.00000000 "acre-ft";
+            $ "OpsData.Project Supply from Inflow_Firm" [] := 100000.00000000 "acre-ft";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"April 1" )
@@ -1450,7 +1450,7 @@ BEGIN
     NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br><br>what is the value from ss to winter of next year?<br>";
     BEGIN
 
-      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
+    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
             $ "OpsData.Project Supply from Storage" [@"t"] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
 
       ELSE
@@ -1462,8 +1462,57 @@ BEGIN
             $ "OpsData.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
       END_ELSEIF;
 
+      IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
+            $ "OpsData.Project Supply from Storage" [@"t"] := 80000.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Storage" [@"t"] := $ "OpsData.Project Supply from Storage" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
+      ELSEIF_CLAUSE
+          INACTIVE      $ "OpsData.Project Supply from Storage" [@"t"] := "Max"( 0.00000000 "acre-ft", ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209111.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) );
+            $ "OpsData.Project Supply from Storage" [@"t"] := "Max"( 0.00000000 "acre-ft", "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209111.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"April 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Storage" [@"t"] := "Max"( 0.00000000 "acre-ft", "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209111.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"April 2" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Storage" [@"t"] := $ "OpsData.Project Supply from Storage" [@"t - 1"];
+      END_ELSEIF;
+
     END
     UUID "{752564a7-b7e9-4d5a-8847-ac39ae688f23}";;
+
+    RULE                 "Project Storage Mar1";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" < @"March 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
+            $ "OpsData.Project_Storage_Mar1" [@"t"] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project_Storage_Mar1" [@"t"] := $ "OpsData.Project_Storage_Mar1" [@"t - 1"];
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project_Storage_Mar1" [@"t"] := "Max"( 0.00000000 "acre-ft", "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209111.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" > @"March 1" AND @"t" <= @"December 31" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project_Storage_Mar1" [@"t"] := $ "OpsData.Project_Storage_Mar1" [@"t - 1"];
+      END_ELSEIF;
+
+    END
+    UUID "{ad398355-38c4-468a-b94d-3262abe33eb5}";;
 
     RULE                 "ProjectShare";
     DESCRIPTION          "";
