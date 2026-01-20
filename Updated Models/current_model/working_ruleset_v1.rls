@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 13:59 January 19, 2026
+# Created 21:55 January 19, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -339,7 +339,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.flood_debug" [@"t"] := $ "Upper Klamath Lake.Flood Control" [@"t"];
+      $ "Upper Klamath Lake.MaxStorage" [@"t"] := "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t"] );
 
     END
     UUID "{5b4e06a7-73b8-4a8e-91c2-4b8997f3e495}";;
@@ -419,13 +419,13 @@ BEGIN
     NOTES                "testing rules order for Flood Control releases from UKL";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Pool Elevation" [@"t - 1"] + 0.10000000 "ft" > $ "Upper Klamath Lake.Flood Control" [@"t - 1"]) THEN
+      IF_STATEMENT ($ "Upper Klamath Lake.Storage" [@"t - 1"] + 0.10000000 "acre-ft" > $ "Upper Klamath Lake.MaxStorage" [@"t - 1"]) THEN
             ALERT_STATEMENT "Flood Contro Release from UKL";
 
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
       $ "Upper Klamath Lake.Flood Control Flag" [@"t"] := 1.00000000;
 
-            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Flood Control" [@"t"] ), "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Pool Elevation" [@"t"] ), @"t" );
+            $ "Upper Klamath Lake.FloodSpill" [@"t"] := "SolveOutflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [@"t"], $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] - 0.10000000 "acre-ft", $ "Upper Klamath Lake.Storage" [@"t - 1"], @"t" );
 
           INACTIVE      $ "Upper Klamath Lake.FloodSpill" [@"t"] := "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) );
 
@@ -466,6 +466,42 @@ BEGIN
 
     END
     UUID "{4aa2f078-c00a-4f43-bcba-0a7e8b4e8210}";;
+
+    RULE                 "Early Flood Release";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
+            IF_STATEMENT ("Max"( 10.00000000, $ "OpsData.NWI_14dayAvg" [@"t - 1"] * 30.00000000 ) > "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] - $ "Upper Klamath Lake.Storage" [@"t - 1"] ) / 1.00000000 "acre-ft" AND $ "Upper Klamath Lake.Storage" [@"t - 1"] <= $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] AND $ "Upper Klamath Lake.Storage" [@"t - 1"] + 0.10000000 "acre-ft" > $ "Upper Klamath Lake.Storage" [@"t - 2"]) THEN
+            $ "Upper Klamath Lake.EarlySpillFlag" [] := 1.00000000;
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "Upper Klamath Lake.EarlySpillFlag" [] := 0.00000000;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+          INACTIVE      IF_STATEMENT ("Max"( 10.00000000, $ "OpsData.NWI_14dayAvg" [@"t - 1"] * 30.00000000 ) > "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] - $ "Upper Klamath Lake.Storage" [@"t - 1"] ) / 1.00000000 "acre-ft" AND $ "Upper Klamath Lake.Storage" [@"t - 1"] <= $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] AND $ "Upper Klamath Lake.Storage" [@"t - 1"] + 0.10000000 "acre-ft" > $ "Upper Klamath Lake.Storage" [@"t - 2"]) THEN
+            $ "Upper Klamath Lake.EarlySpillFlag" [] := 1.00000000;
+
+      END_IF_STATEMENT;
+      END_ELSEIF;
+
+      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31" AND "Max"( 10.00000000, $ "OpsData.NWI_14dayAvg" [@"t - 1"] * 30.00000000 ) > "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] - $ "Upper Klamath Lake.Storage" [@"t - 1"] ) / 1.00000000 "acre-ft" AND $ "Upper Klamath Lake.Storage" [@"t - 1"] <= $ "Upper Klamath Lake.MaxStorage" [@"t - 1"] AND $ "Upper Klamath Lake.Storage" [@"t - 1"] + 0.10000000 "acre-ft" > $ "Upper Klamath Lake.Storage" [@"t - 2"]) THEN
+            $ "Upper Klamath Lake.EarlySpillFlag" [] := 1.00000000;
+
+      ELSE
+            $ "Upper Klamath Lake.EarlySpillFlag" [] := 0.00000000;
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{b7ffa8b9-4731-425a-899e-eb0ba9041a9f}";;
 
   END
   UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
@@ -701,8 +737,8 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Ady Canal.DiversionFromLRDC" [@"t"] + $ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.Diversion Request" [@"t"]) THEN
-            $ "Ady Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] - $ "Ady Canal.DiversionFromLRDC" [@"t"] );
+      IF_STATEMENT ($ "Ady Canal.DiversionFromLRDC" [@"t"] + $ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.To Project" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Ady Canal.To Project" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] - $ "Ady Canal.DiversionFromLRDC" [@"t"] );
 
       ELSE
             $ "Ady Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
@@ -719,8 +755,8 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.Diversion Request" [@"t"]) THEN
-            $ "Ady Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "Ady Canal.Diversion Request" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] );
+      IF_STATEMENT ($ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.To Project" [@"t"]) THEN
+            $ "Ady Canal.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "Ady Canal.To Project" [@"t"] - $ "Ady Canal.DiversionFromUKL" [@"t"] );
 
       ELSE
             $ "Ady Canal.DiversionFromLRDC" [@"t"] := 0.00000000 "cfs";
@@ -767,7 +803,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
+      $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.To Project" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
 
     END
     UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
@@ -2305,9 +2341,9 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal" [];
+    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal" [];
 
-    INACTIVE      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [] + $ "Historical Diversions.Ady Canal to Refuge" [];
+      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [] + $ "Historical Diversions.Ady Canal to Refuge" [];
 
     END
     UUID "{6afe5415-d591-4bb7-8b1b-6ca09b785920}";;
@@ -2320,6 +2356,8 @@ BEGIN
     BEGIN
 
       $ "Ady Canal.To Project" [] := $ "Historical Diversions.Ady Canal to Project" [];
+
+      $ "Ady Canal.ToRefuge" [] := $ "Historical Diversions.Ady Canal to Refuge" [];
 
     END
     UUID "{189738c8-f9b6-40fc-bb92-845db44c6ecd}";;
