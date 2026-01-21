@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:03 January 20, 2026
+# Created 11:08 January 21, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -278,13 +278,13 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC from Lost River.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] );
+            $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := "Min"( $ "LRDC into Link.Return Flow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] );
 
             IF_STATEMENT ($ "LRDC from Lost River.Inflow" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
-            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] );
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] );
 
             IF_STATEMENT ($ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
-            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
 
       ELSE
             $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
@@ -399,12 +399,12 @@ BEGIN
     INACTIVE      $ "Keno.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"] + $ "Keno.Target Releases" [@"t"];
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Inflow.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Upper Klamath Lake.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Upper Klamath Lake.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
       END_IF_STATEMENT
       ELSEIF_COND ( $ "Keno.Flood Control Flag" [@"t"] == 1.00000000 )
       ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Inflow.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Keno.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Keno.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
       END_ELSEIF;
 
     INACTIVE      IF_STATEMENT ("Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
@@ -422,9 +422,9 @@ BEGIN
     NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
     BEGIN
 
-    INACTIVE      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretions Diversion.Diversion" [] - $ "Keno Accretions Inflow.Inflow" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+    INACTIVE      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretions Diversion.Diversion" [] - $ "Keno Accretion Positive.Local Inflow" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
-      $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] - $ "Keno Accretion Inflow.Inflow" [], 0.00000000 "cfs" );
+      $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] - 0.00000000 "cfs", 0.00000000 "cfs" );
 
     END
     UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
@@ -886,38 +886,59 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      IF_STATEMENT ($ "Ady Canal.ToRefugeFromLRDC" [@"t"] + $ "Ady Canal.ToRefugeFromFF" [@"t"] < $ "Ady Canal.ToRefuge" [@"t"]) THEN
-            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := "Min"( $ "LRDC Draw From Klamath.Inflow" [@"t"], $ "Ady Canal.ToRefuge" [@"t"] - $ "Ady Canal.ToRefugeFromFF" [@"t"] - $ "Ady Canal.ToRefugeFromLRDC" [@"t"] );
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := 0.00000000 "cfs";
 
       ELSE
-            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := 0.00000000 "cfs";
+            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := "Min"( $ "Ady Canal.ToRefuge" [@"t"], $ "LRDC Draw From Klamath.Inflow" [@"t"] );
 
       END_IF_STATEMENT;
 
-      $ "Ady Canal.ToRefugeFromUKL" [@"t"] := "Min"( $ "Ady Canal.ToRefuge" [@"t"], $ "LRDC Draw From Klamath.Inflow" [@"t"] );
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 0.00000000) THEN
+            $ "Ady Canal.ToRefugeFromDPS" [@"t"] := 0.00000000 "cfs";
+
+            $ "Ady Canal.ToRefugeFromLP" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
 
     END
     UUID "{9ece23b8-61f2-4b7a-aeaf-94b391c27b37}";;
 
-    RULE                 "Ady Refuge Diversion Lost LRDC Diversion";
+    RULE                 "Ady Refuge Flood DPS";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-    INACTIVE      $ "Ady Canal.ToRefugeFromLRDC" [@"t"] := "Min"( $ "Ady Canal.ToRefuge" [@"t"], $ "LRDC into Link.Return Flow" [@"t"] );
+      IF_STATEMENT ($ "Ady Canal.ToRefugeFromLRDC" [@"t"] < $ "Ady Canal.ToRefuge" [@"t"]) THEN
+            $ "Ady Canal.ToRefugeFromDPS" [@"t"] := "Min"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"], $ "Ady Canal.ToRefuge" [@"t"] - $ "Ady Canal.ToRefugeFromLRDC" [@"t"] );
 
-    INACTIVE      IF_STATEMENT ($ "Ady Canal.ToRefugeFromLRDC" [@"t"] + $ "Ady Canal.ToRefugeFromFF" [@"t"] < $ "Ady Canal.ToRefuge" [@"t"]) THEN
-            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := "Min"( $ "LRDC Draw From Klamath.Inflow" [@"t"], $ "Ady Canal.ToRefuge" [@"t"] - $ "Ady Canal.ToRefugeFromFF" [@"t"] - $ "Ady Canal.ToRefugeFromLRDC" [@"t"] );
+          INACTIVE      IF_STATEMENT ($ "Ady Canal.ToRefugeFromLRDC" [@"t"] + $ "Ady Canal.ToRefugeFromDPS" [@"t"] < $ "Ady Canal.ToRefuge" [@"t"] AND $ "OpsData.FFAccounting" [] == 0.00000000 "acre-ft") THEN
+            $ "Ady Canal.ToRefugeFromLP" [] := $ "Ady Canal.ToRefuge" [@"t"] - $ "Ady Canal.ToRefugeFromDPS" [@"t"] - $ "Ady Canal.ToRefugeFromLRDC" [@"t"];
 
       ELSE
-            $ "Ady Canal.ToRefugeFromUKL" [@"t"] := 0.00000000 "cfs";
+            $ "Ady Canal.ToRefugeFromLP" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
+      ELSE
+            $ "Ady Canal.ToRefugeFromDPS" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{22cf931b-3e4d-4d2b-9a46-037be65962d3}";;
+
+    RULE                 "Ady Refuge LRDC";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Still need to figure LP";
+    BEGIN
+
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Ady Canal.ToRefugeFromLRDC" [@"t"] := $ "Ady Canal.ToRefuge" [@"t"];
+            $ "Ady Canal.ToRefugeFromLRDC" [@"t"] := "Min"( $ "Ady Canal.ToRefuge" [@"t"], $ "LRDC into Link.Return Flow" [@"t"] );
 
       ELSE
             $ "Ady Canal.ToRefugeFromLRDC" [@"t"] := 0.00000000 "cfs";
@@ -925,7 +946,7 @@ BEGIN
       END_IF_STATEMENT;
 
     END
-    UUID "{22cf931b-3e4d-4d2b-9a46-037be65962d3}";;
+    UUID "{af0aca3a-cb52-4b91-91a0-13ee13e1bdab}";;
 
     RULE                 "Ady Refuge Diversion from FF";
     DESCRIPTION          "";
@@ -2215,29 +2236,7 @@ BEGIN
     END
     UUID "{157dc186-d8e5-4cbc-a40b-db655120ce27}";;
 
-    RULE                 "Diversion and return flow slot setting";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Rule is set to avoide the error:<br><br><br><br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
-    BEGIN
-
-      $ "LRDC Draw From Klamath.Available For Diversion" [] := 5000.00000000 "cfs";
-
-      $ "Diversion To Ady.Available For Diversion" [] := 400.00000000 "cfs";
-
-      $ "Diversion To North.Available For Diversion" [] := 190.00000000 "cfs";
-
-      $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
-
-      $ "Ady To Refuge.Available For Diversion" [] := 250.00000000 "cfs";
-
-    INACTIVE      $ "Diversion To Keno Accretion.Available For Diversion" [] := 4000.00000000 "cfs";
-
-    END
-    UUID "{f2c8384b-df12-4738-8af1-82e74cc5b775}";;
-
-    RULE                 "Keno Accretion Inflow";
+    RULE                 "Keno Accretion Positive";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -2245,10 +2244,10 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ($ "Keno data.KenoAccretions" [@"t"] > 0.00000000 "cfs") THEN
-            $ "Keno Accretion Inflow.Inflow" [] := $ "Keno data.KenoAccretions" [];
+            $ "Keno Accretion Positive.Local Inflow" [@"t"] := $ "Keno data.KenoAccretions" [@"t"];
 
       ELSE
-            $ "Keno Accretion Inflow.Inflow" [] := 0.00000000 "cfs";
+            $ "Keno Accretion Positive.Local Inflow" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
 
@@ -2285,7 +2284,7 @@ BEGIN
     END
     UUID "{245cc88b-bcfa-4406-84c5-6d2336e2f952}";;
 
-    RULE                 "Rule";
+    RULE                 "Diversion to Keno Avaiable For Diversion";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
@@ -2293,6 +2292,8 @@ BEGIN
     BEGIN
 
       $ "Diversion To Keno Accretion.Available For Diversion" [] := 4000.00000000 "cfs";
+
+    INACTIVE      $ "Keno Accretion Positive.Available For Diversion" [] := 1000.00000000 "cfs";
 
     END
     UUID "{02ecfe53-ef59-4285-9c40-9b1ea922837d}";;
@@ -2501,6 +2502,28 @@ BEGIN
 
     END
     UUID "{8bedf1bf-3460-44b9-ac89-29454b5cff21}";;
+
+    RULE                 "Diversion and return flow slot setting";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Rule is set to avoide the error:<br><br><br><br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
+    BEGIN
+
+      $ "LRDC Draw From Klamath.Available For Diversion" [] := 5000.00000000 "cfs";
+
+      $ "Diversion To Ady.Available For Diversion" [] := 400.00000000 "cfs";
+
+      $ "Diversion To North.Available For Diversion" [] := 190.00000000 "cfs";
+
+      $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
+
+      $ "Ady To Refuge.Available For Diversion" [] := 250.00000000 "cfs";
+
+    INACTIVE      $ "Diversion To Keno Accretion.Available For Diversion" [] := 4000.00000000 "cfs";
+
+    END
+    UUID "{f2c8384b-df12-4738-8af1-82e74cc5b775}";;
 
   END
   UUID "{404a4aed-c375-4776-bbb7-e0f16190069d}";;
