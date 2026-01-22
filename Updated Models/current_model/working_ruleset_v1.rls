@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 13:22 January 21, 2026
+# Created 21:37 January 21, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -329,6 +329,18 @@ BEGIN
 
     END
     UUID "{5b4e06a7-73b8-4a8e-91c2-4b8997f3e495}";;
+
+    RULE                 "Flood Curve";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.Flood_Curve" [@"t"] := $ "Upper Klamath Lake.Flood Control" [@"t"];
+
+    END
+    UUID "{47ebc5c9-1e0d-4106-868f-ffdec5fd0ea3}";;
 
     RULE                 "Set Minimum";
     DESCRIPTION          "";
@@ -1235,6 +1247,7 @@ BEGIN
       ELSEIF_COND ( @"t" > @"November 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
+          INACTIVE      $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
@@ -1383,7 +1396,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT (@"t" == @"October 1" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
             $ "OpsData.UKL_Prj_Credit_EstTotA" [] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT

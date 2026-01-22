@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 00:51 December 11, 2025
+# Created 12:50 January 20, 2026
 # 
 RULESET
 NAME "Initialization Rules Set";
@@ -61,6 +61,22 @@ BEGIN
     END
     UUID "{7bb3d407-98aa-41b7-bf7c-67231427024b}";;
 
+    RULE                 "Initializing Deferred Project Supply Account";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [date] := 0.00000000 "acre-ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{dbc1ca30-b741-4535-8c46-5f4a6505cdd6}";;
+
     RULE                 "Initializing UKL Elevation";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -69,7 +85,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 2 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
             $ "Upper Klamath Lake.Pool Elevation" [date] := $ "LakeData.Historic Pool Elevation" [date];
 
             $ "Upper Klamath Lake.Outflow" [date] := 1000.00000000 "cfs";
@@ -79,11 +95,73 @@ BEGIN
     END
     UUID "{88859ae7-f5c7-4826-8993-62351e7ed1c2}";;
 
-    RULE                 "Initializing LKNWR Pool Elevation";
+    RULE                 "TEST Initializing Inflow and Outflow";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Upper Klamath Lake.Outflow" [date] := 1000.00000000 "cfs";
+
+            $ "Upper Klamath Lake.Inflow" [date] := 1000.00000000 "cfs";
+
+            $ "Upper Klamath Lake.Lake Index" [date] := 0.10000000;
+
+            $ "OpsData.OpsIndex" [date] := 0.10000000;
+
+            $ "Keno.Outflow" [date] := 1000.00000000 "cfs";
+
+            $ "Keno.Inflow" [date] := 1000.00000000 "cfs";
+
+      ENDFOREACH;
+
+    END
+    UUID "{cad89281-709c-4810-9b48-cdd3e6402eef}";;
+
+    RULE                 "Initialize LRDC Diversion";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+          INACTIVE      $ "Upper Klamath Lake.Shadow Elevation" [date] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [date] - ( 0.00000000 "acre-ft" COMMENTED_BY "# Upper Klamath Lake.Deferred Project Supply Account<br>" + 0.00000000 "acre-ft" COMMENTED_BY "River Data.FFA Increment<br>" ) );
+
+            $ "Upper Klamath Lake.Shadow Elevation" [date] := 4083.00000000 "ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{d3da20f3-8fb3-4f07-aa78-271a15fe1386}";;
+
+    RULE                 "Initialize UKL Shadow Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+          INACTIVE      $ "Upper Klamath Lake.Shadow Elevation" [date] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [date] - ( 0.00000000 "acre-ft" COMMENTED_BY "# Upper Klamath Lake.Deferred Project Supply Account<br>" + 0.00000000 "acre-ft" COMMENTED_BY "River Data.FFA Increment<br>" ) );
+
+            $ "Upper Klamath Lake.Shadow Elevation" [date] := 4083.00000000 "ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{0c754e96-9acb-44fa-a8da-a4ce273b2fa6}";;
+
+    RULE                 "Initializing LKNWR Pool Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       262144;
     NOTES                "";
     BEGIN
 
@@ -92,8 +170,31 @@ BEGIN
 
       ENDFOREACH;
 
+    INACTIVE      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "LKNWR Cell2.Pool Elevation" [date] := $ "Constants.LKNWR Cell2 Init Elevation" [];
+
+            $ "LKNWR Cell2.Outflow" [date] := 0.50000000 "cfs";
+
+      ENDFOREACH;
+
     END
     UUID "{3904fbd5-9451-40c5-97c6-951ae95d8412}";;
+
+    RULE                 "Initializing TLNWR Pool Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       262144;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1", @"Finish Timestep", "1 Days" )) DO
+            $ "Tule Sumps 1A.Pool Elevation" [date] := $ "Constants.Tule Sumps 1A Init Elevation" [];
+
+      ENDFOREACH;
+
+    END
+    UUID "{a5221239-ae6a-4a27-b6ee-85e1843dffea}";;
 
   END
   UUID "{4c766237-d71d-4d11-9e8b-e515ea469b67}";;
