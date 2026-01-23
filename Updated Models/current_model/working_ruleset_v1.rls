@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:37 January 21, 2026
+# Created 22:11 January 22, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -364,12 +364,6 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
-
-      ELSE
-      END_IF_STATEMENT;
-
       IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
             $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
 
@@ -400,6 +394,21 @@ BEGIN
 
     END
     UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
+
+    RULE                 "Ramp Down Rate Max";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Ramp Down Rate" [] > 2000.00000000 "cfs") THEN
+            $ "Keno.Ramp Down Rate" [] := 2000.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{217bc5fd-f31d-448b-8b59-d089403fc7a1}";;
 
     RULE                 "Update UKL Flood Release";
     DESCRIPTION          "";
@@ -535,6 +544,16 @@ BEGIN
 
     END
     UUID "{b7ffa8b9-4731-425a-899e-eb0ba9041a9f}";;
+
+    RULE                 "SFF";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    END
+    UUID "{a00f6e46-e6f1-4f94-a170-38d44d2aa4e4}";;
 
   END
   UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
@@ -1094,6 +1113,36 @@ BEGIN
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
+
+    RULE                 "SFF_Switch";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
+            $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Switch" [@"t"] := $ "OpsData.SFF_Switch" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND "c13_exc"( @"t - 1" ) > 1.00000000 AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "OpsData.FFAccounting" [] > 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
+      END_ELSEIF;
+
+    END
+    UUID "{30e41084-e07e-484d-9ebb-d6b717c883f0}";;
 
     RULE                 "Yest FFA Savings";
     DESCRIPTION          "";
@@ -1717,18 +1766,6 @@ BEGIN
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br><br>what is the value from ss to winter of next year?<br>";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
-            $ "OpsData.Project Supply from Storage" [@"t"] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
-
-      ELSE
-            $ "OpsData.Project Supply from Storage" [] := 350000.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"April 2" AND @"t" < @"December 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
-      END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
             $ "OpsData.Project Supply from Storage" [@"t"] := 80000.00000000 "acre-ft";
