@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:11 January 22, 2026
+# Created 22:56 January 22, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1132,17 +1132,75 @@ BEGIN
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND "c13_exc"( @"t - 1" ) > 1.00000000 AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 )
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND "c13_exc"( @"t - 1" ) > 1.00000000 "cfs" AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
       END_ELSEIF
-      ELSEIF_COND ( @"t" == @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "OpsData.FFAccounting" [] > 0.00000000 )
+      ELSEIF_COND ( @"t" == @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
       END_ELSEIF;
 
     END
     UUID "{30e41084-e07e-484d-9ebb-d6b717c883f0}";;
+
+    RULE                 "SFF_Down_Ramp";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [@"t - 1"] == 1.00000000 AND "c13_exc"( @"t - 1" ) < 0.10000000 "cfs" AND $ "Keno.RampFlow" [] > $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF;
+
+    END
+    UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
+
+    RULE                 "SFF_Already_Hap";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := $ "OpsData.SFF_Already_Hap" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"February 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"February 1" AND @"t" < @"May 1" )
+      ELSEIF_CLAUSE
+            IF_STATEMENT ($ "Keno.Outflow" [@"t - 1"] > $ "OpsData.SFF_Thresh" [] OR $ "OpsData.SFF_Switch" [@"t - 1"] == 1.00000000) THEN
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 1.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+
+      END_IF_STATEMENT;
+      END_ELSEIF;
+
+    END
+    UUID "{5525b89f-7f5e-4714-bb09-618805d0dcf1}";;
 
     RULE                 "Yest FFA Savings";
     DESCRIPTION          "";
