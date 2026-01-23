@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:04 January 21, 2026
+# Created 09:40 January 23, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -364,12 +364,6 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
-
-      ELSE
-      END_IF_STATEMENT;
-
       IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
             $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
 
@@ -400,6 +394,21 @@ BEGIN
 
     END
     UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
+
+    RULE                 "Ramp Down Rate Max";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Ramp Down Rate" [] > 2000.00000000 "cfs") THEN
+            $ "Keno.Ramp Down Rate" [] := 2000.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{217bc5fd-f31d-448b-8b59-d089403fc7a1}";;
 
     RULE                 "Update UKL Flood Release";
     DESCRIPTION          "";
@@ -484,7 +493,9 @@ BEGIN
           DESCRIPTION          "enables the flood control flag at UKL.<br>";
       $ "Keno.Flood Control Flag" [@"t"] := 1.00000000;
 
-            $ "Keno.FloodSpill" [] := "c13_exc"( @"t - 1" );
+          INACTIVE      $ "Keno.FloodSpill" [] := "c13_exc"( @"t - 1" );
+
+            $ "Keno.FloodSpill" [@"t"] := "SolveOutflow"( % "Keno", $ "Keno.Inflow" [@"t"], $ "Keno.Storage" [@"t - 1"], $ "Keno.Storage" [@"t - 1"], @"t" );
 
       ELSE
             $ "Keno.Flood Control Flag" [@"t"] := 0.00000000;
@@ -535,6 +546,16 @@ BEGIN
 
     END
     UUID "{b7ffa8b9-4731-425a-899e-eb0ba9041a9f}";;
+
+    RULE                 "SFF";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    END
+    UUID "{a00f6e46-e6f1-4f94-a170-38d44d2aa4e4}";;
 
   END
   UUID "{d73b0e1b-821c-4e0e-85b3-3a78eafbef6d}";;
@@ -1062,13 +1083,37 @@ BEGIN
     NOTES                "Sets releases for FFA distribution. <br>Currently, the model is set to distribute an equal amount every day, thus &quot;FFA flat distribution&quot;. Additional distribution patterns are possible, they just need to be entered into the Keno data object.<br><br>FFA increment is divided by 121 days to create an equal distribution of all flows, then multiplied across the flat distribution pattern.<br>Other distribution patterns will require more development<br><br>";
     BEGIN
 
-      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
+    INACTIVE      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
             $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
 
       ELSE
             $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
+
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
+
+      ELSE
+            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [] := "Min"( "Max"( 0.00000000 "cfs", $ "OpsData.SFF_Thresh" [] - $ "Keno data.River Base Flow" [@"t"] ), 0.30000000 * "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) );
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [] := "Max"( 0.00000000 "cfs", $ "Keno.RampFlow" [] - ( $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] ) );
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND ( @"t" > @"March 1" AND @"t" <= @"June 30" ) )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) / ( @"24:00:00 July 1, Current Year" - @"t" ) * 1.00000000 "day";
+      END_ELSEIF
+      ELSEIF_COND ( @"t" > @"March 1" AND @"t" <= @"June 30" AND $ "OpsData.SFF_Switch" [@"t"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
+      END_ELSEIF;
 
     END
     UUID "{fa834b55-c845-4d73-a072-b7eafb1221ee}";;
@@ -1094,6 +1139,94 @@ BEGIN
 
     END
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
+
+    RULE                 "SFF_Switch";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
+            $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Switch" [@"t"] := $ "OpsData.SFF_Switch" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "Keno.Flood Control Flag" [@"t - 1"] == 1.00000000 AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" == @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
+      END_ELSEIF;
+
+    END
+    UUID "{30e41084-e07e-484d-9ebb-d6b717c883f0}";;
+
+    RULE                 "SFF_Down_Ramp";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [@"t - 1"] == 1.00000000 AND "c13_exc"( @"t - 1" ) < 0.10000000 "cfs" AND $ "Keno.RampFlow" [] > $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF;
+
+    END
+    UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
+
+    RULE                 "SFF_Already_Hap";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := $ "OpsData.SFF_Already_Hap" [@"t - 1"];
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"February 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"February 1" AND @"t" < @"May 1" )
+      ELSEIF_CLAUSE
+            IF_STATEMENT ($ "Keno.Outflow" [@"t - 1"] > $ "OpsData.SFF_Thresh" [] OR $ "OpsData.SFF_Switch" [@"t - 1"] == 1.00000000) THEN
+            $ "OpsData.SFF_Already_Hap" [@"t"] := 1.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Already_Hap" [@"t"] := $ "OpsData.SFF_Already_Hap" [@"t - 1"];
+
+      END_IF_STATEMENT;
+      END_ELSEIF;
+
+    END
+    UUID "{5525b89f-7f5e-4714-bb09-618805d0dcf1}";;
 
     RULE                 "Yest FFA Savings";
     DESCRIPTION          "";
@@ -1717,18 +1850,6 @@ BEGIN
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br><br>what is the value from ss to winter of next year?<br>";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
-            $ "OpsData.Project Supply from Storage" [@"t"] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [@"t"] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
-
-      ELSE
-            $ "OpsData.Project Supply from Storage" [] := 350000.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"April 2" AND @"t" < @"December 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
-      END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
             $ "OpsData.Project Supply from Storage" [@"t"] := 80000.00000000 "acre-ft";

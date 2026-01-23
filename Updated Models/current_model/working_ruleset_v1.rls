@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:56 January 22, 2026
+# Created 09:42 January 23, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -494,6 +494,8 @@ BEGIN
       $ "Keno.Flood Control Flag" [@"t"] := 1.00000000;
 
             $ "Keno.FloodSpill" [] := "c13_exc"( @"t - 1" );
+
+          INACTIVE      $ "Keno.FloodSpill" [@"t"] := "SolveOutflow"( % "Keno", $ "Keno.Inflow" [@"t"], $ "Keno.Storage" [@"t - 1"], $ "Keno.Storage" [@"t - 1"], @"t" );
 
       ELSE
             $ "Keno.Flood Control Flag" [@"t"] := 0.00000000;
@@ -1081,13 +1083,37 @@ BEGIN
     NOTES                "Sets releases for FFA distribution. <br>Currently, the model is set to distribute an equal amount every day, thus &quot;FFA flat distribution&quot;. Additional distribution patterns are possible, they just need to be entered into the Keno data object.<br><br>FFA increment is divided by 121 days to create an equal distribution of all flows, then multiplied across the flat distribution pattern.<br>Other distribution patterns will require more development<br><br>";
     BEGIN
 
-      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
+    INACTIVE      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
             $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
 
       ELSE
             $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
+
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
+
+      ELSE
+            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [] := "Min"( "Max"( 0.00000000 "cfs", $ "OpsData.SFF_Thresh" [] - $ "Keno data.River Base Flow" [@"t"] ), 0.30000000 * "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) );
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [] := "Max"( 0.00000000 "cfs", $ "Keno.RampFlow" [] - ( $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] ) );
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND ( @"t" > @"March 1" AND @"t" <= @"June 30" ) )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) / ( @"24:00:00 July 1, Current Year" - @"t" ) * 1.00000000 "day";
+      END_ELSEIF
+      ELSEIF_COND ( @"t" > @"March 1" AND @"t" <= @"June 30" AND $ "OpsData.SFF_Switch" [@"t"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
+      END_ELSEIF;
 
     END
     UUID "{fa834b55-c845-4d73-a072-b7eafb1221ee}";;
@@ -1132,7 +1158,7 @@ BEGIN
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND "c13_exc"( @"t - 1" ) > 1.00000000 "cfs" AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "Keno.Flood Control Flag" [@"t - 1"] == 1.00000000 AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
       END_ELSEIF
@@ -1194,7 +1220,7 @@ BEGIN
             $ "OpsData.SFF_Already_Hap" [@"t"] := 1.00000000;
 
       ELSE
-            $ "OpsData.SFF_Already_Hap" [@"t"] := 0.00000000;
+            $ "OpsData.SFF_Already_Hap" [@"t"] := $ "OpsData.SFF_Already_Hap" [@"t - 1"];
 
       END_IF_STATEMENT;
       END_ELSEIF;
