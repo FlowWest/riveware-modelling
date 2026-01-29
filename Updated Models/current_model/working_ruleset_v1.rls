@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 09:42 January 23, 2026
+# Created 16:29 January 28, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -318,6 +318,21 @@ BEGIN
     END
     UUID "{54598af7-5ed1-44a0-9bce-cb3cf3398c9b}";;
 
+    RULE                 "Keep Under Max";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Storage" [@"t"] > $ "Upper Klamath Lake.MaxStorage" [@"t"]) THEN
+            $ "Upper Klamath Lake.Storage" [@"t"] := $ "Upper Klamath Lake.MaxStorage" [@"t"];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{aa031121-b3bc-4453-ad0a-cb7767b0dd17}";;
+
     RULE                 "Max Storage";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -357,6 +372,41 @@ BEGIN
     END
     UUID "{027727ea-435e-40a3-bee7-f68eed3b4525}";;
 
+    RULE                 "Get Max UKL Outflow";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.MaxOut" [] := "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" );
+
+    END
+    UUID "{bfd04469-e535-4896-9665-3566dbea317b}";;
+
+    RULE                 "Test Avg Flood Release";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [] == 1.00000000 AND $ "OpsData.SFF_Switch" [] != 1.00000000) THEN
+            $ "Upper Klamath Lake.Outflow_3Day_Avg" [] := "SumSlot"( $ "Upper Klamath Lake.Outflow", @"t - 1", @"t + 1" ) / 3.00000000;
+
+      END_IF_STATEMENT;
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000 AND $ "OpsData.SFF_Switch" [] != 1.00000000 AND $ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 0.00000000) THEN
+            $ "Upper Klamath Lake.Outflow_3Day_Avg" [] := "SumSlot"( $ "Upper Klamath Lake.Outflow", @"t - 1", @"t" ) / 2.00000000;
+
+      ELSE
+            $ "Upper Klamath Lake.Outflow_3Day_Avg" [] := $ "Upper Klamath Lake.Outflow" [];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{d57cb638-b5ca-4052-922d-ec0649f1dcc7}";;
+
     RULE                 "Ramp Down Flow";
     DESCRIPTION          "";
     ACTIVE               TRUE;
@@ -371,6 +421,44 @@ BEGIN
 
     END
     UUID "{8a596b18-3cc2-45c2-8516-43caa5ee4d63}";;
+
+    RULE                 "SFF_Down_Ramp";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF
+      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [@"t - 1"] == 1.00000000 AND "c13_exc"( @"t - 1" ) < 0.10000000 "cfs" AND $ "Keno.RampFlow" [] > $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] )
+      ELSEIF_CLAUSE
+          INACTIVE      $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF;
+
+      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      ELSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 )
+      ELSEIF_CLAUSE
+            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
+      END_ELSEIF;
+
+    END
+    UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
     RULE                 "Keno RampDown Flow";
     DESCRIPTION          "";
@@ -391,6 +479,8 @@ BEGIN
             $ "Keno.RampFlow" [@"t"] := 0.00000000 "cfs";
 
       END_IF_STATEMENT;
+
+    INACTIVE      $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
 
     END
     UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
@@ -420,12 +510,12 @@ BEGIN
     INACTIVE      $ "Keno.Outflow" [@"t"] := $ "Upper Klamath Lake.FloodSpill" [@"t"] + $ "Keno.Target Releases" [@"t"];
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Upper Klamath Lake.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Div To LRDC.Diversion" [], $ "Upper Klamath Lake.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
       END_IF_STATEMENT
       ELSEIF_COND ( $ "Keno.Flood Control Flag" [@"t"] == 1.00000000 )
       ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [], $ "Keno.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( "Max"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] - $ "Keno Accretion Positive.Local Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Div To LRDC.Diversion" [], $ "Keno.FloodSpill" [] ), 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
       END_ELSEIF;
 
     INACTIVE      IF_STATEMENT ("Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
@@ -443,9 +533,9 @@ BEGIN
     NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
     BEGIN
 
-    INACTIVE      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretions Diversion.Diversion" [] - $ "Keno Accretion Positive.Local Inflow" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] + $ "Div To LRDC.Diversion" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
-      $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] - 0.00000000 "cfs", 0.00000000 "cfs" );
+    INACTIVE      $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] + $ "Div To LRDC.Diversion" [] - 0.00000000 "cfs", 0.00000000 "cfs" );
 
     END
     UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
@@ -1169,32 +1259,6 @@ BEGIN
 
     END
     UUID "{30e41084-e07e-484d-9ebb-d6b717c883f0}";;
-
-    RULE                 "SFF_Down_Ramp";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
-            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
-
-      ELSE
-            $ "OpsData.SFF_Downramp_Switch" [] := 0.00000000;
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 )
-      ELSEIF_CLAUSE
-            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
-      END_ELSEIF
-      ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [@"t - 1"] == 1.00000000 AND "c13_exc"( @"t - 1" ) < 0.10000000 "cfs" AND $ "Keno.RampFlow" [] > $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] )
-      ELSEIF_CLAUSE
-            $ "OpsData.SFF_Downramp_Switch" [] := 1.00000000;
-      END_ELSEIF;
-
-    END
-    UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
     RULE                 "SFF_Already_Hap";
     DESCRIPTION          "";
@@ -2361,6 +2425,34 @@ BEGIN
   ACTIVE         TRUE;
   NOTES          "";
   BEGIN
+
+    RULE                 "Rule";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    INACTIVE      $ "Test_Div.Available For Diversion" [] := 4000.00000000 "cfs";
+
+      $ "Test_Div.Diversion Request" [] := 300.00000000 "cfs";
+
+    END
+    UUID "{7d5a376e-8648-4dd8-8fae-c8e83587e71d}";;
+
+    RULE                 "Rule1";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Tule Lake NWR.Available For Diversion" [] := 4000.00000000 "cfs";
+
+    INACTIVE      $ "Test_Div.Diversion Request" [] := 300.00000000 "cfs";
+
+    END
+    UUID "{a54c198c-ae22-4ea7-adcb-0402bc280c73}";;
 
     RULE                 "Inflow and Diversion Rate rules";
     DESCRIPTION          "";
