@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 19:13 February 4, 2026
+# Created 10:42 February 5, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -597,7 +597,7 @@ BEGIN
 
     RULE                 "Early Flood Release";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -1230,7 +1230,7 @@ BEGIN
 
     RULE                 "SFF_Switch";
     DESCRIPTION          "";
-    ACTIVE               TRUE;
+    ACTIVE               FALSE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
@@ -1246,7 +1246,7 @@ BEGIN
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 0.00000000;
       END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND $ "Keno.Flood Control Flag" [@"t - 1"] == 1.00000000 AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
+      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 10" AND $ "OpsData.SFF_Already_Hap" [] == 0.00000000 AND ( $ "Keno.Flood Control Flag" [@"t - 1"] == 1.00000000 OR $ "Historical Inflows and NWI.I15" [@"t - 1"] > $ "OpsData.kiga_threshold" [@"t"] ) AND $ "OpsData.OpsIndex" [@"t - 1"] <= $ "OpsData.OPI_Thresh" [] AND $ "OpsData.FFAccounting" [] > 0.00000000 "acre-ft" )
       ELSEIF_CLAUSE
             $ "OpsData.SFF_Switch" [@"t"] := 1.00000000;
       END_ELSEIF
@@ -1379,6 +1379,18 @@ BEGIN
 
     END
     UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
+
+    RULE                 "Calculate Kiga Threshold";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "OpsData.kiga_threshold" [] := "TableInterpolation"( $ "OpsData.Kiga_Thresh_Lookup", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+
+    END
+    UUID "{ba302b94-96d7-4667-85af-f8c2f87cefae}";;
 
     RULE                 "ReleaseDebug";
     DESCRIPTION          "";
