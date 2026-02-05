@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 10:52 February 5, 2026
+# Created 13:55 February 5, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -531,7 +531,7 @@ BEGIN
     NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
     BEGIN
 
-      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] + 0.00000000 "cfs" - 0.00000000 "cfs", 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+      $ "Upper Klamath Lake.Outflow" [] := "Min"( "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + 0.00000000 "cfs" + 0.00000000 "cfs" - $ "Keno Accretion Positive.Local Inflow" [], 0.00000000 "cfs" ), "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
 
     INACTIVE      $ "Upper Klamath Lake.Outflow" [] := "Max"( $ "Keno.Target Releases" [] + $ "Diversion To Ady.Diversion" [] + $ "Diversion To North.Diversion" [] - $ "LRDC into Link.Return Flow" [] + $ "LRDC Draw From Klamath.Diversion" [] - $ "F_FF pumps.Inflow" [] + $ "Keno Accretion Diversion.Diversion" [] + $ "Keno Accretion Positive.Local Inflow" [] + 0.00000000 "cfs" - 0.00000000 "cfs", 0.00000000 "cfs" );
 
@@ -2450,16 +2450,14 @@ BEGIN
     END
     UUID "{7d5a376e-8648-4dd8-8fae-c8e83587e71d}";;
 
-    RULE                 "Rule1";
+    RULE                 "D1 to Sump1A";
     DESCRIPTION          "";
-    ACTIVE               FALSE;
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-      $ "Tule Lake NWR.Available For Diversion" [] := 4000.00000000 "cfs";
-
-    INACTIVE      $ "Test_Div.Diversion Request" [] := 300.00000000 "cfs";
+      $ "D1 to Sump1A.Diversion Request" [] := $ "Historical Diversions.D1_S1TOSUMP1A" [];
 
     END
     UUID "{a54c198c-ae22-4ea7-adcb-0402bc280c73}";;
