@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 15:41 February 11, 2026
+# Created 16:46 February 11, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -610,19 +610,16 @@ BEGIN
   BEGIN
 
     RULE                 "North Canal FW SS Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule classifies North Canal diversions from Upper Klamath Lake as either Spring Summer (SS) or Fall/Winter (FW) based on the time of year.<br>Logic: From March 1 through September 30, all North Canal diversions from UKL are assigned to the Spring Summer and none to Fall/Winter. From January 1 through the end of February, and from October 1 through December 31, all diversions are assigned to the Fall/Winter category and none to Spring Summer.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"September 30") THEN
             $ "North Canal.DiversionFromUKL_SS" [@"t"] := $ "North Canal.DiversionFromUKL" [@"t"];
 
             $ "North Canal.DiversionFromUKL_FW" [@"t"] := 0.00000000 "cfs";
-
-      ELSE
-          INACTIVE      $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" < @"March 1" AND @"t" >= @"January 1" )
@@ -640,10 +637,10 @@ BEGIN
     UUID "{2c080dec-f574-4e90-b35e-63af66410fcc}";;
 
     RULE                 "North Canal FF Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether F/FF pump inflow is needed to meet the North Canal diversion request after accounting for LRDC and UKL supplies.<br>Logic: If the combined diversions from LRDC and UKL are less than the North Canal diversion request, the remaining unmet demand is supplied from F/FF pump inflow, up to the amount available. If LRDC and UKL together meet or exceed the diversion request, no water is diverted from F/FF pumps.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "North Canal.DiversionFromLRDC" [@"t"] + $ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
@@ -658,10 +655,10 @@ BEGIN
     UUID "{ae31e199-2286-4c65-8e8c-48fa29e0e9c3}";;
 
     RULE                 "North Canal LRDC Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines how much of the North Canal diversion request is supplied by LRDC return flow after accounting for diversions from Upper Klamath Lake.<br>Logic: If diversion from UKL is less than the North Canal diversion request, the remaining unmet demand is supplied from LRDC return flow, up to the amount available. If UKL diversion meets or exceeds the request, no water is diverted from LRDC.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "North Canal.DiversionFromUKL" [@"t"] < $ "North Canal.Diversion Request" [@"t"]) THEN
@@ -676,10 +673,10 @@ BEGIN
     UUID "{77894f48-9c54-4a43-bd5c-a5af9b32a253}";;
 
     RULE                 "North Canal UKL Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description This rule limits North Canal diversion from Upper Klamath Lake based on available LRDC inflow.<br>Logic Diversion from UKL is set equal to the lesser of the North Canal diversion request and the available LRDC inflow/UKL Outflow for the timestep.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       $ "North Canal.DiversionFromUKL" [@"t"] := "Min"( $ "North Canal.Diversion Request" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
@@ -688,10 +685,10 @@ BEGIN
     UUID "{1cfd7ec1-ac0d-4c3b-b232-1b8c91f90138}";;
 
     RULE                 "Ady Canal FF Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether F/FF pump inflow is needed to meet the Ady Canal project deliveries after accounting for LRDC and UKL supplies.<br>Logic: If the combined diversions from LRDC and UKL are less than the Ady Canal project deliveries, the remaining unmet demand is supplied from F/FF pump inflow, up to the amount available. If LRDC and UKL together meet or exceed the To Project amount, no water is diverted from F/FF pumps.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "Ady Canal.DiversionFromLRDC" [@"t"] + $ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.To Project" [@"t"]) THEN
@@ -706,10 +703,10 @@ BEGIN
     UUID "{504c1436-db01-45fa-9375-0c437c593e14}";;
 
     RULE                 "Ady Canal LRDC Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether LRDC return flow is needed to meet Ady Canal project deliveries after accounting for diversions from Upper Klamath Lake.<br>Logic: If diversion from UKL is less than the Ady Canal delivery to the Project, the remaining unmet demand is supplied from LRDC return flow, up to the amount available. If UKL diversion meets or exceeds the Project delivery, no water is diverted from LRDC.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "Ady Canal.DiversionFromUKL" [@"t"] < $ "Ady Canal.To Project" [@"t"]) THEN
@@ -724,19 +721,16 @@ BEGIN
     UUID "{2b647bd7-cc68-44c9-b54c-68740fe447cc}";;
 
     RULE                 "Ady Canal FW SS Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule classifies Ady Canal project deliveries from Upper Klamath Lake as either Spring Summer (SS) or Fall/Winter (FW) based on the time of year.<br>Logic: From March 1 through September 30, all Ady Canal delivieries from UKL are assigned to the Spring Summer and none to Fall/Winter. From January 1 through the end of February, and from October 1 through December 31, all diversions are assigned to the Fall/Winter category and none to Spring Summer.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"September 30") THEN
             $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := $ "Ady Canal.DiversionFromUKL" [@"t"];
 
             $ "Ady Canal.DiversionFromUKL_FW" [@"t"] := 0.00000000 "cfs";
-
-      ELSE
-          INACTIVE      $ "Ady Canal.DiversionFromUKL_SS" [@"t"] := 0.00000000 "cfs";
 
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" < @"March 1" AND @"t" >= @"January 1" )
@@ -754,10 +748,10 @@ BEGIN
     UUID "{23385691-4bdb-40f0-8b29-44091f3bd0d3}";;
 
     RULE                 "Ady Canal UKL Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description This rule limits Ady Canal project deliveries from Upper Klamath Lake based on available LRDC inflow.<br>Logic Diversion from UKL is set equal to the lesser of the Ady Canal project deliveries and the available LRDC inflow/UKL Outflow for the timestep.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       $ "Ady Canal.DiversionFromUKL" [@"t"] := "Min"( $ "Ady Canal.To Project" [@"t"], $ "LRDC into Link.Inflow" [@"t"] );
@@ -816,10 +810,10 @@ BEGIN
     UUID "{ca595762-9767-42d6-9537-bd342a16d29f}";;
 
     RULE                 "A Canal Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule allocates A Canal diversion demand between the Deferred Project Supply Account (DPS) and current Project Supply.<br>Logic: If DPS water is available, A Canal diverts from DPS first up to the diversion request. If the request exceeds available DPS, the remaining demand is intended to be met from Project Supply (limited by Project Supply availability); otherwise Project Supply diversion is held at the prior timestep value. If no DPS is available, A Canal diversion is supplied from Project Supply up to the diversion request.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] != 0.00000000 "acre-ft") THEN
@@ -954,10 +948,10 @@ BEGIN
   BEGIN
 
     RULE                 "FFA Accounting";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule updates the Flexible Flow (FF) account balance each day and resets it at the start of the water year.<br>Logic: On October 1, the FF account is reset to zero. On all other days, today’s FF balance equals yesterday’s balance plus yesterday’s FFA savings, minus yesterday’s FFA spill, minus the volume of yesterday’s FFA usage (converted from flow to volume for the timestep). The balance cannot go below zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Need to change it back to october 1 reset date";
+    NOTES                "See WRIMS SeasonalSupply.wresl &quot;define Flexible_Flow_Account&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 1") THEN
@@ -971,26 +965,12 @@ BEGIN
     END
     UUID "{741a36e2-fd45-4733-b6fd-0911d232d300}";;
 
-    RULE                 "ffa debug";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "OpsData.ffa_debug" [] := "Max"( 0.00000000 "acre-ft", "FlowToVolume"( "Min"( "C1_exc"( @"t - 1" ), "c13_exc"( @"t - 1" ) - $ "LRDC into Link.Return Flow" [@"t - 1"] - $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "LakeData.DPS Spill" [] ), @"t" ) );
-
-    END
-    UUID "{c12e6aae-8564-4602-8676-ef8a824ebd1d}";;
-
     RULE                 "yest_FFA_Usage";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description This rule determines the amount of Flexible Flow Account (FFA) usage credited to the previous day and resets it at the start of the water year.<br>Logic On October 1, yesterday’s FFA usage is set to zero. On all other days, it is set equal to the lesser of the previous day’s FFA Usage and the previous day’s excess flow (c1_exc function).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS SeasonalSupply.wresl &quot;define Yest_FFA_Savings&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      $ "Klamath River.yest_FFA_Usage" [] := "Min"( $ "Klamath River.FFA Usage" [@"t - 1"], "C1_exc"( @"t - 1" ) );
 
       IF_STATEMENT (@"t" == @"October 1") THEN
             $ "Klamath River.yest_FFA_Usage" [] := 0.00000000 "cfs";
@@ -1004,19 +984,11 @@ BEGIN
     UUID "{a19286e4-5d1d-44d0-871c-806d2d948c52}";;
 
     RULE                 "FFA Usage";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule sets the daily Flexible Flow Account (FFA) usage rate based on whether the Spring Flushing Flow (SFF) switch is turned on, ramping down, or operating during March–June, and it constrains usage to available account balance when applicable.<br>Logic: FFA Usage is zero by default. When SFF turns on (SFF=1 today and 0 yesterday), FFA Usage is the smaller of (a) the flow needed to raise base flow up to the SFF threshold and (b) 30% of the current FFA balance converted to flow. When the SFF downramp switch is active while SFF remains on, FFA Usage is set to the flow needed to meet the Keno ramping flow minus the base-plus-multiplier target (not less than zero). If SFF is oon FFA Usage is set to spread the remaining FFA evenly over the days remaining until July 1. If SFF is off during March 2–June 30, FFA Usage is set to a fixed daily amount based on the March 1 FFA divided across 121 days (converted to flow).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Sets releases for FFA distribution. <br>Currently, the model is set to distribute an equal amount every day, thus &quot;FFA flat distribution&quot;. Additional distribution patterns are possible, they just need to be entered into the Keno data object.<br><br>FFA increment is divided by 121 days to create an equal distribution of all flows, then multiplied across the flat distribution pattern.<br>Other distribution patterns will require more development<br><br>";
+    NOTES                "See WRIMS UKLReleases.wresl &quot;define FFA_use&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
-            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
-
-      ELSE
-            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
 
       IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
             $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
@@ -1039,17 +1011,17 @@ BEGIN
       END_ELSEIF
       ELSEIF_COND ( @"t" > @"March 1" AND @"t" <= @"June 30" AND $ "OpsData.SFF_Switch" [@"t"] == 0.00000000 )
       ELSEIF_CLAUSE
-            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
+            $ "Klamath River.FFA Usage" [@"t"] := "VolumeToFlow"( $ "OpsData.FFAccounting" [@"24:00:00 March 1, Current Year"] / 121.00000000, @"t" );
       END_ELSEIF;
 
     END
     UUID "{fa834b55-c845-4d73-a072-b7eafb1221ee}";;
 
     RULE                 "Yest FFA Spill";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the volume of FFA spill credited to the previous day during Upper Klamath Lake flood control conditions and resets spill to zero on October 1.<br>Logic: On October 1, yesterday’s FFA spill is set to zero. Otherwise calculated when the prior day’s UKL Flood Control Flag is on. In that case, yesterday’s FFA spill is the smaller of (a) yesterday’s C1 excess volume and (b) yesterday’s adjusted C13 excess volume (C13_EXC minus LRDC return flow and pumped storage contribution), minus the volume of DPS spill; the result cannot be negative.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "forumula from page 23 (9)<br><br>FFA spill only computes after DPS Spill is exhausted";
+    NOTES                "See WRIMS SeasonalSupply.wresl &quot;define Yest_FFA_Spill&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 1") THEN
@@ -1068,10 +1040,10 @@ BEGIN
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
 
     RULE                 "SFF_Switch";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule controls when the Spring Flushing Flow (SFF) event is turned on, and keeps it off outside the spring evaluation window.<br>Logic The SFF switch is forced off from October 1 through December 31 and from January 1 through the end of February. Otherwise it carries forward yesterday’s value unless triggered on in early spring. Between March 1 and April 9, if an SFF event has not already occurred and there is a positive FFA balance, SFF turns on when either Keno flood control was active the prior day or I15 Inflow exceeds its threshold, and the prior-day Operations Index is at or below the OPI threshold. On April 10, if an SFF event has not already occurred and FF accounting is positive, SFF is turned on regardless of the other spring triggers.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Operations_Switches.wresl &quot;define switch_SFF&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
@@ -1098,10 +1070,10 @@ BEGIN
     UUID "{30e41084-e07e-484d-9ebb-d6b717c883f0}";;
 
     RULE                 "SFF_Already_Hap";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks whether a Spring Flushing Flow (SFF) event has already occurred during the current season.<br>Logic: The flag is reset to 0 from October 1 through December 31 and during January. From February 1 through April 30, the flag is set to 1 if either the previous day’s Keno outflow exceeded the SFF threshold or the SFF switch was on the previous day; otherwise it carries forward yesterday’s value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Operations_Switches.wresl &quot;define SFF_already_hap_&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
@@ -1130,10 +1102,10 @@ BEGIN
     UUID "{5525b89f-7f5e-4714-bb09-618805d0dcf1}";;
 
     RULE                 "Yest FFA Savings";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule records the prior day’s FFA savings and resets the value at the start of the water year.<br>Logic: On October 1, yesterday’s FFA savings is set to zero. On all other days, it is set equal to the calculated value of “Yesterday’s FFA Saving” for the current timestep.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS UKLSeasonalSupply.wresl &quot;define Yest_FFA_Savings&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 1") THEN
@@ -1141,8 +1113,6 @@ BEGIN
 
       ELSE
             $ "OpsData.YestFFASavings" [@"t"] := "Yesterday's FFA Saving"( @"t" );
-
-          INACTIVE      $ "OpsData.YestFFASavings" [@"t"] := 0.00000000 "acre-ft";
 
       END_IF_STATEMENT;
 
@@ -1155,24 +1125,6 @@ BEGIN
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Code has broken FFA accumulation ruleset into two separate lines of code because the year change between october and March 2 breaks the code<br><br>FFA releases are scheduled <br>FFA increment is 0 if flooding<br><br>need to load in ffa-increment ==0";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31" AND $ "River Data.FFA Increment" [@"t"] < $ "OpsData.FFA_vol_limit" []) THEN
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
-
-      ELSE
-            $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 1" AND $ "River Data.FFA Increment" [@"t"] < $ "OpsData.FFA_vol_limit" [] )
-      ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [@"t"] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"( @"t" ), @"t" );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
-      ELSEIF_CLAUSE
-            $ "River Data.FFA Increment" [@"t"] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
-      END_ELSEIF;
-
-    INACTIVE      $ "River Data.FFA Increment" [] := 0.05000000 * 1000.00000000 "acre-feet";
 
       IF_STATEMENT (@"t" == @"October 1") THEN
             $ "River Data.FFA Increment" [@"t"] := 0.00000000 "acre-ft";
@@ -2555,11 +2507,11 @@ BEGIN
     FUNCTION       "Yesterday's FFA Saving" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description This function calculates the prior day’s FFA savings volume, after accounting for spill and other flow components, and prevents negative savings.<br>Logic Yesterday’s FFA savings is the positive part of: yesterday’s FFA increment converted to volume, minus the positive portion of yesterday’s “excess” flow remaining after subtracting DPS spill, LRDC return flow, pumped storage contribution, and the Keno ramping flow (all converted to volume). If this result is negative, it is set to zero.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC into Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill <br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
+    NOTES          "See WRIMS UKLSeasonalSupply.wresl &quot;define Yest_FFA_Savings&quot; for wrims reference<br><br>";
     BEGIN
 
       "Max"( 0.00000000 "acre-ft", "FlowToVolume"( $ "OpsData.FFAInc" [date - 1.00000000 "day"], @"t" ) - "Max"( "FlowToVolume"( "c13_exc"( date - 1.00000000 "day" ) - $ "LakeData.DPS Spill" [date] - $ "LRDC into Link.Return Flow" [date - 1.00000000 "day"] - $ "Keno.Flow FROM Pumped Storage" [date - 1.00000000 "day"] - $ "Keno.RampFlow" [date - 1.00000000 "day"], @"t - 1" ), 0.00000000 "acre-ft" ) );
