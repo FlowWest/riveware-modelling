@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:49 February 11, 2026
+# Created 23:49 February 11, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1561,10 +1561,10 @@ BEGIN
     UUID "{e616baa5-c479-4b3b-bb4f-5bf0edcb346a}";;
 
     RULE                 "Firm Project Supply From Storage";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule estimates the portion of Project Supply available from UKL storage (based on shadow elevation) and allocates it using the Project Share factor; it is set on March 1 and April 1 and then held constant between updates.<br>Logic: Before April 1 of water year 1980 (years before 1981), storage supply is set to 80,000 acre-ft. From January 1 through February it carries forward. On March 1, storage supply is calculated as the storage above a fixed threshold (shadow-elevation storage minus 209,111 acre-ft, floored at zero) multiplied by the Project Share factor from the Ops Index, and then held constant until April 1. On April 1 the same calculation is repeated, and from April 2 through December 31 the value is held constant at the prior day’s value. This rules combines Project Storage Apr1 and Project Storage Mar1";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Calculates the firm project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.<br><br>first on march 1<br>- 	then april 1: project supply from storage(pss) = (UKL shadow storage (SSd) - 209.111 taf) * Project Share (PS)<br>- Project Supply Storage on April if the firm project supply from storage (does not change again)<br><br><br>what is the value from ss to winter of next year?<br>";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_storage_Apr1,  Project_storage_Mar1&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
@@ -1596,10 +1596,10 @@ BEGIN
     UUID "{752564a7-b7e9-4d5a-8847-ac39ae688f23}";;
 
     RULE                 "Project Storage Apr1";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates and locks in the Project’s share of UKL storage as of April 1 for use in seasonal supply accounting.<br>Logic: Before April 1 of water year 1980 (years before 1981), the value is set to zero. From January 1 through March 31 it carries forward. On April 1, it is calculated as the storage above a fixed threshold (shadow-elevation storage minus 209,111 acre-ft, floored at zero) multiplied by the Project Share factor based on the Ops Index. After April 1, the value is held constant through December 31.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_storage_Apr1&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
@@ -1623,10 +1623,10 @@ BEGIN
     UUID "{0e7cfeda-7486-40bf-bab3-4d1e5753796e}";;
 
     RULE                 "Project Storage Mar1";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description This rule calculates and locks in the Project’s share of UKL storage as of March 1 for use in seasonal supply accounting.<br>Logic Before March 1 of water year 1980 (years before 1981), the value is set to zero. From January 1 through the end of February it carries forward. On March 1, it is calculated as the storage above a fixed threshold (shadow-elevation storage minus 209,111 acre-ft, floored at zero) multiplied by the Project Share factor based on the Ops Index. After March 1, the value is held constant through December 31.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_storage_Mar1&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" < @"March 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
@@ -1650,10 +1650,10 @@ BEGIN
     UUID "{ad398355-38c4-468a-b94d-3262abe33eb5}";;
 
     RULE                 "ProjectShare";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruleset uses OPS index to determine Project Share value through Project Share Calculator look up table.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Prj_share&quot; for wrims reference";
     BEGIN
 
       $ "OpsData.ProjShare" [] := "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
@@ -1671,20 +1671,13 @@ BEGIN
   BEGIN
 
     RULE                 "Refuge Allocation ";
-    DESCRIPTION          "Purpose: Cover LKNWR need from Dedicated UKL within today?s allowance.<br>Reads: RefugeDemand.LKNWR, AllowedToday. Optional: Ady capacity if you enforce hydraulics here.<br>Writes: a working allocation variable (e.g., Alloc.LKNWR.UKLded (AF/d)), or write directly to Ady request later.<br>Logic: UseDedicated = min(Need, AllowedToday); Remaining = Need - UseDedicated.<br>Notes: If you track combined deliveries for both refuges, this rule contributes only LKNWRs portion to the combined tally (see Rule 4.1).<br><br>Purpose: If LKNWR still needs water, allow DPS Spill only after Ag diversions are satisfied.<br>Reads: Remaining from Rule 3.2; a DPS Spill availability series for ?after Ag? (e.g., DPS.AfterAg.Available (AF/d)).<br>Writes: working allocation Alloc.LKNWR.DPSspill (AF/d).<br>Logic: If DPS.AfterAg.Available > 0: UseDPS = min(Remaining, DPS.AfterAg.Available); update Remaining.<br>Notes: This rule does not accrue DPSA; its a debit from DPSA (accounted later).";
+    DESCRIPTION          "Description This rule determines the maximum volume that may be delivered to the refuges on the current day.<br>Logic The allowed delivery is the lesser of (1) the remaining volume under the cumulative seasonal maximum (cumulative max minus cumulative delivered, floored at zero) and (2) the daily delivery cap.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "need to calculate ukl flood spill avaialbe; ffa accounting, dps after ag<br>we don't pull directly from dps - check logic in wrims to see when water gets pulled from dps<br>pull from flood spill first <br>double check on dps spill<br>";
+    NOTES                "<br>";
     BEGIN
 
       $ "Refuge Policy Tracking.RefugeAllowedToday" [] := "Min"( "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [] - $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [] ), $ "Refuge Policy Tracking.RefugeDailyCap" [] );
-
-    INACTIVE      $ "Refuge Policy Tracking.FloodSpill_LKNWR_alloc" [] := IF ( $ "Refuge Policy Tracking.DPSA Balance" [] <= 0.00000000 AND $ "UKL.FFA" [] <= 0.00000000 AND $ "UKL.Spill" [] > 0.00000000 )
- THEN
-  "Min"( "Max"( 0.00000000, $ "Refuge Policy Tracking.LKNWR_Demand" [] - $ "Refuge Policy Tracking.UKL_LKNWR_alloc" [] ), "Max"( 0.00000000, $ "Refuge Policy Tracking.FloodSpillAvail" [] ) )
- ELSE
-  0.00000000
- ENDIF;
 
     END
     UUID "{9f0e359a-99da-4c4d-ad1b-ed502bc2a98d}";;
@@ -1693,14 +1686,8 @@ BEGIN
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Calculcates the max inflow needed into LKWNR. Either 250CFS (max deliveries through the canal) or whatever the volume of water needed is to fill the Refuge to capacity. Result is the smaller value.<br><br>TODOS:<br><br>need TLNWR storage volume value and max cfs delivered through station48<br>";
+    NOTES                "";
     BEGIN
-
-    INACTIVE      $ "Tule Sumps 1A.needed inflow" [@"t"] := "Min"( 500.00000000 "cfs", "SolveInflow"( % "Tule Sumps 1A", $ "Tule Sumps 1A.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "Tule Sumps 1A.Storage" [@"t - 1"], @"24:00:00 October 5, 1980" ) );
-
-    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "Min"( 90.00000000 "cfs", "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 33075.22300000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" ) );
-
-    INACTIVE      $ "LKNWR Cell2.needed inflow" [] := "SolveInflow"( % "LKNWR Cell2", $ "LKNWR Cell2.Outflow" [@"t - 1"], 15.86900000 "acre-ft", $ "LKNWR Cell2.Storage" [@"t - 1"], @"t" );
 
       $ "Ady To Refuge.LKNWR_Credit" [] := $ "Ady To Refuge.LKNWR_Allocation" [] - $ "Ady To Refuge.Outflow" [];
 
@@ -1714,28 +1701,16 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"October 31") THEN
-            $ "Ady To Refuge.allocation" [] := $ "Ady To Refuge.allocation" [@"t - 1"] - "FlowToVolume"( $ "Ady To Refuge.Diversion" [], @"t - 1" );
-
-      ELSE
-            $ "Ady To Refuge.allocation" [] := 21000.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"November 1" AND @"t" <= @"December 31" )
-      ELSEIF_CLAUSE
-            $ "Ady To Refuge.allocation" [] := 0.00000000 "acre-ft";
-      END_ELSEIF;
-
       $ "Ady To Refuge.LKNWR_Allocation" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
 
     END
     UUID "{952fc517-813f-4bca-aea5-26efae15ee7a}";;
 
     RULE                 "Ady To Refuge (LKNWR) Daily Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruleset sets Ady to refuge diversion request based on LKNWR evaporation rate.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "how does this work? do i have to set a diversion request value - what about the demand for the refuge<br>";
+    NOTES                "";
     BEGIN
 
       $ "Ady To Refuge.Diversion Request" [@"t"] := $ "LKNWR Cell2.Outflow" [@"t - 1"];
@@ -1744,7 +1719,7 @@ BEGIN
     UUID "{6474cc6a-817c-484b-81ca-dbe1c796fd27}";;
 
     RULE                 "Sta48 and MH Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruleset sets the Sta48 and MH diversion request value as the total of deliveries to project and requested flow from Sta48 to TLNWR.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1756,7 +1731,7 @@ BEGIN
     UUID "{9ff47d01-0d12-4afc-a350-84b76b7fdb88}";;
 
     RULE                 "Sta 48 to TLNWR Daily Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether excess flow from Tule Sumps 1A is available to be delivered to Tule Lake National Wildlife Refuge (TLNWR) via Station 48.<br>Logic: If the prior day’s Tule Sumps 1A outflow is greater than or equal to the prior day’s Wilson Dam to Tule outflow, the diversion request is set equal to the difference between those two flows. Otherwise, the diversion request is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1774,7 +1749,7 @@ BEGIN
     UUID "{a1a4feff-dda4-4473-afa7-c0c44967cb83}";;
 
     RULE                 "Refuge Cumulative Delivered";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruelset track the cumulate volume delivered to the refuges.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1786,7 +1761,7 @@ BEGIN
     UUID "{244f26de-0b02-4c07-a8c3-49184659ea35}";;
 
     RULE                 "Calculate Cumulative Delivery";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruleset tracks the daily cumulate delivery to the refuges.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1800,10 +1775,10 @@ BEGIN
     UUID "{8515a522-e449-42a9-8c8e-02065e3a50fb}";;
 
     RULE                 "Calculate Evaporation (Outflow)";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This ruleset converts evaporation/day to flat outflow/evaporation value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Not working for some reason. Temprary code in Inflow test. <br><br>This is monthly evaporation rate - need to divide by number of days<br>";
+    NOTES                "";
     BEGIN
 
       $ "LKNWR Cell2.Outflow" [@"t"] := $ "LKNWR Cell2.DailyEvaporation" [@"t"] * 1.00000000 "day";
@@ -1814,7 +1789,7 @@ BEGIN
     UUID "{6b245964-61bc-47c7-962e-12a9a0af03f9}";;
 
     RULE                 "Daily LKNWR Evaporation";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the daily evaporation rate for LKNWR Cell 2 based on surface area and monthly evaporation.<br>Logic: Daily evaporation is computed as the cell’s surface area multiplied by the monthly evaporation depth, converted from volume to flow over the prior timestep, and then divided by the number of days in the month to produce a daily rate.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1826,7 +1801,7 @@ BEGIN
     UUID "{d7ca42e4-a4c3-4885-b705-9b10c4c1bb0a}";;
 
     RULE                 "Daily Tule Sumps Evaporation";
-    DESCRIPTION          "";
+    DESCRIPTION          "DescriptionL This rule calculates the daily evaporation rate for TLNWR 1A based on surface area and monthly evaporation.<br>Logic: Daily evaporation is computed as the cell’s surface area multiplied by the monthly evaporation depth, converted from volume to flow over the prior timestep, and then divided by the number of days in the month to produce a daily rate.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1838,7 +1813,7 @@ BEGIN
     UUID "{b7bdb208-20e3-4dd2-afe3-52df911ed244}";;
 
     RULE                 "get days in month";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Keep track of the number of days in month for evaporation calculation.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1852,7 +1827,7 @@ BEGIN
     UUID "{2c1bcd97-507c-440a-81bb-3fc0a1835576}";;
 
     RULE                 "Calculate LKNWR Area";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the surface area of LKNWR Cell 2 based on its pool elevation.<br>Logic: The cell’s area is determined by interpolating from the elevation–area lookup table using the previous timestep’s pool elevation.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1864,7 +1839,7 @@ BEGIN
     UUID "{49303f26-8933-4721-bdce-6c6fea43efb6}";;
 
     RULE                 "Calculate Tule Sumps Area";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the surface area of LTule Sumpas 1A based on its pool elevation.<br>Logic: The cell’s area is determined by interpolating from the elevation–area lookup table using the previous timestep’s pool elevation.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1876,13 +1851,11 @@ BEGIN
     UUID "{7d51ea1f-c576-41ee-a50e-ec72968f3c49}";;
 
     RULE                 "Set Refuge Diversion Value";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Set Diversion placeholder value so functions could run, ";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
-
-    INACTIVE      "LKNWR Cell2.Outflow" [] := 20.00000000 "cfs";
 
       $ "LKNWR Cell2.Diversion" [] := 0.00000000 "cfs";
 
@@ -1901,7 +1874,7 @@ BEGIN
   BEGIN
 
     RULE                 "TLNWR Seasonal Cumulative Max";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks the TLNWR cumulative max delivery.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1919,7 +1892,7 @@ BEGIN
     UUID "{55e99f2f-55e3-4bf2-b2ab-822b01a006ae}";;
 
     RULE                 "TLNWR Seasonal Daily Cap";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks the cumulative maximum delivery allowed to TLNWR during the delivery season.<br>Logic: From April 1 through October 31, the cumulative maximum increases each day by the TLNWR daily cap, cannot go below zero, and is capped at 21,000 acre-ft. Outside this period, the cumulative maximum is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1937,7 +1910,7 @@ BEGIN
     UUID "{30403ce4-1d47-41b8-92a4-e77abfe35dc5}";;
 
     RULE                 "LKNWR Seaonsal Cumulative Max";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks the LKNWR cumulative max delivery.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1957,7 +1930,7 @@ BEGIN
     UUID "{277512f6-e132-4944-b759-dddd9a6df677}";;
 
     RULE                 "LKNWR Seasonal Daily Cap";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks the cumulative maximum delivery allowed to LKNWR during the delivery season.<br>Logic: From April 1 through October 31, the cumulative maximum increases each day by the LKNWR daily cap, cannot go below zero, and is capped at 21,000 acre-ft. Outside this period, the cumulative maximum is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2060,7 +2033,7 @@ BEGIN
     UUID "{a54c198c-ae22-4ea7-adcb-0402bc280c73}";;
 
     RULE                 "Keno Accretion Positive";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns local inflow into Keno.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2078,7 +2051,7 @@ BEGIN
     UUID "{03d28316-3d6d-4f95-85d9-ff56083a6998}";;
 
     RULE                 "Keno Accretion Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Assign negative keno accretion as diverison.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2096,10 +2069,10 @@ BEGIN
     UUID "{25f0d2d6-0433-41c8-b5df-b5f5e3c04ef2}";;
 
     RULE                 "Project Contributions to Keno Flows";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This calculates the Project contributions to the Keno flow target and also the keno accretions (positive and negative)<br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "calculates the Project contributions to the Keno flow target and also the keno accretions (positive and negative)<br>";
+    NOTES                "";
     BEGIN
 
       $ "Keno data.Project Contributions to Keno Flows" [] := $ "LRDC into Link.Return Flow" [] + $ "Keno.Flow FROM Pumped Storage" [];
@@ -2108,7 +2081,7 @@ BEGIN
     UUID "{245cc88b-bcfa-4406-84c5-6d2336e2f952}";;
 
     RULE                 "Diversion to Keno Avaiable For Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Placeholder so the rule doesn't error out.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2116,16 +2089,14 @@ BEGIN
 
       $ "Diversion To Keno Accretion.Available For Diversion" [] := 4000.00000000 "cfs";
 
-    INACTIVE      $ "Keno Accretion Positive.Available For Diversion" [] := 1000.00000000 "cfs";
-
     END
     UUID "{02ecfe53-ef59-4285-9c40-9b1ea922837d}";;
 
-    RULE                 "Diversion and Multi outflow test";
-    DESCRIPTION          "";
+    RULE                 "Diversion and Multi Outflow";
+    DESCRIPTION          "Description: This rule determines when additional flow must be diverted to the Lost River Diversion Channel (LRDC) to meet downstream diversion demands.<br>Logic: From March 1 through November 30, if Lost River inflow to Wilson Dam is less than the combined diversion requests to Tule and to Station 48/Miller Hill, the shortfall is supplied as diversion to LRDC Multi Outflow. Otherwise, no diversion to LRDC is made.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "this rule sets the diversion request for the Link into LRDC diversion object. Formula is check to see if there is adequate flow from the east side, and if not, divert additional water from the Keno impoundment into the LRDC.";
+    NOTES                "";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"November 30" AND $ "Lost into Wilson.Outflow" [] < $ "Wilson Dam to Tule.Diversion Request" [] + $ "Sta48 and MH from Lost.Diversion Request" []) THEN
@@ -2140,7 +2111,7 @@ BEGIN
     UUID "{9562f51c-15a5-4948-91ad-8ffe941bca1f}";;
 
     RULE                 "c13_exc Rule";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Accounting for C13_Exc";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2152,7 +2123,7 @@ BEGIN
     UUID "{03d1b01a-6515-40ee-ad03-e9999310f304}";;
 
     RULE                 "c1_exc Rule";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Accounting for C1_Exc";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2164,10 +2135,10 @@ BEGIN
     UUID "{6d3529d4-749c-45c7-a361-bb7fc7037adc}";;
 
     RULE                 "Assigning A Canal Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns A Canal Diversion Request based on historical Diversion values.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Need to figure out what starting pool elevation would be. need to verify";
+    NOTES                "";
     BEGIN
 
       $ "A Canal.Diversion Request" [] := $ "Historical Diversions.A canal" [];
@@ -2184,7 +2155,7 @@ BEGIN
     UUID "{bf6e16bd-f017-46ce-bab1-732e13be0331}";;
 
     RULE                 "Assigning Historical Values";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Assign furthe rhistorical vallues to Lost into Wilson, F FF Pumps and Keno Accretions";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2200,7 +2171,7 @@ BEGIN
     UUID "{befea494-e453-4a8d-a263-82a115ff5766}";;
 
     RULE                 "Wilson Dam to  Tule Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns Wilson Dam to Tule historical diversion.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2212,7 +2183,7 @@ BEGIN
     UUID "{4416005c-f1f7-4c89-b635-d238966b7694}";;
 
     RULE                 "Ady Canal Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns Ady canal historical diversion based on sum of deliveries to project and deliveries to refuge.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2224,7 +2195,7 @@ BEGIN
     UUID "{6afe5415-d591-4bb7-8b1b-6ca09b785920}";;
 
     RULE                 "Ady Canal to Project";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns Ady canal to project and to refuge based on historic values..";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2238,7 +2209,7 @@ BEGIN
     UUID "{189738c8-f9b6-40fc-bb92-845db44c6ecd}";;
 
     RULE                 "North Canal Diversion Request";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns North canal historical diversion based on sum of fall winter and spring summer diversion value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2250,7 +2221,7 @@ BEGIN
     UUID "{22380ef0-ca40-4560-b2df-ceb7fa3f07df}";;
 
     RULE                 "Sta48 and MH To Project";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns Station 48 and Miller Hill historical to project value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2261,11 +2232,11 @@ BEGIN
     END
     UUID "{59e67823-7f0c-49d2-bfa6-5a3fd68a5f70}";;
 
-    RULE                 "Diversion and return flow slot setting";
+    RULE                 "Available For Diversion slot setting";
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Rule is set to avoide the error:<br><br><br><br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
+    NOTES                "Rule is set to avoidethe error:<br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
     BEGIN
 
       $ "LRDC Draw From Klamath.Available For Diversion" [] := 5000.00000000 "cfs";
@@ -2277,8 +2248,6 @@ BEGIN
       $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
 
       $ "Ady To Refuge.Available For Diversion" [] := 250.00000000 "cfs";
-
-    INACTIVE      $ "Diversion To Keno Accretion.Available For Diversion" [] := 4000.00000000 "cfs";
 
     END
     UUID "{f2c8384b-df12-4738-8af1-82e74cc5b775}";;
@@ -2310,11 +2279,11 @@ BEGIN
     FUNCTION       "KenoReleaseMultiplier" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description: This rule calculates the Keno release multiplier used to scale base flow requirements based on hydrologic conditions and time of year.<br>Logic: The multiplier is determined by interpolating from the Keno Release Multiplier lookup table using the current Operations Index and the current month.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "Formula only calculates the Keno release multiplier (KRmult) for the current timestep (@&quot;t&quot;).  It does this by interpolating the Keno releast multiplier table in the OpsData data object. <br><br>Keno Release multiplier table is found in Appendix E, pg 23";
+    NOTES          "Keno Release multiplier table is found in Appendix E, pg 23";
     BEGIN
 
       "TableInterpolation"( $ "Keno.Keno Release Multiplier", 0.00000000, "GetMonth"( date ), $ "OpsData.OpsIndex" [], date );
@@ -2364,7 +2333,7 @@ BEGIN
     FUNCTION       "FFA reserve Lookup" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description: This expression uses the Ops Index of the day to look up to FFA Reserve value.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
@@ -2379,7 +2348,7 @@ BEGIN
     FUNCTION       "FFA increment" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description: This expression calculates the FFA increment based using FFA reserve look up.<br>Logic: The value is equal to the Keno river base flow multiplied by the Keno release multiplier and further multiplied by the FFA reserve lookup factor for the current date.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
@@ -2409,11 +2378,11 @@ BEGIN
     FUNCTION       "C1_exc" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description: This expression calculates the portion of Upper Klamath Lake outflow that exceeds the required minimum flow.<br>Logic: Excess flow is equal to today’s UKL outflow minus the applicable minimum flow requirement for the same day.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "Formula to calculate C1-exc variable. UKL releases in excess of Minimum flows (typicall occurs during flood control)";
+    NOTES          "See WRIMS Channel-table.wresl &quot;define C1_EXC&quot; for wrims reference";
     BEGIN
 
       $ "Upper Klamath Lake.Outflow" [date] - $ "Upper Klamath Lake.Min Flows" [date];
@@ -2424,11 +2393,11 @@ BEGIN
     FUNCTION       "c13_exc" ( DATETIME date )
     RETURN_TYPE    NUMERIC;
     SCALE_UNITS    "";
-    DESCRIPTION    "";
+    DESCRIPTION    "Description: This expression calculates the portion of Keno outflow that exceeds both the required base flow and the allowable ramp-down-adjusted flow from the previous day.<br>Logic: Excess flow is equal to today’s Keno outflow minus the greater of (1) the required river base flow or (2) yesterday’s outflow reduced by the allowable ramp-down rate.";
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "<br><br>";
+    NOTES          "See WRIMS Channel-table.wresl &quot;define C13_EXC&quot; for wrims reference";
     BEGIN
 
       $ "Keno.Outflow" [date] - "Max"( $ "Keno data.River Base Flow" [date], $ "Keno.Outflow" [date - 1.00000000 "day"] - $ "Keno.Ramp Down Rate" [date] );
