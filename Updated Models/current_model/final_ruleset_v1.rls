@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 16:46 February 11, 2026
+# Created 22:49 February 11, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -1146,10 +1146,10 @@ BEGIN
     UUID "{0cb69d1c-5adb-4404-8bce-92d6c68cc6d8}";;
 
     RULE                 "FFA_Inc";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule sets the daily Flexible Flow Account (FFA) increment rate and only accrues increment when the FF account is below the volume limit.<br>Logic: FFAInc is zero by default (and on October 1). From October 2–December 31 and from January 1–March 1, if the FF account balance is below the FFA volume limit, FFAInc is set equal to the calculated “FFA increment” value for the day; otherwise it remains zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS UKLSeasonalSupply.wresl &quot;define FFA_inc&quot; for wrims reference<br>";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 1") THEN
@@ -1172,10 +1172,10 @@ BEGIN
     UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
 
     RULE                 "Calculate Kiga Threshold";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description This rule calculates the KIGA inflow threshold used in SFF decision-making.<br>Logic The KIGA threshold is determined by interpolating from the Kiga threshold lookup table using the current Operations Index as the input.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Operations_Switches.wresl &quot;define kiga_thresh&quot; for wrims reference<br>";
     BEGIN
 
       $ "OpsData.kiga_threshold" [] := "TableInterpolation"( $ "OpsData.Kiga_Thresh_Lookup", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
@@ -1193,10 +1193,10 @@ BEGIN
   BEGIN
 
     RULE                 "DPS accounting";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description:This rule updates the Deferred Project Supply Account (DPSA) balance at Upper Klamath Lake and resets it on November 1.<br>Logic: On November 1, the DPSA is set to zero. From November 2–December 31 and from January 1–September 30 the DPSA is updated as yesterday’s DPSA plus daily flow savings plus the refuge daily cap, minus prior-day Project DPS diversions, minus prior-day refuge deliveries from DPS (converted to volume), minus DPS spill (converted to volume). The balance is floored at zero (cannot go negative).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Formula 22 from Appendix E, Used for account for accumulation, diverting, and spilling dps account,<br><br><br>dps set to 0 on nov 1<br><br>setting refuge dps div to zero for now<br>The DPSA balance decreases when:<br><br>Project irrigators divert DPS,<br><br>Refuges divert DPS during flood-control conditions, or<br><br>DPS spills during UKL flood control.<br><br>At the end of each day, DPSA is updated as:<br>DPSA_today = max(0, DPSA_yesterday + flow savings + refuge savings - project DPS diversion - refuge DPS diversion - DPS spill).<br><br>The DPSA account resets to zero on November 1 every year and begins accumulating again on the same day.<br><br>elseif for october place holder";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define UKL_Prj_Credit&quot; for wrims reference<br>";
     BEGIN
 
       IF_STATEMENT (@"t" == @"November 1") THEN
@@ -1209,7 +1209,6 @@ BEGIN
       ELSEIF_COND ( @"t" > @"November 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
             $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
-          INACTIVE      $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
@@ -1220,19 +1219,11 @@ BEGIN
     UUID "{ba582b44-c160-483c-abd2-cf59bfd2064a}";;
 
     RULE                 "Yest_DPS Spill v1";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the portion of flood-control excess flow that is counted as spill from the Deferred Project Supply (DPS) account.<br>Logic: DPS spill is only computed when UKL flood control was active the previous day; otherwise it is zero. When active, DPS spill is set to a non-negative flow limited by the smallest of: (1) yesterday’s excess UKL outflow (C1_EXC), (2) yesterday’s excess Keno flow net of project contributions, and (3) the DPS water available after accounting for prior-day Project DPS diversions and refuge DPS deliveries, plus today’s daily flow savings (all expressed as flow).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                " formula21 from Appendix E, pg 41. Formula only engages in UKL is releasing due to flood control, otherwise DPS Spill is set to zero. This is a workaround for an error encountered with the DPS accounting rule and DPS Spill rule - if  run together without the if statement, it breaks the  code, likely due to a circular reference.<br><br><br>C1_exc = Upper Klamath lake.outflow - upper klamath lake.min flows (flows above minimum releases)<br>C13_exc_Keno.spill<br>DSPA = Upper Klamath Lake. Deferred Supply Account<br>Yest_Project_div_dps = 0.00 ( set to zero until it refuges are programmed in)<br>yest_ref_div_dps = 0.00 (seto to zero, refuges are not in the model yet)<br><br>on ukl flood - control days, any remaining DPSA after project + refuge DPS use can spill but limited by the actual capcity to pass excess flow<br><br>*Double min functions- Riverware's min statements only allow up to two variables, so i stacked the Min functions<br>**Yeah it's coded oddly but i wanted to incorporate the the WRIMS code the best that I could<br><br>still need tlnwr dps divs";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Yest_PC_Spill&quot; for wrims reference<br>";
     BEGIN
-
-    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000) THEN
-            $ "LakeData.DPS Spill" [@"t"] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"( @"t - 1" ), "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [], @"t" ) - "VolumeToFlow"( $ "OpsData.Refuge DPS Div" [], @"t" ) ) ) );
-
-      ELSE
-            $ "LakeData.DPS Spill" [] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t - 1"] == 1.00000000) THEN
             $ "LakeData.DPS Spill" [] := "Max"( 0.00000000 "cfs", "Min"( "C1_exc"( @"t - 1" ), "Min"( "c13_exc"( @"t - 1" ) - $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"], @"t" ) - "VolumeToFlow"( $ "OpsData.Proj DPS Div" [@"t - 1"], @"t" ) - $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"] + "VolumeToFlow"( $ "Upper Klamath Lake.Daily Flow Savings" [], @"t" ) ) ) );
@@ -1246,10 +1237,10 @@ BEGIN
     UUID "{e41ace42-2d80-42a0-be24-d1753c072dd2}";;
 
     RULE                 "Yest_Prj_Div_DPS";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the volume of Project diversions that are charged to Deferred Project Supply (DPS).<br>Logic: Project DPS diversion is set equal to yesterday’s Project DPS fraction multiplied by the total of yesterday’s UKL-supplied diversions (Ady, North, A Canal request, and Station 48/Miller Hill) converted from flow to volume over the prior timestep.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "D_PRJ_UKL_STR_CRD<br><br><br>Formula 19 - calcualte project use of defered project supply. how much of yesterday's UKL project diversion should be debited from DPSA <br><br>This is based on agriculture diversion (project diversion = sum of A canal, station48 and ady diversion from UKL) from UKL yesterday <br>Numeric proj_total_yest :=<br>    (&quot;Station48.Diverted&quot;[t-1] +<br>     &quot;MillerHill.Diverted&quot;[t-1] +<br>     &quot;North.Diverted&quot;[t-1] +<br>     &quot;Ady.Diverted&quot;[t-1])";
+    NOTES                "";
     BEGIN
 
       $ "OpsData.Proj DPS Div" [] := $ "OpsData.Proj DPS Fraction" [@"t - 1"] * "FlowToVolume"( ( $ "Ady Canal.DiversionFromUKL" [@"t - 1"] + $ "North Canal.DiversionFromUKL" [@"t - 1"] + $ "A Canal.Diversion Request" [@"t - 1"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t - 1"] ), @"t - 1" );
@@ -1276,10 +1267,10 @@ BEGIN
     UUID "{5a760d98-ba36-4ce2-82b3-8753b24bd960}";;
 
     RULE                 "Yesterday's PC Savings";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the daily volume of “flow savings” credited to UKL from Project contributions to Keno flow, excluding any portion that is spilling as flood control excess.<br>Logic: From November 1–December 31 and from January 1–September 30, Daily Flow Savings equals the prior day’s Project Contributions to Keno Flows minus the prior day’s Keno excess flow (C13_EXC), floored at zero, and converted from flow to volume for the timestep. Outside these periods, Daily Flow Savings is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Formula 18 from Appendix E, found on Page 40. The formula calculates yesterday's daily flow savings for the current timestep (taken directly from WRIMS code)<br><br>Keno.spill is the variable C13_exc(d-1); yesterday's spill volume at keno<br><br> No accumulation in October, so volume set to zero<br><br>If flood control is not happening at either keno or ukl<br><br>what it does:: adds to dpsa when project side water supports the keno target, letting you reduce link release that day. this only counts when link/keno arent spilling and itsnot october";
+    NOTES                "";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
@@ -1298,19 +1289,11 @@ BEGIN
     UUID "{c5f27a6b-dc92-42e3-956b-4debcd40ef55}";;
 
     RULE                 "Calculate Project Diversion Fraction";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description :This rule sets the fraction of Project diversions that are charged to the Deferred Project Supply (DPS) account.<br>Logic: The Project DPS fraction is set to 0 from November 1–December 31 and from January 1–February 28. From March 1–October 31, it is calculated as the DPS account balance divided by remaining UKL supply (with a small minimum denominator), and then constrained between 0 and 1.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "equation 20<br>this is the share of today's project diversion from UKL that must be charged to the DPSA bank - the water from UKL that goes to agriculture (project diversion)<br>when its under non flood control scenario, a proportion of DPSA gets diverted to project diversion based on the starting level of project supply and dpsa balance on that day<br><br>todo need to add project supply beginning of day value<br>if else statement also has issues<br>";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define credit_use_fraction&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [] != 1.00000000) THEN
-            $ "OpsData.Proj DPS Fraction" [] := $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] / ( "Max"( 0.00000001 "acre-ft", $ "OpsData.ProjectSupplyAccounting" [@"t"] - $ "OpsData.TotalProjectSupplyUsed" [@"t - 1"] ) + $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] );
-
-      ELSE
-            $ "OpsData.Proj DPS Fraction" [] := 1.00000000;
-
-      END_IF_STATEMENT;
 
       IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
             $ "OpsData.Proj DPS Fraction" [] := 0.00000000;
@@ -1329,10 +1312,10 @@ BEGIN
     UUID "{9bf670ae-e484-4e95-9214-657fe379cbbc}";;
 
     RULE                 "RemUKLSupply";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates remaining available UKL supply used for DPS fraction calculations, and forces the value to zero outside the main supply season accounting window.<br>Logic: RemUKLSupply is set to zero during December and from January 1 through March 1. From March 1 through November 30, it is calculated as the prior-day Project Supply balance plus the remaining forecast/estimated supply (UKL projected total minus cumulative supply-season deliveries to date), floored at zero";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define RemUKLSupply_&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"December 1" AND @"t" <= @"December 31") THEN
@@ -1352,10 +1335,10 @@ BEGIN
     UUID "{c6319777-c096-42e5-8051-4fec8f353657}";;
 
     RULE                 "UKL_Prj_Credit_EstTotA";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule sets and holds an estimated total UKL Project Credit value for use in seasonal supply accounting, based on the Deferred Project Supply Account.<br>Logic: The value is initialized to zero on October 5, 1980. On March 1 and again on April 1, it is set equal to the current Deferred Project Supply Account balance (floored at zero). On all other days, it simply carries forward the previous day’s value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define UKL_Prj_Credit_EstTotA&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
@@ -1396,10 +1379,10 @@ BEGIN
   BEGIN
 
     RULE                 "Calculate Project Supply";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule sets the Project Supply accounting volume for the year, resets it to zero outside the supply season, and recalculates it at key dates using inflow-based supply plus a storage/supply component, capped at 350,000 acre-ft.<br>Logic: The value is initialized to 220,000 acre-ft on October 1, 1980. It is set to zero from December 1–December 31 and from January 1 through the end of February. On March 1, Project Supply is set to the lesser of 350,000 acre-ft or (Project Supply from Inflow + Project Storage on March 1). From March 2–March 31 it is held constant. From April 1–November 30, it is recalculated as the lesser of 350,000 acre-ft or (Project Supply from Inflow + Firm Project Supply).<br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define PrjSupply_PA&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 1" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
@@ -1431,7 +1414,7 @@ BEGIN
     UUID "{b673dfc8-1073-413b-9567-ae2cccb264ac}";;
 
     RULE                 "Calculate Cumulative Ag Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule tracks cumulative Project Supply used during the irrigation season based on canal diversions charged to Project Supply.<br>Logic: From January 1 through February 28, Total Project Supply Used is set to zero. From March 1 through October 31, it accumulates daily by adding the current timestep volumes (converted from flow) of Project Supply diversions for A Canal, Station 48/Miller Hill, Ady Canal, and North Canal. Outside these periods, it carries forward the prior day’s value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1453,27 +1436,11 @@ BEGIN
     UUID "{44a4afab-8a62-483d-abb3-d4b902dcb9e2}";;
 
     RULE                 "Variable Project Supply Inflow";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates and then holds the variable (inflow-based) portion of Project Supply, updating it at key forecast dates (March 1, April 1, April 15, and June 1) based on historic inflow forecasts and the Operations Index, and capping it so total supply does not exceed 350,000 acre-ft.<br>Logic: Before April 1 of water year 1980 (i.e., years before 1981), the variable inflow supply is set to 120,000 acre-ft. From January 1 to February 28 it carries forward. On March 1 it is calculated as a historic forecast value (looked up for the current year) multiplied by a project share factor based on the Ops Index, and then held constant until April 1. On April 1, April 15, and June 1 it is recalculated using the corresponding historic forecast period and the Ops Index project share, adjusted by subtracting the firm inflow supply already counted on April 1, multiplied by Project Supply Multiplier, and limited so that firm supply plus variable supply does not exceed 350,000 acre-ft. Between these update dates, the value is held constant through December 31.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "needs debugging<br>need to set variable sproject supply to values from june 1";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_AprSep_Inflow&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" <= @"June 1" AND @"t" >= @"April 15") THEN
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 15, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
-
-      ELSE
-            $ "OpsData.Variable Project Supply Inflow" [] := 0.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" < @"April 15" AND @"t" >= @"April 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Firm Project Supply" [@"24:00:00 April 1, Current Year"], ( "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 5.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the June 1st 50% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) - $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 1, Current Year"] ) * $ "OpsData.ProjSuppMult" [] );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"June 2" AND @"t" < @"October 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Variable Project Supply Inflow" [] := $ "OpsData.Variable Project Supply Inflow" [@"24:00:00 June 1, Current Year"];
-      END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
             $ "OpsData.Project Supply from Inflow_Variable" [@"t"] := 120000.00000000 "acre-ft";
@@ -1519,42 +1486,12 @@ BEGIN
     END
     UUID "{4199cb4c-76b3-4a4e-9035-4ea77aa037af}";;
 
-    RULE                 "Project Supply From Storage";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "If date equals April 1, then set Project Supply from storage<br><br>to look up Project supply multiplier<br>      $ &quot;Lake.DebuggingSlot&quot; [@&quot;t&quot;] := &quot;TableInterpolation&quot;( $ &quot;OpsData.Project Share Calculator&quot;, 0.00000000, 1.00000000, $ &quot;OpsData.OpsIndex&quot; [@&quot;t&quot;], @&quot;t&quot; )<br><br>5/27 - shadow storage is now programmed in, <br>adding placeholder value<br>";
-    BEGIN
-
-      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
-            $ "Upper Klamath Lake.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [];
-
-      ELSE
-            $ "Upper Klamath Lake.Project Supply from Storage" [@"t"] := 350000.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"November 1" )
-      ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
-      END_ELSEIF;
-
-    END
-    UUID "{cdbed44f-da61-40c4-9fd1-6221f5392ecf}";;
-
     RULE                 "Calculate Firm Project Supply (Inflow + Storage)";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule sets the “firm” portion of Project Supply, updating it on April 1 (and again on April 15) based on firm inflow supply plus April 1 storage, and capping firm supply at 350,000 acre-ft.<br>Logic: Before April 1 of water year 1980 (years before 1981), Firm Project Supply is set to 100,000 acre-ft. From January 1 through March 31 it carries forward. On April 1 it is calculated as the lesser of 350,000 acre-ft or (Project Supply from Inflow_Firm + Project Storage on April 1). It is then held constant from April 2–April 14. On April 15 it is recalculated using the same formula, and then held constant for the remainder of the year.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_firm_supply&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"April 15" AND @"t" <= @"October 1") THEN
-            $ "OpsData.Firm Project Supply" [] := "Min"( 350000.00000000 "acre-ft", $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"] + $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"] );
-
-      ELSE
-            $ "OpsData.Firm Project Supply" [] := 0.00000000 "acre-ft";
-
-      END_IF_STATEMENT;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
             $ "OpsData.Firm Project Supply" [] := 100000.00000000 "acre-ft";
@@ -1585,35 +1522,11 @@ BEGIN
     UUID "{0cba4d73-0d53-4489-b9a8-3563a5afb4e8}";;
 
     RULE                 "Firm Project Supply From Inflow";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates the firm inflow-based Project Supply using an April 15 forecast and the Operations Index, then holds it constant after April 15; it also constrains firm inflow supply so total Project Supply does not exceed 350,000 acre-ft when combined with storage supply.<br>Logic: Before April 1 of water year 1980 (years before 1981), firm inflow supply is set to 100,000 acre-ft and carried forward through March 31. From April 1–April 15, it is calculated as the lesser of (350,000 minus Project Supply from Storage on April 1) or (an April 15 95% exceedance historic inflow forecast for the current year multiplied by the project share factor based on the Ops Index). From April 16 through December 31, the value is held constant at the prior day’s value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Calculates the firm project supply from Inflow. Test rule using a function, will be incorporated into a different rule later.<br>";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Project_firm_inflow&quot; for wrims reference";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" >= @"April 1" AND @"t" <= @"April 15") THEN
-            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Calculates the Firm Project Supply from Inflow between April 1 and 15 through lookup tables  <br><br>" [] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"], "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 7.00000000, "GetYear"( @"24:00:00 April 15, Current Year" ), @"t" ) COMMENTED_BY "Looks up the April 15th 95% exceedence forecast by Water Year <br><br>" * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) );
-
-      ELSE
-            $ "OpsData.Project Supply from Inflow_Firm" [] := 0.00000000 "acre-ft";
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" >= @"March 1" AND @"t" < @"April 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply From Inflow" [] := "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 0.00000000, 1.00000000, "GetYear"( @"24:00:00 March 1, Current Year" ), @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"April 16" AND @"t" <= @"December 31" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Inflow_Firm" COMMENTED_BY "Locks in the Firm project supply from Inflow after April 15th <br><br>" [] := $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"];
-      END_ELSEIF
-      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" < @"March 1" )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Inflow_Firm" [@"t"] := $ "OpsData.Project Supply from Inflow_Firm" [@"t - 1"];
-      END_ELSEIF
-      ELSEIF_COND ( @"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000 )
-      ELSEIF_CLAUSE
-            $ "OpsData.Project Supply from Inflow_Firm" [] := 100.00000000 "acre-ft";
-      END_ELSEIF;
 
       IF_STATEMENT (@"t" < @"April 1" AND "GetYear"( @"Current Year" ) < 1981.00000000) THEN
             $ "OpsData.Project Supply from Inflow_Firm" [] := 100000.00000000 "acre-ft";
@@ -1636,42 +1549,16 @@ BEGIN
     UUID "{fe9dfbe6-977b-4ad3-9a86-0e45055ed1d4}";;
 
     RULE                 "Calculate Project Multiplier";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Project Multiplier assigned based on wrims value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "need to figure out how to calculate exceedance value<br>need to redo look up table<br>";
+    NOTES                "Need to figure out how to calculate exceedance value<br>";
     BEGIN
-
-    INACTIVE      IF_STATEMENT (@"t" < @"April 15" AND "GetYear"( @"t" ) == 1981.00000000) THEN
-            $ "OpsData.ProjSuppMult" [@"t"] := 0.50000000;
-
-      ELSE
-            $ "OpsData.ProjSuppMult" [@"t"] := $ "OpsData.ProjSuppMult" [@"t - 1"];
-
-      END_IF_STATEMENT
-      ELSEIF_COND ( @"t" == @"April 1" OR @"t" == @"April 15" OR @"t" == @"May 1" OR @"t" == @"May 15" OR @"t" == @"June 1" )
-      ELSEIF_CLAUSE
-          INACTIVE      $ "OpsData.cumI1_ApSep_ex" [] := "exceedance(0-1)" [];
-            $ "OpsData.cumI1_ApSep_ex" [] := 1.00000000;
-            $ "OpsData.ProjSuppMult" [@"t"] := "TableInterpolation"( $ "OpsData.ProjectSupplyMultiplierLookUp", 0.00000000, 1.00000000, $ "OpsData.cumI1_ApSep_ex" [], @"t" );
-      END_ELSEIF;
 
       $ "OpsData.ProjSuppMult" [] := 1.50000000;
 
     END
     UUID "{e616baa5-c479-4b3b-bb4f-5bf0edcb346a}";;
-
-    RULE                 "PercentRank function test";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "SumsFlowstoVolume does not return any values untiil the stated timestep is finished.";
-    BEGIN
-
-      $ "Upper Klamath Lake.debug slot" [] := "SumFlowsToVolume"( $ "Upper Klamath Lake.Inflow", @"24:00:00 April 1, Current Year", @"24:00:00 May 31, Current Year" );
-
-    END
-    UUID "{3122808e-9c57-4417-ba51-781e276f1350}";;
 
     RULE                 "Firm Project Supply From Storage";
     DESCRIPTION          "";
@@ -2496,7 +2383,7 @@ BEGIN
     ACTIVE         TRUE;
     PRE_EXEC_DIAG  FALSE;
     POST_EXEC_DIAG FALSE;
-    NOTES          "Calculates FFA daily increment based on ops index. <br>Formula #6 from Appendix E (pg 22).";
+    NOTES          "Calculates FFA daily increment based on ops index. <br>Formula #6 from Appendix E (pg 22).<br>See WRIMS UKLSeasonalSupply.wresl &quot;define FFA_inc&quot; for wrims reference<br>";
     BEGIN
 
       $ "Keno data.River Base Flow" [date] * "KenoReleaseMultiplier"( date ) * "FFA reserve Lookup"( date );
