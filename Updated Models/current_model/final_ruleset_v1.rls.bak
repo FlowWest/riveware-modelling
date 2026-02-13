@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 00:19 February 12, 2026
+# Created 21:00 February 12, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -55,7 +55,7 @@ BEGIN
   BEGIN
 
     RULE                 "A Canal Flood Control";
-    DESCRIPTION          "Manages A Canal diversions during flood conditions, prioritizing DPS usage. <br><br>Logic:<br>- Flood Control Active (Flag = 1): Uses DPS and Project Supply allocation logic<br>- DPS Available: Diverts from DPS first, then Project Supply if needed<br>- DPS Not Available: Uses Project Supply only<br>- No Flood Control: Uses Project Supply only, DPS set to 0";
+    DESCRIPTION          "Description This rule allocates A Canal diversion demand between the Deferred Project Supply (DPS) account and current Project Supply, using DPS first when available.<br>Logic If the DPS account has a positive balance, A Canal diversion is assigned to DPS up to the diversion request. If the request exceeds available DPS, the remaining demand is intended to be supplied from Project Supply; otherwise the Project Supply diversion is carried forward from the prior day. If DPS is zero, A Canal diversion is supplied from Project Supply up to the diversion request and DiversionFromDPS is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -999,7 +999,15 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( $ "OpsData.SFF_Switch" [@"t - 1"] == 0.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
       ELSEIF_CLAUSE
+          INACTIVE      $ "Klamath River.FFA Usage" [] := "Min"( "Max"( 0.00000000 "cfs", $ "OpsData.SFF_Thresh" [] - $ "Keno data.River Base Flow" [@"t"] ), 0.30000000 * "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) );
+            IF_STATEMENT ($ "Model Check.SFF_Pulse Scenario" [] == 1.00000000) THEN
             $ "Klamath River.FFA Usage" [] := "Min"( "Max"( 0.00000000 "cfs", $ "OpsData.SFF_Thresh" [] - $ "Keno data.River Base Flow" [@"t"] ), 0.30000000 * "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) );
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "Model Check.SFF_Pulse Scenario" [] == 2.00000000 )
+      ELSEIF_CLAUSE
+            $ "Klamath River.FFA Usage" [] := "Min"( "Max"( 0.00000000 "cfs", $ "OpsData.SFF_Thresh" [] - $ "Keno data.River Base Flow" [@"t"] ), 0.80000000 * "VolumeToFlow"( $ "OpsData.FFAccounting" [@"t"], @"t" ) );
+      END_ELSEIF;
       END_ELSEIF
       ELSEIF_COND ( $ "OpsData.SFF_Downramp_Switch" [] == 1.00000000 AND $ "OpsData.SFF_Switch" [@"t"] == 1.00000000 )
       ELSEIF_CLAUSE

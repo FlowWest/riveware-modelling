@@ -1,0 +1,223 @@
+set ws "ws"
+$ws.outputDeviceMgr addOutCanvas {Output Canvas00001}
+# Output Canvas output device configuration
+$ws.outputCanvasDevice {Output Canvas00001} {
+<OutputCanvasConfig>\
+  <OutCanv_LockBgImages value="0"/>\
+  <OutCanv_LockOtherObjs value="0"/>\
+  <SettingText>\
+    <Property><Name>Identifier</Name><Value>OutCanvName</Value></Property>\
+    <Property><Name>Value</Name><Value>Output Canvas00001</Value></Property>\
+    <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value></Value></Property>\
+  </SettingText>\
+  <SettingInt>\
+    <Property><Name>Identifier</Name><Value>OutCanvWidth</Value></Property>\
+    <Property><Name>Value</Name><Value>500</Value></Property>\
+    <Property><Name>Type</Name><Value>Integer</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>500</Value></Property>\
+    <Property><Name>MinValue</Name><Value>200</Value></Property>\
+    <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+  </SettingInt>\
+  <SettingInt>\
+    <Property><Name>Identifier</Name><Value>OutCanvHeight</Value></Property>\
+    <Property><Name>Value</Name><Value>500</Value></Property>\
+    <Property><Name>Type</Name><Value>Integer</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>500</Value></Property>\
+    <Property><Name>MinValue</Name><Value>200</Value></Property>\
+    <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+  </SettingInt>\
+  <SettingText>\
+    <Property><Name>Identifier</Name><Value>OutCanvBgColor</Value></Property>\
+    <Property><Name>Value</Name><Value>white</Value></Property>\
+    <Property><Name>Type</Name><Value>ColorSpec</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>white</Value></Property>\
+  </SettingText>\
+  <SettingText>\
+    <Property><Name>Identifier</Name><Value>OutCanvRefTstep</Value></Property>\
+    <Property><Name>Value</Name><Value>10-05-1980 24:00:00</Value></Property>\
+    <Property><Name>Type</Name><Value>ModelDateTime</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>10-05-1980 24:00:00</Value></Property>\
+  </SettingText>\
+  <SettingBool>\
+    <Property><Name>Identifier</Name><Value>OutCanvShowOnSim</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </SettingBool>\
+  <SettingBool>\
+    <Property><Name>Identifier</Name><Value>OutCanvShowOnGeo</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </SettingBool>\
+  <SettingBool>\
+    <Property><Name>Identifier</Name><Value>OutCanvShowOnWeb</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </SettingBool>\
+  <SettingEnum>\
+    <Property><Name>Identifier</Name><Value>OutCanvSysDef</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>No</Value></Property>\
+    <Property><Name>Option</Name><Value>No</Value></Property>\
+    <Property><Name>Option</Name><Value>Simulation</Value></Property>\
+    <Property><Name>Option</Name><Value>Geospatial</Value></Property>\
+    <Property><Name>Option</Name><Value>Web Map</Value></Property>\
+  </SettingEnum>\
+  <TextGroup>\
+    <SettingText>\
+      <Property><Name>Identifier</Name><Value>TextGroupName</Value></Property>\
+      <Property><Name>Value</Name><Value>Text Group</Value></Property>\
+      <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </SettingText>\
+    <SettingBool>\
+      <Property><Name>Identifier</Name><Value>TextGroupVis</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </SettingBool>\
+    <SettingEnum>\
+      <Property><Name>Identifier</Name><Value>TextGroupPrecOverride</Value></Property>\
+      <Property><Name>Value</Name><Value>Use Unit Scheme</Value></Property>\
+      <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>Use Unit Scheme</Value></Property>\
+      <Property><Name>Option</Name><Value>Use Unit Scheme</Value></Property>\
+      <Property><Name>Option</Name><Value>0</Value></Property>\
+      <Property><Name>Option</Name><Value>1</Value></Property>\
+      <Property><Name>Option</Name><Value>2</Value></Property>\
+      <Property><Name>Option</Name><Value>3</Value></Property>\
+      <Property><Name>Option</Name><Value>4</Value></Property>\
+      <Property><Name>Option</Name><Value>5</Value></Property>\
+      <Property><Name>Option</Name><Value>6</Value></Property>\
+    </SettingEnum>\
+    <SettingText>\
+      <Property><Name>Identifier</Name><Value>TextGroupFont</Value></Property>\
+      <Property><Name>Value</Name><Value>font-family: sans-serif;</Value></Property>\
+      <Property><Name>Type</Name><Value>Font</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>font-family: sans-serif;</Value></Property>\
+    </SettingText>\
+    <CanvasText>\
+      <SettingEnum>\
+        <Property><Name>Identifier</Name><Value>TextType</Value></Property>\
+        <Property><Name>Value</Name><Value>Value</Value></Property>\
+        <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Plain Text</Value></Property>\
+        <Property><Name>Option</Name><Value>Plain Text</Value></Property>\
+        <Property><Name>Option</Name><Value>Value</Value></Property>\
+        <Property><Name>Option</Name><Value>Value (Priority)</Value></Property>\
+        <Property><Name>Option</Name><Value>Value / Value</Value></Property>\
+        <Property><Name>Option</Name><Value>Percent</Value></Property>\
+        <Property><Name>Option</Name><Value>Timestep</Value></Property>\
+      </SettingEnum>\
+      <SettingEnum>\
+        <Property><Name>Identifier</Name><Value>TextAppl</Value></Property>\
+        <Property><Name>Value</Name><Value>Canvas</Value></Property>\
+        <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Canvas</Value></Property>\
+        <Property><Name>Option</Name><Value>Canvas</Value></Property>\
+        <Property><Name>Option</Name><Value>Teacup</Value></Property>\
+      </SettingEnum>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextColor</Value></Property>\
+        <Property><Name>Value</Name><Value>Black</Value></Property>\
+        <Property><Name>Type</Name><Value>ColorSpec</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Black</Value></Property>\
+      </SettingText>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextPlain</Value></Property>\
+        <Property><Name>Value</Name><Value></Value></Property>\
+        <Property><Name>Type</Name><Value>Text</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextPrefix</Value></Property>\
+        <Property><Name>Value</Name><Value>Surface Flushing Flow Type:</Value></Property>\
+        <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextSuffix</Value></Property>\
+        <Property><Name>Value</Name><Value></Value></Property>\
+        <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingEnum>\
+        <Property><Name>Identifier</Name><Value>TextSlot1RefType</Value></Property>\
+        <Property><Name>Value</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Option</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Option</Name><Value>Data Object / Slot Name</Value></Property>\
+      </SettingEnum>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextSlot1Name</Value></Property>\
+        <Property><Name>Value</Name><Value>Model Check.SFF_Pulse Scenario</Value></Property>\
+        <Property><Name>Type</Name><Value>SlotName</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingEnum>\
+        <Property><Name>Identifier</Name><Value>TextSlot2RefType</Value></Property>\
+        <Property><Name>Value</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Option</Name><Value>Object / Slot Name</Value></Property>\
+        <Property><Name>Option</Name><Value>Data Object / Slot Name</Value></Property>\
+      </SettingEnum>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextSlot2Name</Value></Property>\
+        <Property><Name>Value</Name><Value></Value></Property>\
+        <Property><Name>Type</Name><Value>SlotName</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingText>\
+        <Property><Name>Identifier</Name><Value>TextLegendText</Value></Property>\
+        <Property><Name>Value</Name><Value></Value></Property>\
+        <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      </SettingText>\
+      <SettingEnum>\
+        <Property><Name>Identifier</Name><Value>TextHorzAlign</Value></Property>\
+        <Property><Name>Value</Name><Value>Left</Value></Property>\
+        <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>Left</Value></Property>\
+        <Property><Name>Option</Name><Value>Left</Value></Property>\
+        <Property><Name>Option</Name><Value>Center</Value></Property>\
+        <Property><Name>Option</Name><Value>Right</Value></Property>\
+      </SettingEnum>\
+      <SettingInt>\
+        <Property><Name>Identifier</Name><Value>TextPosX</Value></Property>\
+        <Property><Name>Value</Name><Value>200</Value></Property>\
+        <Property><Name>Type</Name><Value>Integer</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>200</Value></Property>\
+        <Property><Name>MinValue</Name><Value>-200</Value></Property>\
+        <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+      </SettingInt>\
+      <SettingInt>\
+        <Property><Name>Identifier</Name><Value>TextPosY</Value></Property>\
+        <Property><Name>Value</Name><Value>120</Value></Property>\
+        <Property><Name>Type</Name><Value>Integer</Value></Property>\
+        <Property><Name>DefaultValue</Name><Value>120</Value></Property>\
+        <Property><Name>MinValue</Name><Value>-200</Value></Property>\
+        <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+      </SettingInt>\
+        <WorkspacePos inx="0" x="0" y="0" />\
+        <GeospatialPos inx="1" x="0" y="0" />\
+        <WebMapPos inx="1" x="0" y="0" />\
+        <AccountingPos inx="2" x="0" y="0" />\
+    </CanvasText>\
+  </TextGroup>\
+</OutputCanvasConfig>\
+
+}
