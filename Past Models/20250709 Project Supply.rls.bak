@@ -1,0 +1,701 @@
+# RiverWare_Ruleset 9.1.2 Patch
+# Created 15:49 July 9, 2025
+# 
+RULESET
+NAME "RPL Set 2";
+AGENDA_ORDER ASCENDING;
+DESCRIPTION "";
+PRECISION   3;
+NOTES "";
+BEGIN
+
+  POLICY_GROUP   "Keno rule set";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Keno Rampdown Rates";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [] < $ "Keno.Outflow" [@"t - 1"] AND $ "Keno.Outflow" [] > 1400.00000000 "cfs") THEN
+            $ "Keno.Outflow" [] := "Max"( $ "Keno.Outflow" [], $ "Keno.Outflow" [] - $ "Keno.Ramp Down Rate" [] );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{647612aa-2620-4d6c-873c-a5c6310f1b33}";;
+
+    RULE                 "Keno Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Keno.Pool Elevation" [] := 4085.50000000 "feet";
+
+    END
+    UUID "{94d502f7-6598-4a14-b25d-455793bb97b1}";;
+
+    RULE                 "releases to the river";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Formula is designed to add all positive accretions to the target flow, and ignore all negative accretions so that more water is pulled from UKL to keep the reservoir balanced.";
+    BEGIN
+
+      % "Keno" & "Outflow" [] := "Max"( $ "Keno data.River Base Flow" [], $ "Keno data.River Base Flow" [] + ( $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) ) + 0.00000000 "cfs";
+
+    END
+    UUID "{7687a0d1-3d30-4dcb-8984-f8066b257dcd}";;
+
+    RULE                 "Keno Targeted Release";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Targeted releases to the river based on riber base flow multiplier and incorporating FFA accrual and release.";
+    BEGIN
+
+      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [], $ "Keno data.River Base Flow" [] + ( $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) - ( "FFA increment"(  ) + $ "Klamath River.FFA Usage" [] ) ) );
+
+    END
+    UUID "{b8e53ff1-93b7-402d-97db-382612301813}";;
+
+    RULE                 "Keno accretions";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Delete this rule - Dan";
+    BEGIN
+
+      $ "Keno.Accretions" [] := $ "LRDC into Link.Return Flow" [] - $ "Link River to LRDC.Diversion" [] - $ "Link to Ady and F_FF pumps.Diversion" [] - $ "Link outflow to North Canal.Diversion" [] + $ "Keno.Flow FROM Pumped Storage" [];
+
+    END
+    UUID "{f2f4ebcd-89c2-4529-9390-72cb08533a6e}";;
+
+  END
+  UUID "{269a99e1-687b-489f-9675-082d0c135965}";;
+
+  POLICY_GROUP   "Upper Klamath ruleset";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "FFA Downstream Distribution";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Sets releases for FFA distribution. <br>Currently, the model is set to distribute an equal amount every day, thus &quot;FFA flat distribution&quot;. Additional distribution patterns are possible, they just need to be entered into the Keno data object.<br><br>FFA increment is divided by 121 days to create an equal distribution of all flows, then multiplied across the flat distribution pattern.<br>Other distribution patterns will require more development<br><br>";
+    BEGIN
+
+      IF_STATEMENT (@"t" > @"March 1" AND @"t" <= @"June 30") THEN
+            $ "Klamath River.FFA Usage" [] := "VolumeToFlow"( $ "River Data.FFA Increment" [@"24:00:00 March 1, Current Year"] / 121.00000000 * $ "River Data.FFA Flat Distribution" [], @"t" );
+
+      ELSE
+            $ "Klamath River.FFA Usage" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{0df1aa33-b14f-48b0-b9ff-a5fc30e84c7c}";;
+
+    RULE                 "FFA storage and release";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Code has broken FFA accumulation ruleset into two separate lines of code because the year change between october and March 2 breaks the code<br><br>FFA releases are scheduled ";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"October 1" AND @"t" <= @"December 31") THEN
+            $ "River Data.FFA Increment" [] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"(  ), @"t" );
+
+      ELSE
+            $ "River Data.FFA Increment" [] := 0.05000000 "1000 acre-feet";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"March 2" )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [] := $ "River Data.FFA Increment" [@"t - 1"] + "FlowToVolume"( "FFA increment"(  ), @"t" );
+      END_ELSEIF
+      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"June 30" )
+      ELSEIF_CLAUSE
+            $ "River Data.FFA Increment" [] := "Max"( $ "River Data.FFA Increment" [@"t - 1"] - "FlowToVolume"( $ "Klamath River.FFA Usage" [], @"t - 1" ), 0.00000000 "acre-ft" );
+      END_ELSEIF;
+
+    END
+    UUID "{000082ca-73d4-4f66-b2fa-6f4313e22f64}";;
+
+    RULE                 "FFA Savings";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "set FFA savings to lot in UKL (acre-ft), using flowtovolume function<br>";
+    BEGIN
+
+    END
+    UUID "{37ddb05e-594c-44ee-99c1-e3ab22384962}";;
+
+    RULE                 "Yest_DPS Spill v11";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                " formula21 from Appendix E, pg 41 - saved here for backup<br><br><br>C1_exc = Upper Klamath lake.outflow - upper klamath lake.min flows<br>C13_exc_Keno.spill<br>DSPA = Upper Klamath Lake. Deferred Supply Account<br>Yest_Project_div_dps = 0.00 ( set to zero until it refuges are programmed in)<br>yest_ref_div_dps = 0.00 (seto to zero, refuges are not in the model yet)<br><br>*Double min functions- Riverware's min statements only allow up to two variables, so i stacked the Min functions<br>**Yeah it's coded oddly but i wanted to incorporate the the WRIMS code the best that I could";
+    BEGIN
+
+      $ "LakeData.DPS spill" [] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [] - $ "Upper Klamath Lake.Min Flows" [], "Min"( $ "Keno.Spill" [] - $ "Keno data.Project Contributions to Keno Flows" [], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t - 1" ) - 0.00000000 "cfs" - 0.00000000 "cfs" ) ) );
+
+    END
+    UUID "{a2966033-7206-4238-87e6-120799fa53ba}";;
+
+    RULE                 "DPS accounting";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Formula 22 from Appendix E, Used for account for accumulation, divering, and spilling dps account,<br><br>First 0 is a stand in for Yesterday's Refgue savings<br>second 0 is a stand is for project diversion of DPS<br>third 0 is the refuge diversion of dps<br>DPS spill is converted to Acre-ft for this formula<br><br> no accumulation in October, so DPS is set to 0<br><br>";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" - 0.00000000 "acre-ft" - 0.00000000 "acre-ft" - "FlowToVolume"( $ "LakeData.DPS spill" [], @"t - 1" ) );
+
+      ELSE
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
+      ELSEIF_CLAUSE
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + 0.00000000 "acre-ft" - 0.00000000 "acre-ft" - 0.00000000 "acre-ft" - "FlowToVolume"( $ "LakeData.DPS spill" [], @"t - 1" ) );
+      END_ELSEIF;
+
+    END
+    UUID "{b1ba2648-558a-4082-81e2-f75022a8c800}";;
+
+    RULE                 "Yest_DPS Spill v1";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                " formula21 from Appendix E, pg 41. Formula only engages in UKL is spilling, otherwise DPS spill is set to zero. This is a workaround for an error encountered with the DPS accounting rule and DPS spill rule - if  run together without the if statement, it breaks the  code, likely due to a circular reference.<br><br><br>C1_exc = Upper Klamath lake.outflow - upper klamath lake.min flows<br>C13_exc_Keno.spill<br>DSPA = Upper Klamath Lake. Deferred Supply Account<br>Yest_Project_div_dps = 0.00 ( set to zero until it refuges are programmed in)<br>yest_ref_div_dps = 0.00 (seto to zero, refuges are not in the model yet)<br><br>*Double min functions- Riverware's min statements only allow up to two variables, so i stacked the Min functions<br>**Yeah it's coded oddly but i wanted to incorporate the the WRIMS code the best that I could";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Spill" [] > 0.00000000 "cfs") THEN
+            $ "LakeData.DPS spill" [] := "Max"( 0.00000000 "cfs", "Min"( $ "Upper Klamath Lake.Outflow" [] - $ "Upper Klamath Lake.Min Flows" [], "Min"( $ "Keno.Spill" [] - $ "Keno data.Project Contributions to Keno Flows" [], "VolumeToFlow"( $ "Upper Klamath Lake.Deferred Project Supply Account" [], @"t - 1" ) - 0.00000000 "cfs" - 0.00000000 "cfs" ) ) );
+
+      ELSE
+            $ "LakeData.DPS spill" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{99f0a958-8a15-4ad3-b241-a25f88045acd}";;
+
+    RULE                 "yesterday's Flow Savings";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Formula 18 from Appendix E, found on Page 40. The formula calculates yesterday's daily flow savings for the current timestep (taken directly from WRIMS code)<br><br>Keno.spill is the variable C13_exc(d-1); yesterday's spill volume at keno<br><br> No accumulation in October, so volume set to zero";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
+            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - $ "Keno.Spill" [@"t - 1"] ), @"t" );
+
+      ELSE
+            $ "Upper Klamath Lake.Daily Flow Savings" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
+      ELSEIF_CLAUSE
+            $ "Upper Klamath Lake.Daily Flow Savings" [] := "FlowToVolume"( "Max"( 0.00000000 "cfs", $ "Keno data.Project Contributions to Keno Flows" [@"t - 1"] - $ "Keno.Spill" [@"t - 1"] ), @"t" );
+      END_ELSEIF;
+
+    END
+    UUID "{46b63dee-ddf9-4da7-acef-7d5f0fcc6b0a}";;
+
+    RULE                 "Shadow Storage";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.Shadow Elevation" [] := "StorageToElevation"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Storage" [] - ( $ "Upper Klamath Lake.Deferred Project Supply Account" [] + $ "River Data.FFA Increment" [] ) );
+
+    END
+    UUID "{fd260a7f-9752-408a-bca8-d8527a203b7e}";;
+
+  END
+  UUID "{6c778d15-cdde-424f-be6e-401a62842ad7}";;
+
+  POLICY_GROUP   "Indexes and daily calculators";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Ops Index and Logs";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Calculate the Ops Index, Lake Index  and other daily variables used in the Model";
+    BEGIN
+
+      $ "OpsData.OpsIndex" [] := ( $ "OpsData.NWI_14dayAvg" [] + $ "Upper Klamath Lake.Lake Index" [] ) / 2.00000000;
+
+    END
+    UUID "{df05be47-960a-4135-85b3-58fed1a2d9c2}";;
+
+    RULE                 "Lake Index";
+    DESCRIPTION          "Records the lake index value at a slot within the Upper Klamath Lake Object<br>Formula current (and incorrectly) uses actual lake elevation. Need in incorporate shadow levels once DPS and FFA account is in place.";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "formula taken from appendex E, pg 19.  Lake index formula is utilizes lake elevation from previous day due to issues dispatching the model. This may result in minor changes, but the values are similar<br><br>Future Work: ensure formula and model work on @&quot;t&quot; instead of @&quot;t-1&quot;.<br><br>5/27: recoded the formula to work with shadow storage elevation instead of pool elevation.<br><br><br><br>";
+    BEGIN
+
+      $ "Upper Klamath Lake.Lake Index" [] := "Min"( 1.00000000, "Max"( 0.00000000, ( $ "Upper Klamath Lake.Shadow Elevation" [@"t - 1"] - $ "Upper Klamath Lake.UKL lower bound" [@"t - 1"] ) / ( $ "Upper Klamath Lake.UKL upper bound" [@"t - 1"] - $ "Upper Klamath Lake.UKL lower bound" [@"t - 1"] ) ) );
+
+    END
+    UUID "{d7389eb3-ce20-4d48-a25b-9416e8ca9c27}";;
+
+    RULE                 "14 day NWI average";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "OpsData.NWI_14dayAvg" [] := "SumSlot"( $ "Historical Inflows and NWI.NWI", @"t - 13", @"t" ) / 14.00000000;
+
+    END
+    UUID "{9053ba48-5438-47e9-8a78-41a5b32a6706}";;
+
+    RULE                 "Project Supply From storage";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Calculates the project supply from storage (PSS) between Jan 1 and April 2. This portion of project supply is locked in on April 1 and the calcualted value is set in the Project Supply slot in UKL.";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"January 1" AND @"t" <= @"April 2") THEN
+            $ "OpsData.Project Supply from Storage" [] := ( "ElevationToStorage"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Shadow Elevation" [] ) - 209100.00000000 "acre-ft" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+
+      ELSE
+            $ "OpsData.Project Supply from Storage" [] := 0.00000000 "acre-ft";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{43b61bbb-54f7-46ff-b1ed-b27334c95950}";;
+
+    RULE                 "Project Supply from Inflow_Firm";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+    END
+    UUID "{3b8b9515-2cfe-4d52-b693-14742cdab8fe}";;
+
+    RULE                 "Debugging Rule";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"February 1" AND @"t" <= @"May 15") THEN
+            $ "OpsData.debug slot" [] := "GetYear"( @"24:00:00 April 1, Current Year" );
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{a19c8fb3-2f96-4056-ba1e-069999794254}";;
+
+  END
+  UUID "{1daebf9f-5b68-4882-b650-b921adb66d00}";;
+
+  POLICY_GROUP   "Project Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Project Supply";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "If date equals April 1, then set Project Supply from storage<br><br>to look up Project supply multiplier<br>      $ &quot;Lake.DebuggingSlot&quot; [@&quot;t&quot;] := &quot;TableInterpolation&quot;( $ &quot;OpsData.Project Share Calculator&quot;, 0.00000000, 1.00000000, $ &quot;OpsData.OpsIndex&quot; [@&quot;t&quot;], @&quot;t&quot; )<br><br>5/27 - shadow storage is now programmed in, ";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"April 1") THEN
+            $ "Upper Klamath Lake.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [];
+
+      ELSE
+            $ "Upper Klamath Lake.Project Supply from Storage" [] := 35.00000000 "acre-ft";
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"March 2" AND @"t" <= @"November 1" )
+      ELSEIF_CLAUSE
+            $ "Upper Klamath Lake.Project Supply from Storage" [] := $ "OpsData.Project Supply from Storage" [@"24:00:00 April 1, Current Year"];
+      END_ELSEIF;
+
+    END
+    UUID "{16428bef-2fe4-4584-ab2a-2f72ba968101}";;
+
+    RULE                 "Project Supply from inflow_Firm";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Calculates the firm project supply from Inflow. Test rule using a function, will be incorporated into a different rule later.<br>";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"April 1" AND @"t" <= @"April 15") THEN
+            $ "OpsData.Project Supply from Inflow_Firm" [@"t"] := "Min"( 350000.00000000 "acre-ft" - $ "OpsData.Project Supply from Storage" [@"t"], "TableInterpolation"( $ "Historical Inflows and NWI.Historic Forecasts", 1.00000000, 6.00000000, $ "OpsData.debug slot" [], @"t" ) * "TableInterpolation"( $ "OpsData.Project Share Calculator", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" ) );
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( @"t" >= @"April 16" AND @"t" <= @"October 1" )
+      ELSEIF_CLAUSE
+            $ "OpsData.Project Supply from Inflow_Firm" [@"t"] := $ "OpsData.Project Supply from Inflow_Firm" [@"24:00:00 April 15, Current Year"];
+      END_ELSEIF;
+
+    END
+    UUID "{b9bfb009-ce4a-4009-a4b4-9777d4882cb5}";;
+
+    RULE                 "A canal Diversions";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
+            $ "A Canal.Diversion Request" [] := 250.00000000 "cfs";
+
+      ELSE
+            $ "A Canal.Diversion Request" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{9a68f5d2-1eb9-4305-931f-50154cfccca6}";;
+
+    RULE                 "Diversion Headworks";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ("SpringSummerAgSeason"( @"t" ) == TRUE) THEN
+            $ "Lake.Available for A canal" [] := 1100.00000000 "cfs";
+
+      ELSE
+            $ "Lake.Available for A canal" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{9562ff1c-e274-4a45-b13e-1485bf8655c2}";;
+
+    RULE                 "Diversion Rate - in the works";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Still in progress, is supposed to set the diversion rate based on the overall supply remaining divided by the number of days left. <br>Currently only have the supply calculator function working, need to adjust if they ramp up, it will shorten the overall supply function<br>";
+    BEGIN
+
+      $ "Lake.DayCounter" [] := $ "Lake.A canal Supply" [] - "SumFlowsToVolume"( $ "A Canal.Diversion", @"Start Timestep", @"t" );
+
+    END
+    UUID "{5f171b4b-05d8-4283-9d57-b11493767021}";;
+
+    RULE                 "LRDC Diversions_ Temp Rule ";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Set to 3000 CFS to test LRDC diversions of Miller hill and station 48. Will revise later";
+    BEGIN
+
+      $ "Link River to LRDC.Available For Diversion" [] := 3000.00000000 "cfs";
+
+    END
+    UUID "{55273855-d1ca-466b-a399-f9e3eb27110a}";;
+
+    RULE                 "Sta 48 and Miller Hill";
+    DESCRIPTION          "";
+    ACTIVE               FALSE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Rule assumes that Miller Hill and Sta 48 consume all water coming from the east side of the project - as modeled in the WRIMS version. After all water coming from the east is consumed, the pumping plants then take water from UKL via the LRDC.<br><br>Inflows - sta 48 & miller hill_from lost = diversion shortage = Diversion request from sta 48 & miller hill_from UKL.<br><br>***not working - completely breaks the model do i manually input diversion request? or can i calculate it another way?";
+    BEGIN
+
+      $ "Sta48 and MH from UKL.Diversion Request" [] := $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "LRDC from Lost River above Wilson above Wilson.Available For Diversion" [];
+
+    END
+    UUID "{f47247bc-3c7c-4a68-9c97-e1785633d31d}";;
+
+  END
+  UUID "{cc035820-5bf2-4674-af63-80fc3a1a03e9}";;
+
+  POLICY_GROUP   "Various Slot-setting Rules";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Inflow and Diversion Rate rules";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Rules pull data from historical diversion object, When increasing run time, import historical diversion object and adjust through run management.";
+    BEGIN
+
+      $ "Inflows into UKL.Inflow" [] := $ "Historical Inflows and NWI.UKL Inflow" [];
+
+      $ "Lost into Wilson.Inflow" [] := $ "Historical Inflows and NWI.LRDC Into Wilson" [];
+
+      $ "F_FF pumps.Inflow" [] := $ "Historical Inflows and NWI.F_FF pumping" [];
+
+      $ "Keno.Accretions" [] := $ "Historical Inflows and NWI.Keno Accretions" [];
+
+      $ "Wilson Dam  to Tule.Diversion Request" [] := $ "Historical Diversions.Wilson Reservoir to Tule Sumps" [];
+
+      $ "Sta48 and MH from  Lost.Diversion Request" [] := $ "Historical Diversions.Sta 48 and Miller Hill Year Round" [];
+
+      $ "Ady Canal.Diversion Request" [] := $ "Historical Diversions.Ady Canal to Project" [];
+
+      $ "North Canal.Diversion Request" [] := $ "Historical Diversions.North Canal FW" [] + $ "Historical Diversions.North Canal SS" [];
+
+      $ "A Canal.Diversion Request" [] := $ "Historical Diversions.A canal" [];
+
+    END
+    UUID "{aff21669-5a0e-4e1b-922d-0fb9534b41ff}";;
+
+    RULE                 "Ramp down rates";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Constraining factors when reducing keno flows to reduce the risk of fish stranding. <br>Data found in BiOp appendix E, pg 25<br>";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [] < 1400.00000000 "cfs") THEN
+            $ "Keno.Ramp Down Rate" [] := 150.00000000 "cfs";
+
+      ELSE
+            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", $ "Keno.Outflow" [@"t" - 1.00000000] - 3100.00000000 "cfs" );
+
+      END_IF_STATEMENT
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 2800.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 300.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 3100.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 600.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 3500.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := $ "Keno.Outflow" [@"t" - 1.00000000] - 2500.00000000 "cfs";
+      END_ELSEIF
+      ELSEIF_COND ( $ "Keno.Outflow" [] < 4100.00000000 "cfs" )
+      ELSEIF_CLAUSE
+            $ "Keno.Ramp Down Rate" [] := 1000.00000000 "cfs";
+      END_ELSEIF;
+
+    END
+    UUID "{7687baa0-5926-4b02-b53b-75d76bedb72a}";;
+
+    RULE                 "Diversion and return flow slot setting";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Rule is set to avoide the error:<br><br><br><br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
+    BEGIN
+
+      $ "Link River to LRDC.Available For Diversion" [] := 3000.00000000 "cfs";
+
+      $ "Link to Ady and F_FF pumps.Available For Diversion" [] := 400.00000000 "cfs";
+
+      $ "Link outflow to North Canal.Available For Diversion" [] := 190.00000000 "cfs";
+
+      $ "A Canal.Available For Diversion" [] := 1100.00000000 "cfs";
+
+    END
+    UUID "{c0012e82-5316-49fc-87dc-b37031ba17a0}";;
+
+    RULE                 "Project Contributions to Keno Flows";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "calculates the Project contributions to the Keno flow target and also the keno accretions (positive and negative)<br>";
+    BEGIN
+
+      $ "Keno data.Project Contributions to Keno Flows" [] := $ "LRDC into Link.Return Flow" [] + $ "Keno.Flow FROM Pumped Storage" [];
+
+    END
+    UUID "{39e7c596-9665-4588-a1aa-9c88be3fc490}";;
+
+    RULE                 "Diversion and Multi outflow test";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "this rule sets the diversion request for the Link into LRDC diversion object. Formula is check to see if there is adequate flow from the east side, and if not, divert additional water from the Keno impoundment into the LRDC.";
+    BEGIN
+
+      IF_STATEMENT (@"t" >= @"March 1" AND @"t" <= @"November 30" AND $ "Lost into Wilson.Outflow" [] < $ "Wilson Dam  to Tule.Diversion Request" [] + $ "Sta48 and MH from  Lost.Diversion Request" []) THEN
+            $ "Diversion from Link.Multi Outflow" [] := $ "Wilson Dam  to Tule.Diversion Request" [] + $ "Sta48 and MH from  Lost.Diversion Request" [] - $ "Lost into Wilson.Outflow" [];
+
+      ELSE
+            $ "Diversion from Link.Multi Outflow" [] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{cadd907a-f7fc-41f3-9750-cc7a5c855d69}";;
+
+  END
+  UUID "{8ab36297-ef68-4634-a66b-9829ed916b0c}";;
+
+  UTILITY_GROUP "Index and counters Group";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "Flood Season" (  )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Sets Period of time when flood control is operation";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      @"t" > @"November 15" AND @"t" < @"June 15";
+
+    END
+    UUID "{ee714ead-5671-4fca-a613-86572cff92f4}";;
+
+    FUNCTION       "KenoReleaseMultiplier" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Formula only calculates the Keno release multiplier (KRmult) for the current timestep (@&quot;t&quot;).  It does this by interpolating the Keno releast multiplier table in the OpsData data object. <br><br>Keno Release multiplier table is found in Appendix E, pg 23";
+    BEGIN
+
+      "TableInterpolation"( $ "Keno.Keno Release Multiplier", 0.00000000, "GetMonth"( @"t" ), $ "OpsData.OpsIndex" [], @"t" );
+
+    END
+    UUID "{161680cc-61d7-4a86-9039-663ff8f74beb}";;
+
+    FUNCTION       "SpringSummerAgSeason" ( DATETIME CurrentDate )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      CurrentDate >= @"24:00:00 April 1, Current Year" AND CurrentDate <= @"24:00:00 November 30, Current Year";
+
+    END
+    UUID "{85d33bcc-3562-431d-a68c-5bcb12ea61f5}";;
+
+    FUNCTION       "Date Counter" ( DATETIME date1, DATETIME date2 )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Counts the number of days between two dates. Date 1 is the first date, date 2 is the second date ( after).";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Due to RPL language, the values come out as negative, so the abs function is required. Also, riverware count the difference in seconds, thus the divided by 86400 (# of seconds in a day)";
+    BEGIN
+
+      "Abs"( "DateToNumber"( date1 ) - "DateToNumber"( date2 ) ) / 86400.00000000;
+
+    END
+    UUID "{0d2712c5-a1c9-4f20-a26d-2e942c5e5ee9}";;
+
+  END
+  UUID "{0c598bdb-7b19-4f9f-ba96-083092a449d3}";;
+
+  UTILITY_GROUP "Flexible Flow Account and Project Supply";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "FFA reserve Lookup" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Looks up the the FFA reserve volume from the table, based on Ops index value.  FFA reserve table is <br>";
+    BEGIN
+
+      "TableInterpolation"( $ "OpsData.FFA Reserve table", 0.00000000, 1.00000000, $ "OpsData.OpsIndex" [], @"t" );
+
+    END
+    UUID "{e6941377-4e46-4ad4-b532-3524770a872d}";;
+
+    FUNCTION       "FFA increment" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "Calculates FFA daily increment based on ops index. <br>Formula #6 from Appendix E (pg 22).";
+    BEGIN
+
+      $ "Keno data.River Base Flow" [] * "KenoReleaseMultiplier"(  ) * "FFA reserve Lookup"(  );
+
+    END
+    UUID "{fb4a8d5b-8dbf-4f49-8975-78e878216430}";;
+
+    FUNCTION       "Yesterday's FFA Saving" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "calculates savings for FFA account<br>formula 7 from appendix C, (page C-23)<br>Formula variables are as follows:<br><br>River Data.FFA increment<br>Keno.spill =  flood spills over Keno<br>LRDC into Link.Return Flow = LRDC inflows into Keno<br>0.00=temp placeholder for Deferred project supply spill (yet to be programmed)<br>Keno.Flow from pumped storage = F/FF contributions from KDD<br><br>";
+    BEGIN
+
+      "Max"( 0.00000000, $ "River Data.FFA Increment" [@"t - 1"] - "Max"( 0.00000000, $ "Keno.Spill" [@"t - 1"] - ( $ "LRDC into Link.Return Flow" [@"t - 1"] - ( 0.00000000 - ( $ "Keno.Flow FROM Pumped Storage" [@"t - 1"] - $ "Keno.Ramp Down Rate" [@"t - 1"] ) ) ) ) );
+
+    END
+    UUID "{70fd077d-af11-4f0e-8dc0-59345ed4752f}";;
+
+    FUNCTION       "Fractional Diversion of DPS" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "";
+    ACTIVE         FALSE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      ?;
+
+    END
+    UUID "{ebe69e17-ffec-4daf-9cc9-3efba02ad4ea}";;
+
+  END
+  UUID "{06b0d2fa-3379-45be-8bab-80c5bfac6218}";;
+
+END
+UUID "{23cc8ac1-5fb5-4ddb-b5b6-bd51632eb9d2}";

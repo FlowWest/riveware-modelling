@@ -1,0 +1,210 @@
+# RiverWare_Object 9.5.2
+# Created 14:56 December 29, 2025
+# CADSWES, University of Colorado at Boulder, http://cadswes.colorado.edu/
+# objects:  1
+# clusters: 0
+# 
+DST 0
+FlagEncoding 3
+# Section: Objects
+set obj {Seasons and Dates}
+set o "$ws.Seasons and Dates"
+$ws SimObj $obj {DataObj} 712 854 {Red} 430 5071 268 364
+"$o" webMapCoords 687 863
+"$o" geospatialCoords 0 0 218 314
+"$o" UUID {d15944e7-b818-49be-a294-88c6b3b0160b}
+"$o" objOrd wsList 5159
+"$o" objOrd coordMgr 31
+"$o" objSlotOrderType ListOrder_COLSORT 0 Ascend
+"$o" {ScalarSlot} {WinterOps Length}
+set s "$o.WinterOps Length"
+"$s" order 1 
+"$s" UUID {c2ca6a37-56b8-4a5c-8fb1-c58ff24cb504}
+"$s" units {Time} 1 {hr} {%f} 2
+"$s" value 3624 {hr}
+"$o" {ScalarSlot} {Operation Start Timestep}
+set s "$o.Operation Start Timestep"
+"$s" order 2 
+"$s" UUID {f177118e-bd72-4248-bb23-e1f5c71386de}
+"$s" units {DateTime} 1 {FullDateTime} {%f} 0
+"$s" value 6947596800 {FullDateTime}
+"$o" {ScalarSlot} {Last Day of Year}
+set s "$o.Last Day of Year"
+"$s" order 5 
+"$s" UUID {d4b52e36-ff7e-469a-9a01-2a317a0f1788}
+"$s" units {DateTime} 1 {MonthAndDay} {%f} 0
+"$s" value 157766400.609375 {FullDateTime}
+"$o" {ScalarSlot} {Last Day of Summer}
+set s "$o.Last Day of Summer"
+"$s" order 6 
+"$s" UUID {1fb958ab-4b35-4be4-9842-d0ebd5e64f10}
+"$s" units {DateTime} 1 {MonthAndDay} {%f} 0
+"$s" value 149817600.609375 {FullDateTime}
+"$o" {TableSlot} {Spawn Operation Dates}
+set s "$o.Spawn Operation Dates"
+"$s" order 7 
+"$s" UUID {2b3a1c14-c866-47b3-8644-36d53305f6d1}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 149904000.609375 
+"$s" row 1 153792000.609375 
+"$o" {TableSlot} {Spawn Increase Dates}
+set s "$o.Spawn Increase Dates"
+"$s" order 8 
+"$s" UUID {f3e634c8-8eed-4494-b93d-6f329e2db7a0}
+"$s" resize 4 1
+"$s" setRowLabels {First} {Second} {Third} {Fourth} 
+"$s" setColumnLabels {Increase Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 149904000.609375 
+"$s" row 1 150854400.609375 
+"$s" row 2 151718400.609375 
+"$s" row 3 152582400.609375 
+"$o" {TableSlot} {Fill Operation Dates}
+set s "$o.Fill Operation Dates"
+"$s" order 9 
+"$s" UUID {41512b9e-536a-45e6-81cf-a99d8455b941}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 153878400.609375 
+"$s" row 1 131414400.609375 
+"$o" {TableSlot} {Spring Operation Dates}
+set s "$o.Spring Operation Dates"
+"$s" order 10 
+"$s" UUID {787941b9-60bd-463d-b49d-bdb6467ca1e9}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 131414400.609375 
+"$s" row 1 141868800.609375 
+"$o" {TableSlot} {Summer Operation Dates}
+set s "$o.Summer Operation Dates"
+"$s" order 11 
+"$s" UUID {0d8c3356-d211-4057-996d-64fc238e21d4}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 141955200.609375 
+"$s" row 1 149817600.609375 
+"$o" {ScalarSlot} {Project Start Timestep}
+set s "$o.Project Start Timestep"
+"$s" order 12 
+"$s" UUID {4bd1bfcb-5437-4e3e-a7c4-b4c367a0cf14}
+"$s" units {DateTime} 1 {MonthAndDay} {%f} 0
+"$s" value 131414400.609375 {FullDateTime}
+"$o" {ScalarSlot} {Project End Timestep}
+set s "$o.Project End Timestep"
+"$s" order 13 
+"$s" UUID {b1da4055-ba37-4608-acf4-1f4dafb2a8bf}
+"$s" units {DateTime} 1 {MonthAndDay} {%f} 0
+"$s" value 153792000.609375 {FullDateTime}
+"$o" {ScalarSlot} {Observation End Timestep}
+set s "$o.Observation End Timestep"
+"$s" order 14 
+"$s" UUID {daf272fc-13a6-458b-953e-ef9db0699e6a}
+"$s" computedByExpr 3 {"DateToNumber"( "NumberToDate"( $ "Seasons and Dates.Operation Start Timestep" [] ) - 1.00000000 "day" )}
+"$s" units {DateTime} 1 {FullDateTime} {%f} 0
+"$s" value 6947510400 {FullDateTime}
+"$o" {SeriesSlot} {Forecast Timestep Flag}
+set s "$o.Forecast Timestep Flag"
+"$s" order 15 
+"$s" UUID {28820e6c-21b4-498a-9847-13d9ffd0a458}
+"$s" cvg 2 0.0001
+"$s" unit {NONE} 1 {NONE} {%f} 2
+"$s" minMax NaN NaN
+"$s" setFSeries {NONE} {03-02-1981 00:00:00} {03-01-2021 00:00:00} 1 DAY -1 2 @ 14245 64 @ 214 2 @ 151 
+"$s" setDSeries {NONE} {03-02-1981 00:00:00} {03-01-2021 00:00:00} 1 DAY -1 NaN @ 14245 1 0 @ 30 1 0 @ 29 1 0 @ 30 1 0 @ 29 1 0 @ 91 NaN @ 151 
+"$s" allowSync 1
+"$o" {ScalarSlot} {WY Start Date}
+set s "$o.WY Start Date"
+"$s" order 16 
+"$s" UUID {34cb905d-4d0f-47cc-a0fb-f449dfd408f3}
+"$s" units {DateTime} 1 {MonthAndDay} {%f} 0
+"$s" value 149904000.609375 {FullDateTime}
+"$o" {ScalarSlot} {Start Timestep}
+set s "$o.Start Timestep"
+"$s" order 17 
+"$s" UUID {8f38a1c6-e2e9-407e-8b7d-711f3141740d}
+"$s" computedByExpr 2 {"DateToNumber"( @"Start Timestep" )}
+"$s" userDescript {This slot is used in an Output Canvas.}
+"$s" units {DateTime} 1 {FullDateTime} {%f} 0
+"$s" value 6934636800 {FullDateTime}
+"$o" {ScalarSlot} {End Timestep}
+set s "$o.End Timestep"
+"$s" order 17 
+"$s" UUID {5bc740fd-77b3-4ef5-9a13-381cacc345e9}
+"$s" computedByExpr 2 {"DateToNumber"( @"Finish Timestep" )}
+"$s" userDescript {This slot is used in an Output Canvas and Expr Slots}
+"$s" units {DateTime} 1 {FullDateTime} {%f} 0
+"$s" value 6979219200 {FullDateTime}
+"$o" {TableSlot} {Flushing Flow Operation Dates}
+set s "$o.Flushing Flow Operation Dates"
+"$s" order 18 
+"$s" UUID {d2570513-8560-483d-8948-3ad5b43f9e15}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 131414400.609375 
+"$s" row 1 135302400.609375 
+"$o" {TableSlot} {Flushing Flow Compliance Dates}
+set s "$o.Flushing Flow Compliance Dates"
+"$s" order 18 
+"$s" UUID {76b34782-8aff-4a1d-8445-22798e6114f1}
+"$s" resize 2 1
+"$s" setRowLabels {Start} {End} 
+"$s" setColumnLabels {Date} 
+"$s" setMaximums NaN 
+"$s" setMinimums NaN 
+"$s" setUnitTypes {DateTime} 
+"$s" setScales 1 
+"$s" setUsrUnits {MonthAndDay} 
+"$s" setUsrFormat {%f} 
+"$s" setUsrPrecision {0} 
+"$s" row 0 155174400.609375 
+"$s" row 1 136598400.609375 
+"$o" hideSlots 0 hideOff hideEmptyOff
+# Section: Snapshot Object Relationships
+# Section: Links

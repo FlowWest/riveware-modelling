@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 00:15 February 12, 2026
+# Created 16:30 February 12, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -55,7 +55,7 @@ BEGIN
   BEGIN
 
     RULE                 "A Canal Flood Control";
-    DESCRIPTION          "Manages A Canal diversions during flood conditions, prioritizing DPS usage. <br><br>Logic:<br>- Flood Control Active (Flag = 1): Uses DPS and Project Supply allocation logic<br>- DPS Available: Diverts from DPS first, then Project Supply if needed<br>- DPS Not Available: Uses Project Supply only<br>- No Flood Control: Uses Project Supply only, DPS set to 0";
+    DESCRIPTION          "Description This rule allocates A Canal diversion demand between the Deferred Project Supply (DPS) account and current Project Supply, using DPS first when available.<br>Logic If the DPS account has a positive balance, A Canal diversion is assigned to DPS up to the diversion request. If the request exceeds available DPS, the remaining demand is intended to be supplied from Project Supply; otherwise the Project Supply diversion is carried forward from the prior day. If DPS is zero, A Canal diversion is supplied from Project Supply up to the diversion request and DiversionFromDPS is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";

@@ -1,0 +1,83 @@
+# RiverWare_Ruleset 9.5.2
+# Created 09:25 December 31, 2025
+# 
+RULESET
+NAME "Klamath Global Functions";
+AGENDA_ORDER ASCENDING;
+DESCRIPTION "";
+PRECISION   2;
+IS_GLOBAL   TRUE;
+NOTES "";
+BEGIN
+
+  UTILITY_GROUP "Datetime Functions";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "MarchThruNovember" ( DATETIME date )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "If the timestep falls in the months of March thru November, this function solves as TRUE.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      @"March" <= date AND date <= @"November";
+
+    END
+    UUID "{bacfadf3-5285-4472-855e-b32ddd6adf9a}";;
+
+    FUNCTION       "MarchThruSeptember" ( DATETIME date )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "If the timestep falls in the months of March thru September, this function solves as TRUE.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      @"March" <= date AND date <= @"September";
+
+    END
+    UUID "{d655f014-9d76-4025-8c88-6248d3498b90}";;
+
+    FUNCTION       "Operations Period" ( DATETIME date )
+    RETURN_TYPE    BOOLEAN;
+    SCALE_UNITS    "";
+    DESCRIPTION    "If the date is on or after the Operation Start Date, then this function solves as TRUE. ";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      "NumberToDate"( $ "Seasons and Dates.Operation Start Timestep" [] ) <= date;
+
+    END
+    UUID "{ec6fc585-98c1-4636-88fa-74087e395a37}";;
+
+    FUNCTION       "Operation Start Timestep" (  )
+    RETURN_TYPE    DATETIME;
+    SCALE_UNITS    "";
+    DESCRIPTION    "This function returns the Operation Start Date.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      "NumberToDate"( $ "Seasons and Dates.Operation Start Timestep" [] );
+
+    END
+    UUID "{26d8456f-349a-49a3-943a-562050347fc1}";;
+
+  END
+  UUID "{1506e184-ccac-4e9d-840a-939a95df4c8f}";;
+
+END
+UUID "{2223880c-87c3-4b0a-8dd7-2e7704efe6d4}";
