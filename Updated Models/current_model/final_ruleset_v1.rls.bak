@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 21:00 February 12, 2026
+# Created 11:02 February 13, 2026
 # 
 RULESET
 NAME "working_ruleset_1";
@@ -16,7 +16,7 @@ BEGIN
   BEGIN
 
     RULE                 "Calculate CumAg_ss_Delv";
-    DESCRIPTION          "Calculates cumulative agricultural supply-side deliveries from March 1 to October 31, with reduced scope in November.<br><br>Logic:January 1: Reset cumulative value to 0 acre-ft<br>- March 1: Begin accumulation with current day's flows<br>- March 1 - October 31: Add daily flows to cumulative total<br>- November 1 - November 15: Only include Sta48 and MH from Lost flows<br>- Other dates: Carry forward previous day's value<br>";
+    DESCRIPTION          "Description: This rule tracks cumulative agricultural deliveries during the supply season, resetting annually and accumulating daily diversion volumes from key canals, with a limited accumulation period in early November.<br>Logic: CumAg_ss_DelDV resets to zero on January 1 and otherwise carries forward by default. On March 1 it initializes the cumulative total as the current day’s diversion volume (A Canal request, Sta48/MH from UKL, Ady SpringSummer from UKL, and North SpringSummer from UKL). From March 2 through October 31 it adds the current day’s diversion volume to yesterday’s cumulative total. From November 1–November 15 it continues accumulating but only adds Sta48/MH diversion volume; outside these periods it holds the prior value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -55,7 +55,7 @@ BEGIN
   BEGIN
 
     RULE                 "A Canal Flood Control";
-    DESCRIPTION          "Description This rule allocates A Canal diversion demand between the Deferred Project Supply (DPS) account and current Project Supply, using DPS first when available.<br>Logic If the DPS account has a positive balance, A Canal diversion is assigned to DPS up to the diversion request. If the request exceeds available DPS, the remaining demand is intended to be supplied from Project Supply; otherwise the Project Supply diversion is carried forward from the prior day. If DPS is zero, A Canal diversion is supplied from Project Supply up to the diversion request and DiversionFromDPS is set to zero.";
+    DESCRIPTION          "Description: This rule allocates A Canal diversion demand between the Deferred Project Supply (DPS) account and current Project Supply, using DPS first when available.<br>Logic: If the DPS account has a positive balance, A Canal diversion is assigned to DPS up to the diversion request. If the request exceeds available DPS, the remaining demand is intended to be supplied from Project Supply; otherwise the Project Supply diversion is carried forward from the prior day. If DPS is zero, A Canal diversion is supplied from Project Supply up to the diversion request and DiversionFromDPS is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -83,7 +83,7 @@ BEGIN
     UUID "{2c72b107-1d65-4ae1-920c-4dc8aa986185}";;
 
     RULE                 "North Canal UKL Flood Control";
-    DESCRIPTION          "Description: <br>This rule determines whether North Canal diversions from Upper Klamath Lake are supplied from the Deferred Project Supply Account (DPS) or from current Project Supply.<br>Logic: <br>If water is available in the Deferred Project Supply Account, it is used first to meet the North Canal diversion. If the diversion demand exceeds the available DPS, the remaining amount is supplied from current Project Supply. If no DPS water is available, the entire diversion is supplied from current Project Supply. In all cases, deliveries cannot exceed the amount available in the respective account.";
+    DESCRIPTION          "Description: This rule determines whether North Canal diversions from Upper Klamath Lake are supplied from the Deferred Project Supply Account (DPS) or from current Project Supply.<br>Logic: If water is available in the Deferred Project Supply Account, it is used first to meet the North Canal diversion. If the diversion demand exceeds the available DPS, the remaining amount is supplied from current Project Supply. If no DPS water is available, the entire diversion is supplied from current Project Supply. In all cases, deliveries cannot exceed the amount available in the respective account.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Reference: Appendix C-33";
@@ -144,7 +144,7 @@ BEGIN
     UUID "{ba5e34e8-7266-4ca1-a3cf-b07b6d248191}";;
 
     RULE                 "Ady Canal UKL Flood Control";
-    DESCRIPTION          "Description: Manages Ady Canal diversions from UKL during flood conditions.<br>Logic:<br>If water is available in the Deferred Project Supply Account, it is used first to meet the Ady Canal diversions. If the diversion demand exceeds the available DPS, the remaining amount is supplied from current Project Supply. If no DPS water is available, the entire diversion is supplied from current Project Supply. In all cases, deliveries cannot exceed the amount available in the respective account.<br>";
+    DESCRIPTION          "Description: Manages Ady Canal diversions from UKL during flood conditions.<br>Logic: If water is available in the Deferred Project Supply Account, it is used first to meet the Ady Canal diversions. If the diversion demand exceeds the available DPS, the remaining amount is supplied from current Project Supply. If no DPS water is available, the entire diversion is supplied from current Project Supply. In all cases, deliveries cannot exceed the amount available in the respective account.<br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -172,7 +172,7 @@ BEGIN
     UUID "{68f56e92-c215-4ae5-98bf-7b9fd02ad848}";;
 
     RULE                 "Ady Canal Flood Control";
-    DESCRIPTION          "Description: This rule defines how Ady Canal diversion demand is met during flood control operations, prioritizing LRDC, return flows and pump inflows before diverting from Upper Klamath Lake (UKL).<br><br>Logic: If the Flood Control Flag is active, diversions are supplied first from LRDC return flow up to the diversion request, then from F/FF pump inflow if additional demand remains, and finally from UKL for any remaining unmet demand. If flood control is not active, no diversion is allocated from LRDC, F/FF, or UKL under this rule.";
+    DESCRIPTION          "Description: This rule defines how Ady Canal diversion demand is met during flood control operations, prioritizing LRDC, return flows and pump inflows before diverting from Upper Klamath Lake (UKL).<br>Logic: If the Flood Control Flag is active, diversions are supplied first from LRDC return flow up to the diversion request, then from F/FF pump inflow if additional demand remains, and finally from UKL for any remaining unmet demand. If flood control is not active, no diversion is allocated from LRDC, F/FF, or UKL under this rule.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Reference: Appendix C-33";
@@ -205,8 +205,8 @@ BEGIN
     UUID "{ff2d16a8-9480-4a58-86cd-21419d5aee28}";;
 
     RULE                 "Sta48 MH UKL Flood Control";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
+    DESCRIPTION          "Description: This rule allocates Station 48 and Miller Hill diversions supplied from UKL between the Deferred Project Supply (DPS) account and current Project Supply, using DPS first when available.<br>Logic :If the DPS account has a positive balance, Sta48/MH diversion is assigned to DPS up to the UKL-supplied diversion amount. If the UKL diversion exceeds available DPS, the remaining amount is intended to be supplied from Project Supply (limited by availability); otherwise Project Supply diversion is set to zero. If DPS is zero, the full UKL diversion is supplied from Project Supply up to availability and DiversionFromDPS is set to zero.";
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Reference: Appendix C-33";
     BEGIN
@@ -233,20 +233,20 @@ BEGIN
     UUID "{52ee19f1-82f1-4377-bf77-00ce4f621943}";;
 
     RULE                 "Sta48 MH Flood Control";
-    DESCRIPTION          "";
-    ACTIVE               FALSE;
+    DESCRIPTION          "Description: This rule defines how Station 48 and Miller Hill diversion demand is met during UKL flood control operations, prioritizing LRDC supply and F/FF pump inflow before diverting from Upper Klamath Lake (UKL).<br>Logic: When the UKL Flood Control Flag is active, diversion to the Project is first assigned from LRDC inflow. If LRDC inflow is insufficient to meet the diversion request, the remaining demand is supplied from F/FF pump inflow up to availability. If demand still exceeds LRDC and F/FF supplies, the remaining balance is diverted from UKL. If flood control is not active, no diversion is assigned from LRDC, F/FF, or UKL under this rule.";
+    ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Reference: Appendix C-33";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
-            $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"];
+            $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := $ "Sta48 and MH from Lost.To_Project" [@"t"];
 
             IF_STATEMENT ($ "LRDC from Lost River.Inflow" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
             $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] );
 
-            IF_STATEMENT ($ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
-            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
+            IF_STATEMENT ($ "Sta48 and MH from Lost.To_Project" [@"t"] - $ "LRDC from Lost River.Inflow" [@"t"] > $ "F_FF pumps.Inflow" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Sta48 and MH from Lost.To_Project" [@"t"] - $ "LRDC into Link.Return Flow" [@"t"] - $ "F_FF pumps.Inflow" [@"t"];
 
       ELSE
             $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
@@ -260,18 +260,13 @@ BEGIN
 
       END_IF_STATEMENT;
 
-      ELSE
-          INACTIVE      $ "North Canal.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
-
-          INACTIVE      $ "North Canal.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
-
       END_IF_STATEMENT;
 
     END
     UUID "{d989a157-7317-4068-8795-2e4dd27f6014}";;
 
     RULE                 "Max Storage";
-    DESCRIPTION          "Description:<br>Calculate Upper Klamath Lake max storage";
+    DESCRIPTION          "Description: Calculate Upper Klamath Lake max storage";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -283,7 +278,7 @@ BEGIN
     UUID "{5b4e06a7-73b8-4a8e-91c2-4b8997f3e495}";;
 
     RULE                 "Flood Curve";
-    DESCRIPTION          "Description:<br>Generate UKL flood curve for comparison";
+    DESCRIPTION          "Description: Generate UKL flood curve for comparison";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -295,7 +290,7 @@ BEGIN
     UUID "{47ebc5c9-1e0d-4106-868f-ffdec5fd0ea3}";;
 
     RULE                 "Set Minimum";
-    DESCRIPTION          "Description:<br><br>Ensure C1 Outflow is bigger than UKL minimum flows.";
+    DESCRIPTION          "Description: Ensure C1 Outflow is bigger than UKL minimum flows.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -322,7 +317,7 @@ BEGIN
     UUID "{bfd04469-e535-4896-9665-3566dbea317b}";;
 
     RULE                 "Ramp Down Flow";
-    DESCRIPTION          "Description:<br>Keno ramping constraints are enforced upstream at Upper Klamath Lake. If a proposed decrease in UKL outflow would violate the allowable ramp-down rate at Keno, UKL releases are increased to satisfy the downstream ramping requirement.";
+    DESCRIPTION          "Description: Keno ramping constraints are enforced upstream at Upper Klamath Lake. If a proposed decrease in UKL outflow would violate the allowable ramp-down rate at Keno, UKL releases are increased to satisfy the downstream ramping requirement.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -337,7 +332,7 @@ BEGIN
     UUID "{8a596b18-3cc2-45c2-8516-43caa5ee4d63}";;
 
     RULE                 "SFF_Down_Ramp";
-    DESCRIPTION          "Description This rule controls activation of the SFF downramp switch.<br>Logic The downramp switch is set to 1 when the SFF switch turns on (i.e., it equals 1 in the current timestep and was 0 in the previous timestep). Otherwise, including on October 5, 1980, the downramp switch is set to 0.";
+    DESCRIPTION          "Description: This rule controls activation of the SFF downramp switch.<br>Logic: The downramp switch is set to 1 when the SFF switch turns on (i.e., it equals 1 in the current timestep and was 0 in the previous timestep). Otherwise, including on October 5, 1980, the downramp switch is set to 0.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS UKLReleases.wresl &quot;define SFF_downramp_switch&quot; for wrims reference";
@@ -359,10 +354,10 @@ BEGIN
     UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
     RULE                 "Keno RampDown Flow";
-    DESCRIPTION          "Description:<br>When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior day’s UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
+    DESCRIPTION          "Description: When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior day’s UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS UKLReleases.wresl &quot;define Keno_ramp_flow&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Upper Klamath Lake.Outflow" [@"t - 1"]) THEN
@@ -377,7 +372,7 @@ BEGIN
     UUID "{6452a5ca-0b25-4065-b3ca-bdc16de96e2a}";;
 
     RULE                 "Ramp Down Rate Max";
-    DESCRIPTION          "Description:<br>Enforces Rampdown rate max is at 2000 cfs.";
+    DESCRIPTION          "Description: Enforces Rampdown rate max is at 2000 cfs.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -411,7 +406,7 @@ BEGIN
     UUID "{4d19adb3-efa7-4005-9fbb-dafae0fd7de2}";;
 
     RULE                 "Release to River";
-    DESCRIPTION          "Description This rule sets Upper Klamath Lake outflow to satisfy downstream target releases and diversion demands while accounting for return flows, LRDC draw, F/FF pump inflow, and Keno accretion terms, and while staying within physical release capacity.<br><br>Logic UKL outflow is computed as the target release at Keno plus Ady and North diversions, minus LRDC return flow, plus LRDC draw, minus F/FF pump inflow, plus Keno accretion diversion and positive local inflow. The result is floored at zero and capped at the maximum outflow possible given the current UKL inflow.";
+    DESCRIPTION          "Description: This rule sets Upper Klamath Lake outflow to satisfy downstream target releases and diversion demands while accounting for return flows, LRDC draw, F/FF pump inflow, and Keno accretion terms, and while staying within physical release capacity.<br><br>Logic: UKL outflow is computed as the target release at Keno plus Ady and North diversions, minus LRDC return flow, plus LRDC draw, minus F/FF pump inflow, plus Keno accretion diversion and positive local inflow. The result is floored at zero and capped at the maximum outflow possible given the current UKL inflow.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -448,7 +443,7 @@ BEGIN
     UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
 
     RULE                 "Keno Flood Control";
-    DESCRIPTION          "Description This rule activates flood control at Keno when releases fall to the minimum flow requirement and assigns any excess release as flood spill.<br><br>Logic If the previous timestep’s Upper Klamath Lake outflow is effectively equal to or below the minimum flow requirement (within a small tolerance), the Keno Flood Control Flag is set to 1, an alert is issued, and Keno flood spill is set equal to the previous timestep’s excess flow (C13_EXC). Otherwise, the Flood Control Flag is set to 0 and flood spill is set to zero.";
+    DESCRIPTION          "Description: This rule activates flood control at Keno when releases fall to the minimum flow requirement and assigns any excess release as flood spill.<br>Logic: If the previous timestep’s Upper Klamath Lake outflow is effectively equal to or below the minimum flow requirement (within a small tolerance), the Keno Flood Control Flag is set to 1, an alert is issued, and Keno flood spill is set equal to the previous timestep’s excess flow (C13_EXC). Otherwise, the Flood Control Flag is set to 0 and flood spill is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS SeasonalSupply.wresl &quot;define UKL_Keno_spill&quot; for wrims reference";
@@ -482,7 +477,7 @@ BEGIN
   BEGIN
 
     RULE                 "Keno Targeted Release";
-    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Account (FFA) accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by today’s FFA increment (FFAInc) and increased by today’s FFA usage.";
+    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by today’s FFA increment (FFAInc) and increased by today’s FFA usage.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS UKLReleases.wresl &quot;define C13target_temp&quot; for wrims reference";
@@ -748,7 +743,7 @@ BEGIN
     UUID "{23385691-4bdb-40f0-8b29-44091f3bd0d3}";;
 
     RULE                 "Ady Canal UKL Diversion";
-    DESCRIPTION          "Description This rule limits Ady Canal project deliveries from Upper Klamath Lake based on available LRDC inflow.<br>Logic Diversion from UKL is set equal to the lesser of the Ady Canal project deliveries and the available LRDC inflow/UKL Outflow for the timestep.";
+    DESCRIPTION          "Description: This rule limits Ady Canal project deliveries from Upper Klamath Lake based on available LRDC inflow.<br>Logic: Diversion from UKL is set equal to the lesser of the Ady Canal project deliveries and the available LRDC inflow/UKL Outflow for the timestep.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Reference: Appendix C-33";
@@ -760,14 +755,14 @@ BEGIN
     UUID "{8148ef40-1723-422c-96f4-5002533b9ad5}";;
 
     RULE                 "Sta48 and MH from Lost FF Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether F/FF pump inflow is needed to meet Station 48 and Miller Hill project deliveries after accounting for LRDC and UKL supplies.<br>Logic: If the combined diversions from LRDC and UKL are less than the Sta48/MH project delivery, the remaining unmet demand is supplied from F/FF pump inflow up to availability. If LRDC and UKL together meet or exceed the project delivery, no water is diverted from F/FF pumps.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
-      IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
-            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] );
+      IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] + $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] < $ "Sta48 and MH from Lost.To_Project" [@"t"]) THEN
+            $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := "Min"( $ "F_FF pumps.Inflow" [@"t"], $ "Sta48 and MH from Lost.To_Project" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] );
 
       ELSE
             $ "Sta48 and MH from Lost.DiversionFromFF" [@"t"] := 0.00000000 "cfs";
@@ -778,19 +773,11 @@ BEGIN
     UUID "{0c1c552c-10e9-4b22-b4d9-909b2d8d8411}";;
 
     RULE                 "Sta48 and MH from Lost UKLDiversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines Station 48 and Miller Hill Diverison from UKL eqauls to the Diversion to LRDC diversion request.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
-
-    INACTIVE      IF_STATEMENT ($ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] < $ "Sta48 and MH from Lost.Diversion Request" [@"t"]) THEN
-            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := "Min"( $ "LRDC Draw From Klamath.Inflow" [@"t"], $ "Sta48 and MH from Lost.Diversion Request" [@"t"] - $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] );
-
-      ELSE
-            $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := 0.00000000 "cfs";
-
-      END_IF_STATEMENT;
 
       $ "Sta48 and MH from Lost.DiversionFromUKL" [@"t"] := $ "Div To LRDC.Diversion Request" [];
 
@@ -798,13 +785,13 @@ BEGIN
     UUID "{2a40cacb-1a8a-4138-b112-86d7f9582238}";;
 
     RULE                 "Sta48 and MH from Lost LRDC Diversion";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule assigns all Station 48 and Miller Hill project deliveries to be supplied from LRDC.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Reference: Appendix C-33";
     BEGIN
 
-      $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := $ "Sta48 and MH from Lost.Diversion Request" [@"t"];
+      $ "Sta48 and MH from Lost.DiversionFromLRDC" [@"t"] := $ "Sta48 and MH from Lost.To_Project" [@"t"];
 
     END
     UUID "{ca595762-9767-42d6-9537-bd342a16d29f}";;
@@ -836,10 +823,10 @@ BEGIN
     UUID "{3488b621-37da-499d-b880-cc2c97aab734}";;
 
     RULE                 "Ady Refuge Diversion from UKL";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether Ady Canal refuge deliveries are supplied from Upper Klamath Lake (UKL).<br>Logic: When the UKL Flood Control Flag is active, no refuge delivery is supplied from UKL. When flood control is not active, delivery from UKL is set to the lesser of the Ady Canal refuge demand and available LRDC draw from the Klamath inflow.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Refuge spill diversion could be further studied.";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
@@ -861,7 +848,7 @@ BEGIN
     UUID "{9ece23b8-61f2-4b7a-aeaf-94b391c27b37}";;
 
     RULE                 "Ady Refuge Flood DPS";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether Deferred Project Supply (DPS) water is used to meet Ady Canal refuge deliveries during UKL flood control conditions.<br>Logic: When the UKL Flood Control Flag is active, if LRDC supply does not fully meet the Ady Canal refuge demand, the remaining unmet portion is supplied from DPS. If LRDC fully meets the demand, or if flood control is not active, delivery from DPS is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -885,10 +872,10 @@ BEGIN
     UUID "{22cf931b-3e4d-4d2b-9a46-037be65962d3}";;
 
     RULE                 "Ady Refuge Flood LP";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines whether LP water is used to meet remaining Ady Canal refuge deliveries during UKL flood control conditions.<br>Logic: When the UKL Flood Control Flag is active, if refuge demand is not fully met by LRDC and DPS supplies and the Flexible Flow (FF) account balance is zero, the remaining unmet demand is supplied from LP. If LRDC and DPS meet the demand, if FF accounting is nonzero, or if flood control is not active, delivery from LP is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "Needs further understanding.<br>See WRIMS Delivery-table.wresl &quot;define D91_Spill_lp&quot; for wrims reference";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
@@ -909,10 +896,10 @@ BEGIN
     UUID "{43923eaa-a9c4-4971-852c-8e44a8d1647f}";;
 
     RULE                 "Ady Refuge LRDC";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule determines how much of the Ady Canal refuge delivery is supplied from LRDC return flow during UKL flood control conditions.<br>Logic: When the UKL Flood Control Flag is active, delivery to the refuge from LRDC is set to the lesser of the Ady Canal refuge demand and available LRDC return flow. If flood control is not active, delivery from LRDC is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Still need to figure LP";
+    NOTES                "The refuge diversion priority could be further studied.";
     BEGIN
 
       IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
@@ -937,6 +924,72 @@ BEGIN
 
     END
     UUID "{e6e03f7b-3890-4b89-b620-8d68a23353d4}";;
+
+    RULE                 "TLNWR Diversion from UKL";
+    DESCRIPTION          "Description: This rule determines whether Tule Lake National Wildlife Refuge deliveries are supplied from Upper Klamath Lake (UKL).<br>Logic: When the UKL Flood Control Flag is active, no delivery to TLNWR is supplied from UKL. When flood control is not active, delivery from UKL is set equal to the Station 48 to TLNWR diversion request.";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "Refuge spill diversion could be further studied.";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            $ "TLNWR.ToRefugeFromUKL" [@"t"] := 0.00000000 "cfs";
+
+      ELSE
+            $ "TLNWR.ToRefugeFromUKL" [@"t"] := $ "Sta 48 to TLNWR.Diversion Request" [];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{22e5a02d-5e6c-474c-b16a-e4be269f4894}";;
+
+    RULE                 "TLNWR Flood DPS";
+    DESCRIPTION          "Description: This rule determines whether Deferred Project Supply (DPS) water is used to meet TLNWR refuge deliveries during UKL flood control conditions.<br>Logic: When the UKL Flood Control Flag is active, if LRDC supply does not fully meet the TLNWR demand, the remaining unmet portion is supplied from DPS. If LRDC fully meets the demand, or if flood control is not active, delivery from DPS is set to zero.";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Upper Klamath Lake.Flood Control Flag" [@"t"] == 1.00000000) THEN
+            IF_STATEMENT ($ "Sta 48 to TLNWR.Diversion Request" [@"t"] > 0.00000000 "cfs") THEN
+            $ "TLNWR.ToRefugeFromDPS" [@"t"] := $ "Sta 48 to TLNWR.Diversion Request" [@"t"];
+
+      ELSE
+            $ "TLNWR.ToRefugeFromDPS" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+      ELSE
+            $ "TLNWR.ToRefugeFromDPS" [@"t"] := 0.00000000 "cfs";
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{4bd7030c-05b5-4c9c-92be-1df24a852190}";;
+
+    RULE                 "TLNWR Diversion from LRDC";
+    DESCRIPTION          "Description: This rule determines how much of the TLNWR refuge delivery is supplied from LRDC .<br>";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "The refuge diversion priority could be further studied.";
+    BEGIN
+
+      $ "TLNWR.ToRefugeFromLRDC" [@"t"] := $ "Wilson Dam to Tule.Diversion" [];
+
+    END
+    UUID "{b3bbacfa-ba01-47f3-9f86-03313e1303ac}";;
+
+    RULE                 "TLNWR Diversion from FF";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "TLNWR.ToRefugeFromFF" [@"t"] := 0.00000000 "cfs";
+
+    END
+    UUID "{d5cd6ba7-920d-42d9-bbd7-acfe5a7c1f17}";;
 
   END
   UUID "{7fd17c67-01e9-4917-a9df-caa41984c689}";;
@@ -966,7 +1019,7 @@ BEGIN
     UUID "{741a36e2-fd45-4733-b6fd-0911d232d300}";;
 
     RULE                 "yest_FFA_Usage";
-    DESCRIPTION          "Description This rule determines the amount of Flexible Flow Account (FFA) usage credited to the previous day and resets it at the start of the water year.<br>Logic On October 1, yesterday’s FFA usage is set to zero. On all other days, it is set equal to the lesser of the previous day’s FFA Usage and the previous day’s excess flow (c1_exc function).";
+    DESCRIPTION          "Description: This rule determines the amount of Flexible Flow Account (FFA) usage credited to the previous day and resets it at the start of the water year.<br>Logic: On October 1, yesterday’s FFA usage is set to zero. On all other days, it is set equal to the lesser of the previous day’s FFA Usage and the previous day’s excess flow (c1_exc function).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS SeasonalSupply.wresl &quot;define Yest_FFA_Savings&quot; for wrims reference";
@@ -987,7 +1040,7 @@ BEGIN
     DESCRIPTION          "Description: This rule sets the daily Flexible Flow Account (FFA) usage rate based on whether the Spring Flushing Flow (SFF) switch is turned on, ramping down, or operating during March–June, and it constrains usage to available account balance when applicable.<br>Logic: FFA Usage is zero by default. When SFF turns on (SFF=1 today and 0 yesterday), FFA Usage is the smaller of (a) the flow needed to raise base flow up to the SFF threshold and (b) 30% of the current FFA balance converted to flow. When the SFF downramp switch is active while SFF remains on, FFA Usage is set to the flow needed to meet the Keno ramping flow minus the base-plus-multiplier target (not less than zero). If SFF is oon FFA Usage is set to spread the remaining FFA evenly over the days remaining until July 1. If SFF is off during March 2–June 30, FFA Usage is set to a fixed daily amount based on the March 1 FFA divided across 121 days (converted to flow).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "See WRIMS UKLReleases.wresl &quot;define FFA_use&quot; for wrims reference";
+    NOTES                "See WRIMS UKLReleases.wresl &quot;define FFA_use&quot; for wrims reference<br>Note: SFF Model Scenario is added to for model scenario planning. Model Check.SFF_Pulse Scenario 1 is the normal 30% pulse increase, and Model Check.SFF_Pulse Scenario 2 is the test 80% pulse increase.";
     BEGIN
 
       IF_STATEMENT (@"t" == @"October 5" AND "GetYear"( @"Current Year" ) == 1980.00000000) THEN
@@ -1048,7 +1101,7 @@ BEGIN
     UUID "{6c89cda2-a760-4f23-bb67-1f9929d7bafb}";;
 
     RULE                 "SFF_Switch";
-    DESCRIPTION          "Description: This rule controls when the Spring Flushing Flow (SFF) event is turned on, and keeps it off outside the spring evaluation window.<br>Logic The SFF switch is forced off from October 1 through December 31 and from January 1 through the end of February. Otherwise it carries forward yesterday’s value unless triggered on in early spring. Between March 1 and April 9, if an SFF event has not already occurred and there is a positive FFA balance, SFF turns on when either Keno flood control was active the prior day or I15 Inflow exceeds its threshold, and the prior-day Operations Index is at or below the OPI threshold. On April 10, if an SFF event has not already occurred and FF accounting is positive, SFF is turned on regardless of the other spring triggers.";
+    DESCRIPTION          "Description: This rule controls when the Spring Flushing Flow (SFF) event is turned on, and keeps it off outside the spring evaluation window.<br>Logic: The SFF switch is forced off from October 1 through December 31 and from January 1 through the end of February. Otherwise it carries forward yesterday’s value unless triggered on in early spring. Between March 1 and April 9, if an SFF event has not already occurred and there is a positive FFA balance, SFF turns on when either Keno flood control was active the prior day or I15 Inflow exceeds its threshold, and the prior-day Operations Index is at or below the OPI threshold. On April 10, if an SFF event has not already occurred and FF accounting is positive, SFF is turned on regardless of the other spring triggers.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS Operations_Switches.wresl &quot;define switch_SFF&quot; for wrims reference";
@@ -1128,7 +1181,7 @@ BEGIN
     UUID "{038a637a-969a-4769-bd30-82591d9789ff}";;
 
     RULE                 "FFA Stored";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: This rule calculates cumulative FFA increments.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Code has broken FFA accumulation ruleset into two separate lines of code because the year change between october and March 2 breaks the code<br><br>FFA releases are scheduled <br>FFA increment is 0 if flooding<br><br>need to load in ffa-increment ==0";
@@ -1180,7 +1233,7 @@ BEGIN
     UUID "{0dea0dce-774c-4b4b-a67c-345e9e9ed91b}";;
 
     RULE                 "Calculate Kiga Threshold";
-    DESCRIPTION          "Description This rule calculates the KIGA inflow threshold used in SFF decision-making.<br>Logic The KIGA threshold is determined by interpolating from the Kiga threshold lookup table using the current Operations Index as the input.";
+    DESCRIPTION          "Description: This rule calculates the KIGA inflow threshold used in SFF decision-making.<br>Logic: The KIGA threshold is determined by interpolating from the Kiga threshold lookup table using the current Operations Index as the input.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS Operations_Switches.wresl &quot;define kiga_thresh&quot; for wrims reference<br>";
@@ -1201,7 +1254,7 @@ BEGIN
   BEGIN
 
     RULE                 "DPS accounting";
-    DESCRIPTION          "Description:This rule updates the Deferred Project Supply Account (DPSA) balance at Upper Klamath Lake and resets it on November 1.<br>Logic: On November 1, the DPSA is set to zero. From November 2–December 31 and from January 1–September 30 the DPSA is updated as yesterday’s DPSA plus daily flow savings plus the refuge daily cap, minus prior-day Project DPS diversions, minus prior-day refuge deliveries from DPS (converted to volume), minus DPS spill (converted to volume). The balance is floored at zero (cannot go negative).";
+    DESCRIPTION          "Description: This rule updates the Deferred Project Supply Account (DPSA) balance at Upper Klamath Lake and resets it on November 1.<br>Logic: On November 1, the DPSA is set to zero. From November 2–December 31 and from January 1–September 30 the DPSA is updated as yesterday’s DPSA plus daily flow savings plus the refuge daily cap, minus prior-day Project DPS diversions, minus prior-day refuge deliveries from DPS (converted to volume), minus DPS spill (converted to volume). The balance is floored at zero (cannot go negative).";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define UKL_Prj_Credit&quot; for wrims reference<br>";
@@ -1216,11 +1269,11 @@ BEGIN
       END_IF_STATEMENT
       ELSEIF_COND ( @"t" > @"November 1" AND @"t" <= @"December 31" )
       ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "TLNWR.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
       END_ELSEIF
       ELSEIF_COND ( @"t" >= @"January 1" AND @"t" <= @"September 30" )
       ELSEIF_CLAUSE
-            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
+            $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t"] := "Max"( 0.00000000 "acre-ft", $ "Upper Klamath Lake.Deferred Project Supply Account" [@"t - 1"] + $ "Upper Klamath Lake.Daily Flow Savings" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] - $ "OpsData.Proj DPS Div" [@"t - 1"] - "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "TLNWR.ToRefugeFromDPS" [@"t - 1"], @"t" ) - "FlowToVolume"( $ "LakeData.DPS Spill" [], @"t" ) );
       END_ELSEIF;
 
     END
@@ -1257,28 +1310,22 @@ BEGIN
     UUID "{70e3f112-73e4-49db-8422-e7d32a905e89}";;
 
     RULE                 "yes_Refuge_Div";
-    DESCRIPTION          "";
+    DESCRIPTION          "Description: Sum of DPS diversions to TLNWR and LKNWR";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Debits DPSA for DPS valu delivered to refuges that day. Set this to 0 for now. DPS might go to refuge only after theres water to agriculture diversion and its in flood spill state and the daily max value of the canals to refuge have not been fulfilled";
+    NOTES                "<br>";
     BEGIN
 
-    INACTIVE      $ "Refuge Policy Tracking.Refuge_DPS_Div" [] := $ "DPS_TLNWR_alloc" [] + $ "DPS_LKNWR_alloc" [];
-
-    INACTIVE      $ "OpsData.Refuge DPS Div" [] := $ "Refuge Policy Tracking.RefugeDailyCap" [@"t"];
-
-    INACTIVE      $ "OpsData.Refuge DPS Div" [] := $ "A Cana.DiversionFromDPS" [];
-
-      $ "OpsData.Refuge DPS Div" [] := 0.00000000 " acre-ft";
+      $ "OpsData.Refuge DPS Div" [] := "FlowToVolume"( $ "TLNWR.ToRefugeFromDPS" [@"t - 1"], @"t" ) + "FlowToVolume"( $ "Ady Canal.ToRefugeFromDPS" [@"t - 1"], @"t" );
 
     END
     UUID "{5a760d98-ba36-4ce2-82b3-8753b24bd960}";;
 
     RULE                 "Yesterday's PC Savings";
-    DESCRIPTION          "Description: This rule calculates the daily volume of “flow savings” credited to UKL from Project contributions to Keno flow, excluding any portion that is spilling as flood control excess.<br>Logic: From November 1–December 31 and from January 1–September 30, Daily Flow Savings equals the prior day’s Project Contributions to Keno Flows minus the prior day’s Keno excess flow (C13_EXC), floored at zero, and converted from flow to volume for the timestep. Outside these periods, Daily Flow Savings is set to zero.";
+    DESCRIPTION          "Description: This rule calculates the daily volume of flow savings credited to UKL from Project contributions to Keno flow, excluding any portion that is spilling as flood control excess.<br>Logic: From November 1–December 31 and from January 1–September 30, Daily Flow Savings equals the prior day’s Project Contributions to Keno Flows minus the prior day’s Keno excess flow (C13_EXC), floored at zero, and converted from flow to volume for the timestep. Outside these periods, Daily Flow Savings is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See WRIMS Seasonal_Supply.wresl &quot;define Yest_PC_Savings&quot; for wrims reference<br>";
     BEGIN
 
       IF_STATEMENT (@"t" >= @"November 1" AND @"t" <= @"December 31") THEN
@@ -1679,7 +1726,7 @@ BEGIN
   BEGIN
 
     RULE                 "Refuge Allocation ";
-    DESCRIPTION          "Description This rule determines the maximum volume that may be delivered to the refuges on the current day.<br>Logic The allowed delivery is the lesser of (1) the remaining volume under the cumulative seasonal maximum (cumulative max minus cumulative delivered, floored at zero) and (2) the daily delivery cap.";
+    DESCRIPTION          "Description: This rule determines the maximum volume that may be delivered to the refuges on the current day.<br>Logic: The allowed delivery is the lesser of (1) the remaining volume under the cumulative seasonal maximum (cumulative max minus cumulative delivered, floored at zero) and (2) the daily delivery cap.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "<br>";
@@ -1689,30 +1736,6 @@ BEGIN
 
     END
     UUID "{9f0e359a-99da-4c4d-ad1b-ed502bc2a98d}";;
-
-    RULE                 "LKNWR Credit";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Ady To Refuge.LKNWR_Credit" [] := $ "Ady To Refuge.LKNWR_Allocation" [] - $ "Ady To Refuge.Outflow" [];
-
-    END
-    UUID "{c95d5f42-074d-47e6-b0eb-d0cc312556d9}";;
-
-    RULE                 "LKNWR Allocations";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Ady To Refuge.LKNWR_Allocation" [] := "VolumeToFlow"( $ "Refuge Policy Tracking.LKNWRDailyCap" [], @"t" );
-
-    END
-    UUID "{952fc517-813f-4bca-aea5-26efae15ee7a}";;
 
     RULE                 "Ady To Refuge (LKNWR) Daily Diversion Request";
     DESCRIPTION          "Description: This ruleset sets Ady to refuge diversion request based on LKNWR evaporation rate.";
@@ -1809,7 +1832,7 @@ BEGIN
     UUID "{d7ca42e4-a4c3-4885-b705-9b10c4c1bb0a}";;
 
     RULE                 "Daily Tule Sumps Evaporation";
-    DESCRIPTION          "DescriptionL This rule calculates the daily evaporation rate for TLNWR 1A based on surface area and monthly evaporation.<br>Logic: Daily evaporation is computed as the cell’s surface area multiplied by the monthly evaporation depth, converted from volume to flow over the prior timestep, and then divided by the number of days in the month to produce a daily rate.";
+    DESCRIPTION          "Description: This rule calculates the daily evaporation rate for TLNWR 1A based on surface area and monthly evaporation.<br>Logic: Daily evaporation is computed as the cell’s surface area multiplied by the monthly evaporation depth, converted from volume to flow over the prior timestep, and then divided by the number of days in the month to produce a daily rate.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -1962,8 +1985,6 @@ BEGIN
     NOTES                "";
     BEGIN
 
-    INACTIVE      $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] ) );
-
       IF_STATEMENT (@"t" >= @"April 1" AND @"t" < @"November 1") THEN
             $ "Refuge Policy Tracking.RefugeCumlativeMax" [] := "Min"( 43000.00000000 "acre-ft", "Max"( 0.00000000 "acre-ft", $ "Refuge Policy Tracking.RefugeCumlativeMax" [@"t - 1"] + $ "Refuge Policy Tracking.RefugeDailyCap" [] ) );
 
@@ -2026,20 +2047,6 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "D1 to Sump1A";
-    DESCRIPTION          "";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "D1 to Sump1A.Diversion Request" [] := $ "Historical Diversions.D1_S1TOSUMP1A" [];
-
-      $ "D1 to Sump1A.Available For Diversion" [] := 4000.00000000 "cfs";
-
-    END
-    UUID "{a54c198c-ae22-4ea7-adcb-0402bc280c73}";;
-
     RULE                 "Keno Accretion Positive";
     DESCRIPTION          "Description: This rule assigns local inflow into Keno.";
     ACTIVE               TRUE;
@@ -2077,7 +2084,7 @@ BEGIN
     UUID "{25f0d2d6-0433-41c8-b5df-b5f5e3c04ef2}";;
 
     RULE                 "Project Contributions to Keno Flows";
-    DESCRIPTION          "Description: This calculates the Project contributions to the Keno flow target and also the keno accretions (positive and negative)<br>";
+    DESCRIPTION          "Description: This calculates the Project contributions to the Keno flow target.<br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -2244,7 +2251,7 @@ BEGIN
     DESCRIPTION          "";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "Rule is set to avoidethe error:<br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
+    NOTES                "Rule is set to avoid the error:<br>Must input maximum value for &quot;Available For Diversion&quot;when solving for inflow on reaches<br>";
     BEGIN
 
       $ "LRDC Draw From Klamath.Available For Diversion" [] := 5000.00000000 "cfs";
