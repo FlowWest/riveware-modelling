@@ -1,0 +1,513 @@
+set ws "ws"
+$ws.outputDeviceMgr addModelReport {Report}
+# Model Report output device configuration
+$ws.modelReportDevice {Report} {
+<Item>\
+  <ItemType>Report</ItemType>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Name</Value></Property>\
+    <Property><Name>Value</Name><Value>Report</Value></Property>\
+    <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value></Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report File</Value></Property>\
+    <Property>\
+      <Name>Value</Name>\
+      <Value>C:/Users/Emanuel/Documents/projects/riveware-modelling/Updated Models/current_model/Report.html</Value>\
+    </Property>\
+    <Property><Name>Type</Name><Value>FileName</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    <Property><Name>PreferredFileExt</Name><Value>HTML File, html, htm</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Title</Value></Property>\
+    <Property><Name>Value</Name><Value>Report</Value></Property>\
+    <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value></Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report ShowIcons</Value></Property>\
+    <Property><Name>Value</Name><Value>Yes</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report DisplayControls</Value></Property>\
+    <Property><Name>Value</Name><Value>Yes</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report EmbedImages</Value></Property>\
+    <Property><Name>Value</Name><Value>Yes</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report BodyFont</Value></Property>\
+    <Property><Name>Value</Name><Value>font-family: sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font-family: sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report TitleFont</Value></Property>\
+    <Property><Name>Value</Name><Value>font: bold 130% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: bold 130% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Level1Font</Value></Property>\
+    <Property><Name>Value</Name><Value>font: 130% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: 130% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Level2Font</Value></Property>\
+    <Property><Name>Value</Name><Value>font: 120% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: 120% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Level3Font</Value></Property>\
+    <Property><Name>Value</Name><Value>font: 110% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: 110% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Level4Font</Value></Property>\
+    <Property><Name>Value</Name><Value>font: italic 100% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: italic 100% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report Level5Font</Value></Property>\
+    <Property><Name>Value</Name><Value>font: italic 100% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: italic 100% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report LabelFont</Value></Property>\
+    <Property><Name>Value</Name><Value>font: bold 100% sans-serif;</Value></Property>\
+    <Property><Name>Type</Name><Value>Font</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>font: bold 100% sans-serif;</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report IncludeDateInName</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </Setting>\
+  <Setting>\
+    <Property><Name>Identifier</Name><Value>Report IncludeTimeInName</Value></Property>\
+    <Property><Name>Value</Name><Value>No</Value></Property>\
+    <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+    <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+    <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+    <Property><Name>FalseString</Name><Value>No</Value></Property>\
+  </Setting>\
+  <Item>\
+    <ItemType>ModelInfo</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ModelInfo ShowFileHistory</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ModelInfo ShowFileComment</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>TableOfContents</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>TableOfContents Title</Value></Property>\
+      <Property><Name>Value</Name><Value>Contents</Value></Property>\
+      <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>Contents</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>RplSet</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet SetName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      <Property><Name>OptionsAreRplSets</Name><Value>True</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet ShowPolicyGroups</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet ShowUtilityGroups</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet ShowReportGroups</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet ShowGlobalGroups</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>Item ShowExecProps</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowDescriptions</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowNotes</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowRplComments</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet UseRuleExecOrder</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowObjName</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowAccountName</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowType</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotMaxTableCols</Value></Property>\
+      <Property><Name>Value</Name><Value>0</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>0</Value></Property>\
+      <Property><Name>MinValue</Name><Value>0</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>999</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotPlotWidth</Value></Property>\
+      <Property><Name>Value</Name><Value>500</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>500</Value></Property>\
+      <Property><Name>MinValue</Name><Value>10</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotPlotHeight</Value></Property>\
+      <Property><Name>Value</Name><Value>250</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>250</Value></Property>\
+      <Property><Name>MinValue</Name><Value>10</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SimObjShowType</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>RplGroup</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplGroup SetName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      <Property><Name>OptionsAreRplSets</Name><Value>True</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplGroup GroupName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>RplGroupName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>Item ShowExecProps</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowDescriptions</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowNotes</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowRplComments</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplSet UseRuleExecOrder</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowObjName</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowAccountName</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotShowType</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotMaxTableCols</Value></Property>\
+      <Property><Name>Value</Name><Value>0</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>0</Value></Property>\
+      <Property><Name>MinValue</Name><Value>0</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>999</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotPlotWidth</Value></Property>\
+      <Property><Name>Value</Name><Value>500</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>500</Value></Property>\
+      <Property><Name>MinValue</Name><Value>10</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SlotPlotHeight</Value></Property>\
+      <Property><Name>Value</Name><Value>250</Value></Property>\
+      <Property><Name>Type</Name><Value>Integer</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>250</Value></Property>\
+      <Property><Name>MinValue</Name><Value>10</Value></Property>\
+      <Property><Name>MaxValue</Name><Value>5000</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplObj SimObjShowType</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>RplBlock</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock SetName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>Enumeration</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+      <Property><Name>OptionsAreRplSets</Name><Value>True</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock RplApp</Value></Property>\
+      <Property><Name>Value</Name><Value>Rule Based Simulation</Value></Property>\
+      <Property><Name>Type</Name><Value>SingleLineText</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>Rule Based Simulation</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock RuleName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>RplRuleName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock GoalName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>RplGoalName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock MethodName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>RplMethName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>RplBlock InitRuleName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>RplInitRuleName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>Item ShowExecProps</Value></Property>\
+      <Property><Name>Value</Name><Value>No</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>False</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowDescription</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowNotes</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>ShowRplComments</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>AccountingInfo</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>AccountingInfo ShowWaterOwners</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>AccountingInfo ShowWaterTypes</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>AccountingInfo ShowReleaseTypes</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>AccountingInfo ShowDestinations</Value></Property>\
+      <Property><Name>Value</Name><Value>Yes</Value></Property>\
+      <Property><Name>Type</Name><Value>Boolean</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value>True</Value></Property>\
+      <Property><Name>TrueString</Name><Value>Yes</Value></Property>\
+      <Property><Name>FalseString</Name><Value>No</Value></Property>\
+    </Setting>\
+  </Item>\
+  <Item>\
+    <ItemType>Subbasin</ItemType>\
+    <Setting>\
+      <Property><Name>Identifier</Name><Value>Subbasin SubbasinName</Value></Property>\
+      <Property><Name>Value</Name><Value></Value></Property>\
+      <Property><Name>Type</Name><Value>SubbasinName</Value></Property>\
+      <Property><Name>DefaultValue</Name><Value></Value></Property>\
+    </Setting>\
+  </Item>\
+</Item>\
+
+}

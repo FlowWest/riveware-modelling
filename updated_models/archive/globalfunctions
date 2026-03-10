@@ -1,0 +1,126 @@
+# RiverWare_Ruleset 9.5.2
+# Created 13:47 December 29, 2025
+# 
+RULESET
+NAME "Klamath 2019PA Global Functions";
+AGENDA_ORDER ASCENDING;
+DESCRIPTION "";
+PRECISION   2;
+IS_GLOBAL   TRUE;
+NOTES "";
+BEGIN
+
+  UTILITY_GROUP "Agricultural Functions";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+  END
+  UUID "{fff65861-7dd9-4544-9f11-7d5b09ddd021}";;
+
+  UTILITY_GROUP "Demand Forecast Functions";
+  DESCRIPTION   "";
+  ACTIVE        TRUE;
+  NOTES          "";
+  BEGIN
+
+    FUNCTION       "Seasonal Adj" ( OBJECT object, DATETIME date )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "This function computes the seasonal adjustment factor for diversion or offset forecasts.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      IF ( object == % "Ady Canal" OR object == % "North Canal" )
+ THEN
+  IF ( "NovemberThruFebruary"( date ) )
+  THEN
+   object & "Seasonal Supply and Adj" ["FW", "Adj Factor"]
+  ELSE
+   object & "Seasonal Supply and Adj" ["SS", "Adj Factor"]
+  ENDIF
+ ELSE
+  object & "Seasonal Supply and Adj" ["Season", "Adj Factor"]
+ ENDIF COMMENTED_BY "Ady and North Canal's seasonal adjustment varies by season, the other demand objects do not. <br>Thus, select the appropiate seasonal adjustment based on the object and timestep.  <br>";
+
+    END
+    UUID "{74f17c1a-b6b8-4aa9-89aa-29481cc3e34e}";;
+
+    FUNCTION       "Seasonal Supply" ( DATETIME date, OBJECT object )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "This function computes the seasonal supply for diversion or offset forecasts.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      IF ( object == % "Ady Canal" OR object == % "North Canal" )
+ THEN
+  WITH BOOLEAN IsInPeriod = IF ( object == % "Ady Canal" )
+  THEN
+   "OctoberThruFebruary"( date )
+  ELSE
+   "NovemberThruFebruary"( date )
+  ENDIF DO
+   IF ( IsInPeriod )
+   THEN
+    object & "Seasonal Supply and Adj" ["FW", "Supply"]
+   ELSE
+    object & "Seasonal Supply and Adj" ["SS", "Supply"]
+   ENDIF
+  ENDWITH
+ ELSE
+  object & "Seasonal Supply and Adj" ["Season", "Supply"]
+ ENDIF COMMENTED_BY "Ady and North Canal's seasonal supply varies by season, the other demand objects do not. <br>Thus, select the appropriate seasonal supply based on object and timestep.   <br>";
+
+    END
+    UUID "{6095e747-1982-4208-9f4d-f12954c6b28c}";;
+
+    FUNCTION       "IGD Storage Fcst" (  )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Forecasts storage at t+Lag to account for the lag time between Keno and IGD. This assumes a integer lag time.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      $ "IGD.Storage" [] + IF ( $ "Keno to IGD Routing.LagTime" [0.00000000, 0.00000000] > 0.00000000 "day" )
+ THEN
+  FOR ( DATETIME dt IN @"t + 1" TO @"t" + $ "Keno to IGD Routing.LagTime" [0.00000000, 0.00000000] ) STAT_SUM
+   "FlowToVolume"( $ "Keno to IGD Gain.Outflow" [dt], @"t" ) COMMENTED_BY "Inflows into IGD<br>" - "FlowToVolume"( $ "IGD.Min Release Table" [dt, "Min_1"], @"t" ) COMMENTED_BY "Min Release Requirements from IGD<br>"
+  ENDFOR
+ ELSE
+  0.00000000 "acre-feet"
+ ENDIF;
+
+    END
+    UUID "{99679489-beb7-4ee2-94dd-6546dbc0720b}";;
+
+    FUNCTION       "Forecast Ag Offset" ( OBJECT obj, DATETIME date )
+    RETURN_TYPE    NUMERIC;
+    SCALE_UNITS    "";
+    DESCRIPTION    "Loops through offset objects and forecasts offset using operations mode logic.";
+    ACTIVE         TRUE;
+    PRE_EXEC_DIAG  FALSE;
+    POST_EXEC_DIAG FALSE;
+    NOTES          "";
+    BEGIN
+
+      ( "Distribution Fraction By Date"( obj, date ) * "VolumeToFlow"( "Seasonal Supply"( date, obj ), @"t" ) * "Seasonal Adj"( obj, date ) ) COMMENTED_BY "A custom series slot named &quot;Ag Offset&quot; stores the forecasted offsets. These <br>are theoretical and their use is for accounting purposes. Thus, these flows <br>are not routed by the offest objects.  <br>Multiply the timestep's distribution percent with the seasonal supply and <br>adjustment to determine the object's offset.    <br>";
+
+    END
+    UUID "{1639f901-50d8-40bd-9163-47eec25e2464}";;
+
+  END
+  UUID "{18303066-5211-4325-901f-fe605e464886}";;
+
+END
+UUID "{49c0e0e9-7f4f-46e6-9fb7-0b3f4b3f72ab}";
