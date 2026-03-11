@@ -1,0 +1,153 @@
+# RiverWare_Ruleset 9.5.2
+# Created 18:58 March 10, 2026
+# 
+RULESET
+NAME "Initialization Rules Set";
+AGENDA_ORDER ASCENDING;
+DESCRIPTION "";
+PRECISION   2;
+NOTES "";
+BEGIN
+
+  POLICY_GROUP   "Policy Group";
+  DESCRIPTION    "";
+  ACTIVE         TRUE;
+  NOTES          "";
+  BEGIN
+
+    RULE                 "Initialize Keno Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       262144;
+    NOTES                "";
+    BEGIN
+
+    DESCRIPTION          "Pool elevation is kept constant since it is not of interest to solve. This allows Keno to dispatch and <br>objects downstream to solve unkown slots. This is done from the &quot;Initialization Timestep&quot; thru the <br>&quot;Finish Timestep&quot; for pool elevation.  <br><br>This must use the Z flag above to give it a high priority.  <br>";
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1", @"Finish Timestep", "1 Days" )) DO
+            $ "Keno.Pool Elevation" [date] := $ "Constants.Keno Init Elevation" [];
+
+      ENDFOREACH;
+
+    END
+    UUID "{7bb3d407-98aa-41b7-bf7c-67231427024b}";;
+
+    RULE                 "Initializing UKL Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Upper Klamath Lake.Pool Elevation" [date] := $ "LakeData.Historic Pool Elevation" [date];
+
+            $ "Upper Klamath Lake.Outflow" [date] := 1000.00000000 "cfs";
+
+      ENDFOREACH;
+
+    END
+    UUID "{88859ae7-f5c7-4826-8993-62351e7ed1c2}";;
+
+    RULE                 "Initializing Refuge Policy";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Refuge Policy Tracking.RefugeAllowedToday" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.RefugeCumlativeDelivered" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.RefugeCumlativeMax" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.LKNWRCumulativeMax" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.TLNWRCumulativeMax" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.LKNWRCumulativeDelivered" [date] := 0.00000000 "acre-ft";
+
+            $ "Refuge Policy Tracking.TLNWRCumulativeDelivered" [date] := 0.00000000 "acre-ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{e4feeb23-367b-43b8-bd59-c8647ce696c8}";;
+
+    RULE                 "Initializing FFA";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep + 2 Day", "1 Days" )) DO
+            $ "OpsData.FFAccounting" [date] := 0.00000000 "acre-ft";
+
+            $ "OpsData.yest_FFA_Spill" [date] := 0.00000000 "acre-ft";
+
+            $ "OpsData.YestFFASavings" [date] := 0.00000000 "acre-ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{0a93bb06-0f9b-4fb1-833a-3c9b67698565}";;
+
+    RULE                 "Initialize UKL Shadow Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       64;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 5 Day", @"Start Timestep - 1 Day", "1 Days" )) DO
+            $ "Upper Klamath Lake.Shadow Elevation" [date] := 4083.00000000 "ft";
+
+      ENDFOREACH;
+
+    END
+    UUID "{0c754e96-9acb-44fa-a8da-a4ce273b2fa6}";;
+
+    RULE                 "Initializing LKNWR Pool Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       262144;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1", @"Finish Timestep", "1 Days" )) DO
+            $ "LKNWR Cell2.Pool Elevation" [date] := $ "Constants.LKNWR Cell2 Init Elevation" [];
+
+      ENDFOREACH;
+
+    END
+    UUID "{3904fbd5-9451-40c5-97c6-951ae95d8412}";;
+
+    RULE                 "Initializing TLNWR Pool Elevation";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    SET_VALUE_FLAG       262144;
+    NOTES                "";
+    BEGIN
+
+      FOREACH (DATETIME date IN "GetDates"( @"Start Timestep - 1", @"Finish Timestep", "1 Days" )) DO
+            $ "Tule Sumps 1A.Pool Elevation" [date] := $ "Constants.Tule Sumps 1A Init Elevation" [];
+
+      ENDFOREACH;
+
+    END
+    UUID "{a5221239-ae6a-4a27-b6ee-85e1843dffea}";;
+
+  END
+  UUID "{4c766237-d71d-4d11-9e8b-e515ea469b67}";;
+
+END
+UUID "{8c59f4f1-06de-4747-b843-9d918240e30f}";
