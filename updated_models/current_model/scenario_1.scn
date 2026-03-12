@@ -1,0 +1,24 @@
+# RiverWare_Scenario 9.5.2
+# Scenario File Created 12:38 March 12, 2026
+#  as C:/Users/Emanuel/Documents/projects/riveware-modelling/updated_models/current_model/scenario_1.scn
+# Generated using RiverWare Version <RiverWare_Model 9.5.2>
+# Generated from Model File <final_model_v2.mdl>
+# CADSWES, University of Colorado at Boulder, http://cadswes.colorado.edu/
+#
+
+DST 0
+FlagEncoding 3
+set mgr "$ws.Scenario"
+set scn "$ws.scenario_1"
+$mgr Scenario {scenario_1} {Created by Emanuel on 03-12-2026 12:36:36.
+Scenario saved as "C:/Users/Emanuel/Documents/projects/riveware-modelling/updated_models/current_model/scenario_1.scn" by Emanuel on 03-12-2026 12:37:57.
+}
+$scn sandboxEna 0
+$scn scenarioSlot {Model Check.KenoTargetReleaseScenario} {} 1 99999
+set o "$scn.Model Check"
+set s "$o.KenoTargetReleaseScenario"
+"$s" order 2 
+"$s" UUID {c48bb81a-317b-4e7a-8853-6115040c87e2}
+"$s" units {NONE} 1 {NONE} {%f} 2
+"$s" value 2 {NONE}
+"$s" numericCategory integer

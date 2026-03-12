@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 10:40 March 12, 2026
+# Created 12:32 March 12, 2026
 # 
 RULESET
 NAME "final_ruleset_v2";
@@ -16,7 +16,7 @@ BEGIN
   BEGIN
 
     RULE                 "Calculate CumAg_ss_Delv";
-    DESCRIPTION          "Description: This rule tracks cumulative agricultural deliveries during the supply season, resetting annually and accumulating daily diversion volumes from key canals, with a limited accumulation period in early November.<br>Logic: CumAg_ss_DelDV resets to zero on January 1 and otherwise carries forward by default. On March 1 it initializes the cumulative total as the current day?s diversion volume (A Canal request, Sta48/MH from UKL, Ady SpringSummer from UKL, and North SpringSummer from UKL). From March 2 through October 31 it adds the current day?s diversion volume to yesterday?s cumulative total. From November 1?November 15 it continues accumulating but only adds Sta48/MH diversion volume; outside these periods it holds the prior value.";
+    DESCRIPTION          "Description: This rule tracks cumulative agricultural deliveries during the supply season, resetting annually and accumulating daily diversion volumes from key canals, with a limited accumulation period in early November.<br>Logic: CumAg_ss_DelDV resets to zero on January 1 and otherwise carries forward by default. On March 1 it initializes the cumulative total as the current days diversion volume (A Canal request, Sta48/MH from UKL, Ady SpringSummer from UKL, and North SpringSummer from UKL). From March 2 through October 31 it adds the current day's diversion volume to yesterday's cumulative total. From November 1 to November 15 it continues accumulating but only adds Sta48/MH diversion volume; outside these periods it holds the prior value.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -304,21 +304,6 @@ BEGIN
     END
     UUID "{027727ea-435e-40a3-bee7-f68eed3b4525}";;
 
-    RULE                 "Assign Ramp Down Flow";
-    DESCRIPTION          "Description: Keno ramping constraints are enforced upstream at Upper Klamath Lake. If a proposed decrease in UKL outflow would violate the allowable ramp-down rate at Keno, UKL releases are increased to satisfy the downstream ramping requirement.";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"] - $ "Upper Klamath Lake.Keno_UKL_Outflow_Diff" [];
-
-      END_IF_STATEMENT;
-
-    END
-    UUID "{8a596b18-3cc2-45c2-8516-43caa5ee4d63}";;
-
     RULE                 "SFF_Down_Ramp";
     DESCRIPTION          "Description: This rule controls activation of the SFF downramp switch.<br>Logic: The downramp switch is set to 1 when the SFF switch turns on (i.e., it equals 1 in the current timestep and was 0 in the previous timestep). Otherwise, including on October 5, 1980, the downramp switch is set to 0.";
     ACTIVE               TRUE;
@@ -341,8 +326,23 @@ BEGIN
     END
     UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
-    RULE                 "Test RampDiff";
-    DESCRIPTION          "";
+    RULE                 "Assign Ramp Down Flow";
+    DESCRIPTION          "Description: This rule checks whether flow at Keno has dropped below the allowable ramp-limited flow. If it has, the rule increases Upper Klamath Lake outflow so that, after accounting for the difference between UKL and Keno, the resulting Keno flow will match the required Keno.RampFlow.<br><br>Logic: this rule pushes the ramping constraint upstream to UKL. Since Keno is the compliance point for the ramp-down requirement, and UKL outflow is one of the main upstream controls on Keno flow, the model adjusts UKL releases when Keno would otherwise fall below the ramp target.";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"] - $ "Upper Klamath Lake.Keno_UKL_Outflow_Diff" [];
+
+      END_IF_STATEMENT;
+
+    END
+    UUID "{8a596b18-3cc2-45c2-8516-43caa5ee4d63}";;
+
+    RULE                 "Keno and Upper Klamath Lake Flow Diff ";
+    DESCRIPTION          "Description: This rule calculates the difference between the flow released at Keno and the outflow released from UKL at the current timestep.<br><br>Logic: Because Keno is downstream of UKL, the flows at the two locations may differ due to accretions, diversions, return flows, or routing adjustments along the river reach between the lake outlet and Keno. This slot will be used to calculate the amount of ukl outflow needed in addition to the rampflow.<br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
@@ -354,7 +354,7 @@ BEGIN
     UUID "{13c88041-c208-431b-b818-5793eaa6d403}";;
 
     RULE                 "Calculate Keno Ramp Down Flow";
-    DESCRIPTION          "Description: When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior days UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
+    DESCRIPTION          "Description: When Keno outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior days Keno outflow minus the specified ramp-down rate. ";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS UKLReleases.wresl &quot;define Keno_ramp_flow&quot; for wrims reference";
@@ -375,7 +375,7 @@ BEGIN
     DESCRIPTION          "Description: Enforces Rampdown rate max is at 2000 cfs.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
+    NOTES                "See Biops pg90";
     BEGIN
 
       IF_STATEMENT ($ "Keno.Ramp Down Rate" [] > 2000.00000000 "cfs") THEN
@@ -489,10 +489,10 @@ BEGIN
     UUID "{bfd04469-e535-4896-9665-3566dbea317b}";;
 
     RULE                 "Keno Targeted Release";
-    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by todays FFA increment (FFAInc) and increased by todays FFA usage.";
+    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by todays FFA increment (FFAInc) and increased by todays FFA usage.<br><br>Alternative scenario is when Ops Index < 0.5, target release is the same as before. When OPS Index > 0.5, target release is decreased to baseflow.<br><br>";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "See WRIMS UKLReleases.wresl &quot;define C13target_temp&quot; for wrims reference<br><br>releasemult applied when opsindex < 0.5 = current target release<br>when opsindex > 0.5 = baseflow<br><br> <br>";
+    NOTES                "See WRIMS UKLReleases.wresl &quot;define C13target_temp&quot; for wrims reference<br><br> <br>";
     BEGIN
 
       IF_STATEMENT ($ "Model Check.KenoTargetReleaseScenario" [] == 1.00000000) THEN
