@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:11 March 11, 2026
+# Created 22:17 March 11, 2026
 # 
 RULESET
 NAME "final_ruleset_v2";
@@ -420,7 +420,7 @@ BEGIN
     UUID "{234d6ccf-525c-40ae-a85d-361b93516f6f}";;
 
     RULE                 "UKL flood control";
-    DESCRIPTION          "Description This rule activates flood control at Upper Klamath Lake when storage exceeds the maximum allowable storage and calculates the corresponding flood spill release.<br><br>Logic If yesterday?s storage exceeds yesterday?s maximum storage (with a small tolerance), the Flood Control Flag is set to 1, an alert is issued, and flood spill is calculated as the excess storage converted to flow for the current timestep. If storage does not exceed the maximum, the Flood Control Flag is set to 0 and flood spill is set to zero.";
+    DESCRIPTION          "Description This rule activates flood control at Upper Klamath Lake when storage exceeds the maximum allowable storage and calculates the corresponding flood spill release.<br><br>Logic If yesterday'ss storage exceeds yesterday's maximum storage (with a small tolerance), the Flood Control Flag is set to 1, an alert is issued, and flood spill is calculated as the excess storage converted to flow for the current timestep. If storage does not exceed the maximum, the Flood Control Flag is set to 0 and flood spill is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS SeasonalSupply.wresl &quot;define UKL_Keno_spill&quot; for wrims reference.";
@@ -445,7 +445,7 @@ BEGIN
     UUID "{61c5802c-a9e0-4c34-81ab-673084c99b17}";;
 
     RULE                 "Keno Flood Control";
-    DESCRIPTION          "Description: This rule activates flood control at Keno when releases fall to the minimum flow requirement and assigns any excess release as flood spill.<br>Logic: If the previous timestep?s Upper Klamath Lake outflow is effectively equal to or below the minimum flow requirement (within a small tolerance), the Keno Flood Control Flag is set to 1, an alert is issued, and Keno flood spill is set equal to the previous timestep?s excess flow (C13_EXC). Otherwise, the Flood Control Flag is set to 0 and flood spill is set to zero.";
+    DESCRIPTION          "Description: This rule activates flood control at Keno when releases fall to the minimum flow requirement and assigns any excess release as flood spill.<br>Logic: If the previous timestep's Upper Klamath Lake outflow is effectively equal to or below the minimum flow requirement (within a small tolerance), the Keno Flood Control Flag is set to 1, an alert is issued, and Keno flood spill is set equal to the previous timestep?s excess flow (C13_EXC). Otherwise, the Flood Control Flag is set to 0 and flood spill is set to zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS SeasonalSupply.wresl &quot;define UKL_Keno_spill&quot; for wrims reference";
