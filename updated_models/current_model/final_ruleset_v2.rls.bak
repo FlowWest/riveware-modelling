@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 22:17 March 11, 2026
+# Created 09:51 March 12, 2026
 # 
 RULESET
 NAME "final_ruleset_v2";
@@ -304,29 +304,15 @@ BEGIN
     END
     UUID "{027727ea-435e-40a3-bee7-f68eed3b4525}";;
 
-    RULE                 "Ramp Down Flow";
+    RULE                 "Assign Ramp Down Flow";
     DESCRIPTION          "Description: Keno ramping constraints are enforced upstream at Upper Klamath Lake. If a proposed decrease in UKL outflow would violate the allowable ramp-down rate at Keno, UKL releases are increased to satisfy the downstream ramping requirement.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "";
     BEGIN
 
-    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
-
-      END_IF_STATEMENT;
-
-      IF_STATEMENT ($ "Model Check.KenoTargetReleaseScenario" [] == 1.00000000) THEN
-            IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
-
-      END_IF_STATEMENT;
-
-      ELSE
-            IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( $ "Keno.RampFlow" [@"t"], "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
-
-      END_IF_STATEMENT;
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.Outflow" [@"t"] - $ "Upper Klamath Lake.Ramp_UKL_Outflow_Diff" [];
 
       END_IF_STATEMENT;
 
@@ -355,15 +341,27 @@ BEGIN
     END
     UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
-    RULE                 "Keno RampDown Flow";
+    RULE                 "Test RampDiff";
+    DESCRIPTION          "";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "";
+    BEGIN
+
+      $ "Upper Klamath Lake.Ramp_UKL_Outflow_Diff" [] := $ "Keno.RampFlow" [] - $ "Upper Klamath Lake.Outflow" [];
+
+    END
+    UUID "{13c88041-c208-431b-b818-5793eaa6d403}";;
+
+    RULE                 "Calculate Keno Ramp Down Flow";
     DESCRIPTION          "Description: When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior days UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS UKLReleases.wresl &quot;define Keno_ramp_flow&quot; for wrims reference";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Upper Klamath Lake.Outflow" [@"t - 1"]) THEN
-            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Upper Klamath Lake.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
+      IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.Outflow" [@"t - 1"]) THEN
+            $ "Keno.RampFlow" [@"t"] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - $ "Keno.Ramp Down Rate" [] );
 
       ELSE
             $ "Keno.RampFlow" [@"t"] := 0.00000000 "cfs";
@@ -515,38 +513,38 @@ BEGIN
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
 
     RULE                 "Ramp down rates";
-    DESCRIPTION          "Description: This rule sets the allowable ramp-down rate for Keno outflow based on the current flow magnitude, with larger reductions allowed at higher flows.<br>Logic: If Keno outflow is less than 1,400 cfs, the ramp-down rate is 150 cfs. If less than 2,800 cfs, the rate is 300 cfs. If less than 3,100 cfs, the rate is 600 cfs. If less than 3,500 cfs, the rate is limited to the amount above 2,500 cfs (not less than zero). If less than 4,100 cfs, the rate is 1,000 cfs. If 4,100 cfs or greater, the ramp-down rate is the lesser of 2,000 cfs or the amount above 3,100 cfs from the previous timestep, not less than zero.";
+    DESCRIPTION          "Description: This rule sets the allowable ramp-down rate for Keno outflow based on the current flow magnitude, with larger reductions allowed at higher flows.<br>Logic: If yesterday's Keno outflow is less than 1,400 cfs, the ramp-down rate is 150 cfs. If less than 2,800 cfs, the rate is 300 cfs. If less than 3,100 cfs, the rate is 600 cfs. If less than 3,500 cfs, the rate is limited to the amount above 2,500 cfs (not less than zero). If less than 4,100 cfs, the rate is 1,000 cfs. If 4,100 cfs or greater, the ramp-down rate is the lesser of 2,000 cfs or the amount above 3,100 cfs from the previous timestep, not less than zero.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "Data found in BiOp appendix E, pg 25<br><br>";
     BEGIN
 
-      IF_STATEMENT ($ "Keno.Outflow" [] < 1400.00000000 "cfs") THEN
+      IF_STATEMENT ($ "Keno.Outflow" [@"t - 1"] < 1400.00000000 "cfs") THEN
             $ "Keno.Ramp Down Rate" [] := 150.00000000 "cfs";
 
       ELSE
             $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "Max"( $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
 
       END_IF_STATEMENT
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 2800.00000000 "cfs" )
+      ELSEIF_COND ( $ "Keno.Outflow" [@"t - 1"] < 2800.00000000 "cfs" )
       ELSEIF_CLAUSE
             $ "Keno.Ramp Down Rate" [] := 300.00000000 "cfs";
       END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 3100.00000000 "cfs" )
+      ELSEIF_COND ( $ "Keno.Outflow" [@"t - 1"] < 3100.00000000 "cfs" )
       ELSEIF_CLAUSE
             $ "Keno.Ramp Down Rate" [] := 600.00000000 "cfs";
       END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 3500.00000000 "cfs" )
+      ELSEIF_COND ( $ "Keno.Outflow" [@"t - 1"] < 3500.00000000 "cfs" )
       ELSEIF_CLAUSE
             $ "Keno.Ramp Down Rate" [] := "Max"( 0.00000000 "cfs", $ "Keno.Outflow" [@"t - 1"] - 2500.00000000 "cfs" );
       END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] < 4100.00000000 "cfs" )
+      ELSEIF_COND ( $ "Keno.Outflow" [@"t - 1"] < 4100.00000000 "cfs" )
       ELSEIF_CLAUSE
             $ "Keno.Ramp Down Rate" [] := 1000.00000000 "cfs";
       END_ELSEIF
-      ELSEIF_COND ( $ "Keno.Outflow" [] >= 4100.00000000 "cfs" )
+      ELSEIF_COND ( $ "Keno.Outflow" [@"t - 1"] >= 4100.00000000 "cfs" )
       ELSEIF_CLAUSE
-            $ "Keno.Ramp Down Rate" [] := "Min"( 2000.00000000 "cfs", "Max"( $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
+            $ "Keno.Ramp Down Rate" [@"t"] := "Min"( 2000.00000000 "cfs", "Max"( $ "Keno.Outflow" [@"t - 1"] - 3100.00000000 "cfs", 0.00000000 "cfs" ) );
       END_ELSEIF;
 
     END

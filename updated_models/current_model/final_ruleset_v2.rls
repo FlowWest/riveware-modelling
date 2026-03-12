@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 09:51 March 12, 2026
+# Created 10:40 March 12, 2026
 # 
 RULESET
 NAME "final_ruleset_v2";
@@ -312,7 +312,7 @@ BEGIN
     BEGIN
 
       IF_STATEMENT ($ "Keno.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
-            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Upper Klamath Lake.Outflow" [@"t"] - $ "Upper Klamath Lake.Ramp_UKL_Outflow_Diff" [];
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"] - $ "Upper Klamath Lake.Keno_UKL_Outflow_Diff" [];
 
       END_IF_STATEMENT;
 
@@ -348,7 +348,7 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      $ "Upper Klamath Lake.Ramp_UKL_Outflow_Diff" [] := $ "Keno.RampFlow" [] - $ "Upper Klamath Lake.Outflow" [];
+      $ "Upper Klamath Lake.Keno_UKL_Outflow_Diff" [] := $ "Keno.Outflow" [] - $ "Upper Klamath Lake.Outflow" [];
 
     END
     UUID "{13c88041-c208-431b-b818-5793eaa6d403}";;
