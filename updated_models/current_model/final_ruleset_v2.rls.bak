@@ -1,5 +1,5 @@
 # RiverWare_Ruleset 9.5.2
-# Created 19:17 March 10, 2026
+# Created 21:29 March 11, 2026
 # 
 RULESET
 NAME "final_ruleset_v2";
@@ -304,18 +304,6 @@ BEGIN
     END
     UUID "{027727ea-435e-40a3-bee7-f68eed3b4525}";;
 
-    RULE                 "Get Max UKL Outflow";
-    DESCRIPTION          "Description:<br>Data tracking to see UKL max release given inflow.";
-    ACTIVE               TRUE;
-    RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "";
-    BEGIN
-
-      $ "Upper Klamath Lake.MaxOut" [] := "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" );
-
-    END
-    UUID "{bfd04469-e535-4896-9665-3566dbea317b}";;
-
     RULE                 "Ramp Down Flow";
     DESCRIPTION          "Description: Keno ramping constraints are enforced upstream at Upper Klamath Lake. If a proposed decrease in UKL outflow would violate the allowable ramp-down rate at Keno, UKL releases are increased to satisfy the downstream ramping requirement.";
     ACTIVE               TRUE;
@@ -323,8 +311,22 @@ BEGIN
     NOTES                "";
     BEGIN
 
-      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
+    INACTIVE      IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
             $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
+
+      END_IF_STATEMENT;
+
+      IF_STATEMENT ($ "Model Check.KenoTargetReleaseScenario" [] == 1.00000000) THEN
+            IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := $ "Keno.RampFlow" [@"t"];
+
+      END_IF_STATEMENT;
+
+      ELSE
+            IF_STATEMENT ($ "Upper Klamath Lake.Outflow" [@"t"] < $ "Keno.RampFlow" [@"t"]) THEN
+            $ "Upper Klamath Lake.Outflow" [@"t"] := "Min"( $ "Keno.RampFlow" [@"t"], "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" ) );
+
+      END_IF_STATEMENT;
 
       END_IF_STATEMENT;
 
@@ -354,7 +356,7 @@ BEGIN
     UUID "{b68c5872-02cd-483d-909f-76f859dc36e7}";;
 
     RULE                 "Keno RampDown Flow";
-    DESCRIPTION          "Description: When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior day?s UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
+    DESCRIPTION          "Description: When Upper Klamath Lake (UKL) outflow decreases relative to the previous day, a ramp-constrained minimum allowable flow (Keno.RampFlow) is computed based on the prior days UKL release minus the specified ramp-down rate. If UKL outflow is increasing or unchanged, no ramp constraint is triggered. Keno outflow is a downstream expression of UKL release decisions and is propagated through the river system via mass continuity.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS UKLReleases.wresl &quot;define Keno_ramp_flow&quot; for wrims reference";
@@ -387,7 +389,7 @@ BEGIN
     UUID "{217bc5fd-f31d-448b-8b59-d089403fc7a1}";;
 
     RULE                 "Update UKL Flood Release";
-    DESCRIPTION          "Description: This rule sets Upper Klamath Lake outflow during flood control conditions, ensuring outflow meets downstream target release and diversion requirements while also meeting flood spill needs and staying within physical release capacity.<br>Logic: If the UKL Flood Control Flag is on, UKL outflow is set to the larger of (1) a computed ?required outflow? to support Keno target releases and diversions (accounting for return flows, LRDC draw, F/FF inflow, and Keno accretion terms) and (2) the UKL flood spill flow; outflow is not allowed to go below zero and is capped by the maximum outflow possible given current inflow. If the Keno Flood Control Flag is on instead, the same calculation is used but flood spill is taken from the Keno flood spill term rather than the UKL flood spill term, with the same non-negativity and maximum-capacity limits.";
+    DESCRIPTION          "Description: This rule sets Upper Klamath Lake outflow during flood control conditions, ensuring outflow meets downstream target release and diversion requirements while also meeting flood spill needs and staying within physical release capacity.<br>Logic: If the UKL Flood Control Flag is on, UKL outflow is set to the larger of (1) a computed required outflow to support Keno target releases and diversions (accounting for return flows, LRDC draw, F/FF inflow, and Keno accretion terms) and (2) the UKL flood spill flow; outflow is not allowed to go below zero and is capped by the maximum outflow possible given current inflow. If the Keno Flood Control Flag is on instead, the same calculation is used but flood spill is taken from the Keno flood spill term rather than the UKL flood spill term, with the same non-negativity and maximum-capacity limits.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
     NOTES                "See WRIMS SeasonalSupply.wresl &quot;define UKL_Keno_spill&quot; for wrims reference";
@@ -476,14 +478,38 @@ BEGIN
   NOTES          "";
   BEGIN
 
-    RULE                 "Keno Targeted Release";
-    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by today?s FFA increment (FFAInc) and increased by today?s FFA usage.";
+    RULE                 "Get Max UKL Outflow";
+    DESCRIPTION          "Description:<br>Data tracking to see UKL max release given inflow.";
     ACTIVE               TRUE;
     RULE_EXEC_CONSTRAINT TRUE;
-    NOTES                "See WRIMS UKLReleases.wresl &quot;define C13target_temp&quot; for wrims reference";
+    NOTES                "";
     BEGIN
 
-      $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "OpsData.FFAInc" [@"t"] + $ "Klamath River.FFA Usage" [@"t"] );
+      $ "Upper Klamath Lake.MaxOut" [] := "GetMaxOutflowGivenInflow"( % "Upper Klamath Lake", $ "Upper Klamath Lake.Inflow" [], @"t" );
+
+    END
+    UUID "{bfd04469-e535-4896-9665-3566dbea317b}";;
+
+    RULE                 "Keno Targeted Release";
+    DESCRIPTION          "Description: This rule sets the target release at Keno based on the base flow requirement, adjusted by the Keno release multiplier and Flexible Flow Accounting.<br>Logic: Keno target release is the greater of: (1) the Keno river base flow, or (2) the base flow increased by the Keno release multiplier, then reduced by todays FFA increment (FFAInc) and increased by todays FFA usage.";
+    ACTIVE               TRUE;
+    RULE_EXEC_CONSTRAINT TRUE;
+    NOTES                "See WRIMS UKLReleases.wresl &quot;define C13target_temp&quot; for wrims reference<br><br>releasemult applied when opsindex < 0.5 = current target release<br>when opsindex > 0.5 = baseflow<br><br> <br>";
+    BEGIN
+
+      IF_STATEMENT ($ "Model Check.KenoTargetReleaseScenario" [] == 1.00000000) THEN
+            $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [@"t"], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [@"t"] - $ "OpsData.FFAInc" [@"t"] + $ "Klamath River.FFA Usage" [@"t"] );
+
+      ELSE
+            IF_STATEMENT ($ "OpsData.OpsIndex" [] < 0.50000000) THEN
+            $ "Keno.Target Releases" [] := "Max"( $ "Keno data.River Base Flow" [], $ "Keno data.River Base Flow" [@"t"] + "KenoReleaseMultiplier"( @"t" ) * $ "Keno data.River Base Flow" [] - $ "OpsData.FFAInc" [] + $ "Klamath River.FFA Usage" [] );
+
+      ELSE
+            $ "Keno.Target Releases" [] := $ "Keno data.River Base Flow" [];
+
+      END_IF_STATEMENT;
+
+      END_IF_STATEMENT;
 
     END
     UUID "{48312e14-60fe-43ca-95fd-d34b301f3fe1}";;
